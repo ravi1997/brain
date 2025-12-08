@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <memory>
 #include <random>
 #include <string>
@@ -31,6 +32,15 @@ namespace brain
         Tensor logits;
         Tensor probs;
         double value{0.0};
+    };
+
+    struct Experience
+    {
+        Tensor obs_with_reward; // sensory + reward channel
+        Tensor context_before;
+        Tensor next_obs;
+        double reward{0.0};
+        int action{-1};
     };
 
     inline std::size_t param_count_from_layers(const std::vector<std::size_t> &sizes)
@@ -83,6 +93,15 @@ namespace brain
             return -1;
         return static_cast<int>(std::distance(
             v.begin(), std::max_element(v.begin(), v.end())));
+    }
+
+    inline Tensor concat(const Tensor &a, const Tensor &b)
+    {
+        Tensor out;
+        out.reserve(a.size() + b.size());
+        out.insert(out.end(), a.begin(), a.end());
+        out.insert(out.end(), b.begin(), b.end());
+        return out;
     }
 
     inline Tensor softmax(const Tensor &logits, double temperature = 1.0)
@@ -252,12 +271,14 @@ namespace brain
         WorldModelModule(std::string name,
                          std::size_t sensory_size,
                          std::size_t context_size,
-                         std::size_t hidden_size)
+                         std::size_t hidden_size,
+                         bool include_reward = true)
             : name_(std::move(name)),
-              sensory_size_(sensory_size),
-              layer_sizes_{sensory_size + context_size, hidden_size, sensory_size},
+              predict_size_(sensory_size),
+              input_size_(sensory_size + context_size + (include_reward ? 1 : 0)),
+              layer_sizes_{input_size_, hidden_size, predict_size_},
               net_(layer_sizes_, dnn::Activation::Relu, dnn::Activation::Linear),
-              last_prediction_(sensory_size, 0.0)
+              last_prediction_(predict_size_, 0.0)
         {
         }
 
@@ -267,7 +288,7 @@ namespace brain
             fit_to_size(x, layer_sizes_.front());
 
             last_prediction_ = net_.predict(x);
-            fit_to_size(last_prediction_, sensory_size_);
+            fit_to_size(last_prediction_, predict_size_);
             return {last_prediction_, last_prediction_};
         }
 
@@ -276,9 +297,19 @@ namespace brain
         std::string name() const override { return name_; }
         std::size_t param_count() const override { return param_count_from_layers(layer_sizes_); }
 
+        void train(const std::vector<Tensor> &X,
+                   const std::vector<Tensor> &Y,
+                   std::size_t epochs,
+                   std::size_t batch,
+                   double lr)
+        {
+            net_.train(X, Y, epochs, batch, lr);
+        }
+
     private:
         std::string name_;
-        std::size_t sensory_size_{0};
+        std::size_t predict_size_{0};
+        std::size_t input_size_{0};
         std::vector<std::size_t> layer_sizes_;
         dnn::NeuralNetwork net_;
         Tensor last_prediction_;
@@ -307,6 +338,15 @@ namespace brain
 
         std::string name() const override { return name_; }
         std::size_t param_count() const override { return param_count_from_layers(layer_sizes_); }
+
+        void train(const std::vector<Tensor> &X,
+                   const std::vector<Tensor> &Y,
+                   std::size_t epochs,
+                   std::size_t batch,
+                   double lr)
+        {
+            net_.train(X, Y, epochs, batch, lr);
+        }
 
     private:
         std::string name_;
@@ -486,6 +526,7 @@ namespace brain
                        std::size_t context_size = 64)
             : sensory_size_(sensory_size),
               action_count_(action_count),
+              context_size_(context_size),
               augmented_obs_(sensory_size + 1, 0.0)
         {
             engine_.set_context_size(context_size);
@@ -507,7 +548,8 @@ namespace brain
                 "working-memory", sensory_size_ + 1, context_size, context_size, 0.01);
 
             auto world = std::make_unique<WorldModelModule>(
-                "world-model", sensory_size_ + 1, context_size, context_size);
+                "world-model", sensory_size_, context_size, context_size, true);
+            world_module_ = world.get();
 
             auto policy = std::make_unique<PolicyModule>(
                 "policy",
@@ -529,12 +571,15 @@ namespace brain
 
         Tensor act(const Tensor &observation, double reward)
         {
+            last_context_before_ = engine_.context();
             if (observation.size() != sensory_size_)
                 augmented_obs_.assign(sensory_size_ + 1, 0.0);
             std::copy(observation.begin(), observation.end(), augmented_obs_.begin());
             augmented_obs_.back() = reward;
 
             Tensor logits = engine_.step(augmented_obs_, policy_idx_);
+            last_reward_ = reward;
+            last_aug_obs_ = augmented_obs_;
 
             if (value_module_)
             {
@@ -554,22 +599,96 @@ namespace brain
             Tensor logits = act(observation, reward);
             Tensor probs = softmax(logits, temperature);
             int action = greedy ? argmax(probs) : sample_from_probs(probs, rng_);
-            return Decision{action, std::move(logits), std::move(probs), value_estimate()};
+            last_decision_ = Decision{action, logits, probs, value_estimate()};
+            return last_decision_;
+        }
+
+        void record_transition(const Tensor &next_observation)
+        {
+            if (last_decision_.action < 0)
+                return;
+            Experience e;
+            e.obs_with_reward = last_aug_obs_;
+            e.context_before = last_context_before_;
+            e.next_obs = next_observation;
+            e.reward = last_reward_;
+            e.action = last_decision_.action;
+
+            if (experiences_.size() >= max_experiences_)
+            {
+                experiences_.erase(experiences_.begin());
+            }
+            experiences_.push_back(std::move(e));
         }
 
         const Tensor &context() const { return engine_.context(); }
         double value_estimate() const { return last_value_; }
         void set_seed(std::uint64_t seed) { rng_.seed(seed); }
 
+        void set_experience_limit(std::size_t n) { max_experiences_ = std::max<std::size_t>(8, n); }
+
+        void learn_from_experience(std::size_t epochs = 3,
+                                   std::size_t batch = 8,
+                                   double lr_value = 0.01,
+                                   double lr_world = 0.005,
+                                   double gamma = 0.95)
+        {
+            if (experiences_.empty() || !value_module_ || !world_module_)
+                return;
+
+            std::vector<double> returns(experiences_.size(), 0.0);
+            double running = 0.0;
+            for (std::size_t i = experiences_.size(); i-- > 0;)
+            {
+                running = experiences_[i].reward + gamma * running;
+                returns[i] = running;
+            }
+
+            std::vector<Tensor> vx;
+            std::vector<Tensor> vy;
+            std::vector<Tensor> wx;
+            std::vector<Tensor> wy;
+
+            vx.reserve(experiences_.size());
+            vy.reserve(experiences_.size());
+            wx.reserve(experiences_.size());
+            wy.reserve(experiences_.size());
+
+            for (std::size_t i = 0; i < experiences_.size(); ++i)
+            {
+                Tensor input = concat(experiences_[i].obs_with_reward, experiences_[i].context_before);
+                fit_to_size(input, sensory_size_ + 1 + context_size_);
+                vx.push_back(input);
+                vy.push_back(Tensor{returns[i]});
+
+                Tensor w_in = input;
+                Tensor target = experiences_[i].next_obs;
+                fit_to_size(target, sensory_size_);
+                wx.push_back(std::move(w_in));
+                wy.push_back(std::move(target));
+            }
+
+            value_module_->train(vx, vy, epochs, batch, lr_value);
+            world_module_->train(wx, wy, epochs, batch, lr_world);
+        }
+
     private:
         BrainEngine engine_;
         std::size_t sensory_size_{0};
         std::size_t action_count_{0};
+        std::size_t context_size_{0};
         Tensor augmented_obs_;
         int policy_idx_{-1};
         ValueModule *value_module_{nullptr};
+        WorldModelModule *world_module_{nullptr};
         double last_value_{0.0};
+        Decision last_decision_;
         std::mt19937_64 rng_{std::random_device{}()};
+        Tensor last_aug_obs_;
+        Tensor last_context_before_;
+        double last_reward_{0.0};
+        std::vector<Experience> experiences_;
+        std::size_t max_experiences_{512};
     };
 
 } // namespace brain

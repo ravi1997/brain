@@ -12,14 +12,13 @@ int main()
     std::uniform_real_distribution<double> dist(-1.0, 1.0);
     std::uniform_real_distribution<double> reward_dist(0.0, 1.0);
     brain::Tensor obs(8);
-
-    for (int step = 0; step < 5; ++step)
+    for (double &v : obs)
     {
-        for (double &v : obs)
-        {
-            v = dist(rng);
-        }
+        v = dist(rng);
+    }
 
+    for (int step = 0; step < 20; ++step)
+    {
         double reward = reward_dist(rng);
         Decision d = brain.decide(obs, reward, /*temperature*/ 0.8, /*greedy*/ false);
 
@@ -37,5 +36,18 @@ int main()
             std::cout << ' ' << p;
         }
         std::cout << '\n';
+
+        brain::Tensor next_obs(8);
+        for (double &v : next_obs)
+        {
+            v = dist(rng);
+        }
+        brain.record_transition(next_obs);
+        obs = next_obs;
+
+        if ((step + 1) % 5 == 0)
+        {
+            brain.learn_from_experience(/*epochs*/ 2, /*batch*/ 4, /*lr_value*/ 0.02, /*lr_world*/ 0.01);
+        }
     }
 }
