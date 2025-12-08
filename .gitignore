@@ -1,1 +1,5 @@
 build/
+brain
+*.o
+*.obj
+*.log
