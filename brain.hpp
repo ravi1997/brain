@@ -157,6 +157,105 @@ namespace brain
         Tensor hidden_state_;
     };
 
+    class AttentionModule : public BrainModule
+    {
+    public:
+        AttentionModule(std::string name,
+                        std::size_t sensory_size,
+                        std::size_t context_size,
+                        std::size_t hidden_size)
+            : name_(std::move(name)),
+              layer_sizes_{sensory_size + context_size, hidden_size, context_size},
+              net_(layer_sizes_, dnn::Activation::Relu, dnn::Activation::Tanh)
+        {
+        }
+
+        BrainOutput step(const BrainIO &in, double /*dt*/) override
+        {
+            Tensor x = concat_inputs(in.sensory_input, in.context_input);
+            fit_to_size(x, layer_sizes_.front());
+
+            Tensor attended = net_.predict(x);
+            return {attended, attended};
+        }
+
+        std::string name() const override { return name_; }
+        std::size_t param_count() const override { return param_count_from_layers(layer_sizes_); }
+
+    private:
+        std::string name_;
+        std::vector<std::size_t> layer_sizes_;
+        dnn::NeuralNetwork net_;
+    };
+
+    class WorldModelModule : public BrainModule
+    {
+    public:
+        WorldModelModule(std::string name,
+                         std::size_t sensory_size,
+                         std::size_t context_size,
+                         std::size_t hidden_size)
+            : name_(std::move(name)),
+              sensory_size_(sensory_size),
+              layer_sizes_{sensory_size + context_size, hidden_size, sensory_size},
+              net_(layer_sizes_, dnn::Activation::Relu, dnn::Activation::Linear),
+              last_prediction_(sensory_size, 0.0)
+        {
+        }
+
+        BrainOutput step(const BrainIO &in, double /*dt*/) override
+        {
+            Tensor x = concat_inputs(in.sensory_input, in.context_input);
+            fit_to_size(x, layer_sizes_.front());
+
+            last_prediction_ = net_.predict(x);
+            fit_to_size(last_prediction_, sensory_size_);
+            return {last_prediction_, last_prediction_};
+        }
+
+        const Tensor &last_prediction() const { return last_prediction_; }
+
+        std::string name() const override { return name_; }
+        std::size_t param_count() const override { return param_count_from_layers(layer_sizes_); }
+
+    private:
+        std::string name_;
+        std::size_t sensory_size_{0};
+        std::vector<std::size_t> layer_sizes_;
+        dnn::NeuralNetwork net_;
+        Tensor last_prediction_;
+    };
+
+    class ValueModule : public BrainModule
+    {
+    public:
+        ValueModule(std::string name,
+                    std::size_t sensory_size,
+                    std::size_t context_size,
+                    std::size_t hidden_size)
+            : name_(std::move(name)),
+              layer_sizes_{sensory_size + context_size, hidden_size, 1},
+              net_(layer_sizes_, dnn::Activation::Relu, dnn::Activation::Linear)
+        {
+        }
+
+        BrainOutput step(const BrainIO &in, double /*dt*/) override
+        {
+            Tensor x = concat_inputs(in.sensory_input, in.context_input);
+            fit_to_size(x, layer_sizes_.front());
+            Tensor v = net_.predict(x);
+            return {v, {}};
+        }
+
+        std::string name() const override { return name_; }
+        std::size_t param_count() const override { return param_count_from_layers(layer_sizes_); }
+
+    private:
+        std::string name_;
+        std::vector<std::size_t> layer_sizes_;
+        dnn::NeuralNetwork net_;
+    };
+
     class PolicyModule : public BrainModule
     {
     public:
@@ -215,6 +314,7 @@ namespace brain
         }
 
         void set_dt(double dt) { dt_ = dt; }
+        void set_settling_steps(int n) { settling_steps_ = std::max(1, n); }
 
         void set_context_size(std::size_t n)
         {
@@ -234,53 +334,57 @@ namespace brain
 
         Tensor step(const Tensor &env_obs, int policy_module_index = -1)
         {
-            Tensor aggregate = context_;
-            std::size_t contributors = aggregate.empty() ? 0 : 1;
             Tensor policy_out;
             bool have_policy = false;
 
-            for (std::size_t idx = 0; idx < modules_.size(); ++idx)
+            for (int iter = 0; iter < settling_steps_; ++iter)
             {
-                auto &entry = modules_[idx];
-                const bool run_now = (entry.step_counter++ % entry.steps_per_call) == 0;
-                if (!run_now)
-                    continue;
+                Tensor aggregate = context_;
+                std::size_t contributors = aggregate.empty() ? 0 : 1;
 
-                BrainIO io{
-                    entry.uses_sensory ? &env_obs : nullptr,
-                    entry.uses_context ? &context_ : nullptr};
-
-                BrainOutput out = entry.module->step(io, dt_);
-
-                if (!out.context_out.empty())
+                for (std::size_t idx = 0; idx < modules_.size(); ++idx)
                 {
-                    if (aggregate.size() < out.context_out.size())
-                        aggregate.resize(out.context_out.size(), 0.0);
-                    for (std::size_t i = 0; i < out.context_out.size(); ++i)
+                    auto &entry = modules_[idx];
+                    const bool run_now = (entry.step_counter++ % entry.steps_per_call) == 0;
+                    if (!run_now)
+                        continue;
+
+                    BrainIO io{
+                        entry.uses_sensory ? &env_obs : nullptr,
+                        entry.uses_context ? &context_ : nullptr};
+
+                    BrainOutput out = entry.module->step(io, dt_);
+
+                    if (!out.context_out.empty())
                     {
-                        aggregate[i] += out.context_out[i];
+                        if (aggregate.size() < out.context_out.size())
+                            aggregate.resize(out.context_out.size(), 0.0);
+                        for (std::size_t i = 0; i < out.context_out.size(); ++i)
+                        {
+                            aggregate[i] += out.context_out[i];
+                        }
+                        ++contributors;
                     }
-                    ++contributors;
+
+                    if (static_cast<int>(idx) == policy_module_index)
+                    {
+                        policy_out = out.output;
+                        have_policy = true;
+                    }
                 }
 
-                if (static_cast<int>(idx) == policy_module_index)
+                if (contributors > 0 && !aggregate.empty())
                 {
-                    policy_out = out.output;
-                    have_policy = true;
+                    const double scale = 1.0 / static_cast<double>(contributors);
+                    for (double &v : aggregate)
+                    {
+                        v *= scale;
+                    }
                 }
-            }
 
-            if (contributors > 0 && !aggregate.empty())
-            {
-                const double scale = 1.0 / static_cast<double>(contributors);
-                for (double &v : aggregate)
-                {
-                    v *= scale;
-                }
+                if (!aggregate.empty())
+                    context_ = std::move(aggregate);
             }
-
-            if (!aggregate.empty())
-                context_ = std::move(aggregate);
 
             if (have_policy)
                 return policy_out;
@@ -291,6 +395,86 @@ namespace brain
         std::vector<ModuleEntry> modules_;
         Tensor context_;
         double dt_{1.0};
+        int settling_steps_{1};
+    };
+
+    class CognitiveBrain
+    {
+    public:
+        CognitiveBrain(std::size_t sensory_size,
+                       std::size_t action_count,
+                       std::size_t context_size = 64)
+            : sensory_size_(sensory_size),
+              action_count_(action_count),
+              augmented_obs_(sensory_size + 1, 0.0)
+        {
+            engine_.set_context_size(context_size);
+            engine_.set_dt(0.05);
+            engine_.set_settling_steps(2);
+
+            auto vision = std::make_unique<VisionModule>(
+                "vision",
+                std::vector<std::size_t>{sensory_size_ + 1, context_size},
+                dnn::Activation::Relu,
+                dnn::Activation::Tanh);
+
+            auto attention = std::make_unique<AttentionModule>(
+                "attention", sensory_size_ + 1, context_size, context_size);
+
+            auto working = std::make_unique<MemoryModule>(
+                "working-memory", sensory_size_ + 1, context_size, context_size, 0.01);
+
+            auto world = std::make_unique<WorldModelModule>(
+                "world-model", sensory_size_ + 1, context_size, context_size);
+
+            auto policy = std::make_unique<PolicyModule>(
+                "policy",
+                std::vector<std::size_t>{context_size + context_size, context_size, static_cast<std::size_t>(action_count_)},
+                dnn::Activation::Relu,
+                dnn::Activation::Linear);
+
+            auto value = std::make_unique<ValueModule>(
+                "value", sensory_size_ + 1, context_size, context_size);
+            value_module_ = value.get();
+
+            engine_.add_module(std::move(vision), true, false);
+            engine_.add_module(std::move(attention), true, true);
+            engine_.add_module(std::move(working), true, true);
+            engine_.add_module(std::move(world), true, true, 2);
+            policy_idx_ = engine_.add_module(std::move(policy), false, true);
+            engine_.add_module(std::move(value), false, true);
+        }
+
+        Tensor act(const Tensor &observation, double reward)
+        {
+            if (observation.size() != sensory_size_)
+                augmented_obs_.assign(sensory_size_ + 1, 0.0);
+            std::copy(observation.begin(), observation.end(), augmented_obs_.begin());
+            augmented_obs_.back() = reward;
+
+            Tensor logits = engine_.step(augmented_obs_, policy_idx_);
+
+            if (value_module_)
+            {
+                BrainIO io{&augmented_obs_, &engine_.context()};
+                auto v = value_module_->step(io, 0.0).output;
+                last_value_ = v.empty() ? 0.0 : v.front();
+            }
+
+            return logits;
+        }
+
+        const Tensor &context() const { return engine_.context(); }
+        double value_estimate() const { return last_value_; }
+
+    private:
+        BrainEngine engine_;
+        std::size_t sensory_size_{0};
+        std::size_t action_count_{0};
+        Tensor augmented_obs_;
+        int policy_idx_{-1};
+        ValueModule *value_module_{nullptr};
+        double last_value_{0.0};
     };
 
 } // namespace brain
