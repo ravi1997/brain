@@ -4,6 +4,7 @@
 #include <random>
 #include <string>
 #include <vector>
+#include <chrono>
 
 #include "brain.hpp"
 
@@ -112,6 +113,27 @@ namespace
         }
         return answer;
     }
+
+    std::vector<std::string> unique_phrases(const std::vector<std::string> &texts)
+    {
+        std::vector<std::string> out;
+        for (const auto &t : texts)
+        {
+            const std::string lowered = to_lower(t);
+            bool seen = false;
+            for (const auto &o : out)
+            {
+                if (to_lower(o) == lowered)
+                {
+                    seen = true;
+                    break;
+                }
+            }
+            if (!seen)
+                out.push_back(t);
+        }
+        return out;
+    }
 }
 
 int main()
@@ -126,9 +148,11 @@ int main()
     {
         std::string text;
         brain::Tensor embed;
+        std::chrono::steady_clock::time_point t;
     };
     std::vector<MemoryEntry> memory;
     std::vector<brain::Tensor> memory_embeds;
+    std::vector<std::string> memory_texts;
 
     std::cout << "Brain ready. Type to teach or ask (end with '?' to ask). Type 'stop' to exit.\n";
     std::string line;
@@ -151,14 +175,7 @@ int main()
         {
             Tensor query = encode_text(line, sensory_width);
             auto idx = topk_matches(query, memory_embeds, 3, 0.05);
-            answer = synthesize_answer(line, [&memory]() {
-                std::vector<std::string> texts;
-                texts.reserve(memory.size());
-                for (const auto &m : memory)
-                    texts.push_back(m.text);
-                return texts;
-            }(),
-                                       idx);
+            answer = synthesize_answer(line, memory_texts, idx);
         }
         if (answer.empty() && is_question)
         {
@@ -167,8 +184,9 @@ int main()
 
         if (!is_question)
         {
-            memory.push_back(MemoryEntry{line, obs});
+            memory.push_back(MemoryEntry{line, obs, std::chrono::steady_clock::now()});
             memory_embeds.push_back(obs);
+            memory_texts.push_back(line);
         }
 
         brain.record_transition(obs);
@@ -180,6 +198,38 @@ int main()
 
         if (!is_question)
             answer = line;
+
+        const auto now = std::chrono::steady_clock::now();
+        if ((step % 6 == 0) && !memory.empty())
+        {
+            // Simple rehearsal: resurface older memories
+            for (std::size_t i = 0; i < memory.size(); ++i)
+            {
+                auto age = std::chrono::duration_cast<std::chrono::seconds>(now - memory[i].t).count();
+                if (age > 30)
+                {
+                    memory[i].t = now;
+                    memory_embeds[i] = memory[i].embed;
+                }
+            }
+        }
+
+        if (memory.size() > 2048)
+        {
+            memory.erase(memory.begin(), memory.begin() + 512);
+            memory_embeds.erase(memory_embeds.begin(), memory_embeds.begin() + 512);
+            if (memory_texts.size() > 512)
+                memory_texts.erase(memory_texts.begin(), memory_texts.begin() + 512);
+        }
+
+        if (is_question && answer.empty() && !memory_texts.empty())
+        {
+            auto unique = unique_phrases(memory_texts);
+            if (!unique.empty())
+            {
+                answer = synthesize_answer(line, unique, std::vector<std::size_t>{0});
+            }
+        }
 
         std::cout << (is_question ? "Answer: " : "Learned: ") << answer
                   << " | value " << d.value << " | action " << d.action << '\n';
