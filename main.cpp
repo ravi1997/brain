@@ -1,17 +1,7 @@
-#include <algorithm>
 #include <iostream>
 #include <random>
 
 #include "brain.hpp"
-
-namespace
-{
-    int argmax(const brain::Tensor &v)
-    {
-        return static_cast<int>(std::distance(
-            v.begin(), std::max_element(v.begin(), v.end())));
-    }
-}
 
 int main()
 {
@@ -31,17 +21,20 @@ int main()
         }
 
         double reward = reward_dist(rng);
-        auto logits = brain.act(obs, reward);
-        int action = argmax(logits);
+        Decision d = brain.decide(obs, reward, /*temperature*/ 0.8, /*greedy*/ false);
 
-        std::cout << "step " << step
-                  << " action " << action
+        std::cout << "step " << step << " action " << d.action
                   << " reward " << reward
-                  << " value " << brain.value_estimate()
+                  << " value " << d.value
                   << " logits:";
-        for (double l : logits)
+        for (double l : d.logits)
         {
             std::cout << ' ' << l;
+        }
+        std::cout << " probs:";
+        for (double p : d.probs)
+        {
+            std::cout << ' ' << p;
         }
         std::cout << '\n';
     }

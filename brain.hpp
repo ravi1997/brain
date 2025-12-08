@@ -1,7 +1,9 @@
 #pragma once
 
 #include <algorithm>
+#include <cmath>
 #include <memory>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -21,6 +23,14 @@ namespace brain
     {
         Tensor output;
         Tensor context_out;
+    };
+
+    struct Decision
+    {
+        int action{-1};
+        Tensor logits;
+        Tensor probs;
+        double value{0.0};
     };
 
     inline std::size_t param_count_from_layers(const std::vector<std::size_t> &sizes)
@@ -65,6 +75,54 @@ namespace brain
         {
             v.resize(wanted);
         }
+    }
+
+    inline int argmax(const Tensor &v)
+    {
+        if (v.empty())
+            return -1;
+        return static_cast<int>(std::distance(
+            v.begin(), std::max_element(v.begin(), v.end())));
+    }
+
+    inline Tensor softmax(const Tensor &logits, double temperature = 1.0)
+    {
+        Tensor probs(logits.size(), 0.0);
+        if (logits.empty())
+            return probs;
+        const double inv_temp = 1.0 / std::max(temperature, 1e-6);
+        const double max_logit = *std::max_element(logits.begin(), logits.end());
+
+        double sum = 0.0;
+        for (std::size_t i = 0; i < logits.size(); ++i)
+        {
+            const double z = (logits[i] - max_logit) * inv_temp;
+            const double e = std::exp(z);
+            probs[i] = e;
+            sum += e;
+        }
+
+        if (sum > 0.0)
+        {
+            for (double &p : probs)
+            {
+                p /= sum;
+            }
+        }
+        else
+        {
+            const double uniform = 1.0 / static_cast<double>(probs.size());
+            std::fill(probs.begin(), probs.end(), uniform);
+        }
+        return probs;
+    }
+
+    inline int sample_from_probs(const Tensor &probs, std::mt19937_64 &rng)
+    {
+        if (probs.empty())
+            return -1;
+        std::discrete_distribution<int> dist(probs.begin(), probs.end());
+        return dist(rng);
     }
 
     class VisionModule : public BrainModule
@@ -315,6 +373,8 @@ namespace brain
 
         void set_dt(double dt) { dt_ = dt; }
         void set_settling_steps(int n) { settling_steps_ = std::max(1, n); }
+        void set_context_blend(double mix) { context_blend_ = std::clamp(mix, 0.0, 1.0); }
+        void set_context_clip(double clip) { context_clip_ = std::max(clip, 0.0); }
 
         void set_context_size(std::size_t n)
         {
@@ -383,7 +443,25 @@ namespace brain
                 }
 
                 if (!aggregate.empty())
-                    context_ = std::move(aggregate);
+                {
+                    if (context_.size() < aggregate.size())
+                        context_.resize(aggregate.size(), 0.0);
+
+                    const double blend = context_blend_;
+                    for (std::size_t i = 0; i < aggregate.size(); ++i)
+                    {
+                        double mixed = aggregate[i];
+                        if (blend < 1.0)
+                        {
+                            mixed = context_[i] * (1.0 - blend) + aggregate[i] * blend;
+                        }
+                        if (context_clip_ > 0.0)
+                        {
+                            mixed = std::clamp(mixed, -context_clip_, context_clip_);
+                        }
+                        context_[i] = mixed;
+                    }
+                }
             }
 
             if (have_policy)
@@ -396,6 +474,8 @@ namespace brain
         Tensor context_;
         double dt_{1.0};
         int settling_steps_{1};
+        double context_blend_{1.0};
+        double context_clip_{5.0};
     };
 
     class CognitiveBrain
@@ -411,6 +491,8 @@ namespace brain
             engine_.set_context_size(context_size);
             engine_.set_dt(0.05);
             engine_.set_settling_steps(2);
+            engine_.set_context_blend(0.65);
+            engine_.set_context_clip(3.0);
 
             auto vision = std::make_unique<VisionModule>(
                 "vision",
@@ -464,8 +546,20 @@ namespace brain
             return logits;
         }
 
+        Decision decide(const Tensor &observation,
+                        double reward,
+                        double temperature = 1.0,
+                        bool greedy = false)
+        {
+            Tensor logits = act(observation, reward);
+            Tensor probs = softmax(logits, temperature);
+            int action = greedy ? argmax(probs) : sample_from_probs(probs, rng_);
+            return Decision{action, std::move(logits), std::move(probs), value_estimate()};
+        }
+
         const Tensor &context() const { return engine_.context(); }
         double value_estimate() const { return last_value_; }
+        void set_seed(std::uint64_t seed) { rng_.seed(seed); }
 
     private:
         BrainEngine engine_;
@@ -475,6 +569,7 @@ namespace brain
         int policy_idx_{-1};
         ValueModule *value_module_{nullptr};
         double last_value_{0.0};
+        std::mt19937_64 rng_{std::random_device{}()};
     };
 
 } // namespace brain
