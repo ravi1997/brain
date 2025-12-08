@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <random>
@@ -35,6 +36,82 @@ namespace
         }
         return dot / std::sqrt(na * nb);
     }
+
+    std::string to_lower(std::string s)
+    {
+        std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c)
+                       { return static_cast<char>(std::tolower(c)); });
+        return s;
+    }
+
+    std::vector<std::size_t> topk_matches(const brain::Tensor &query,
+                                          const std::vector<brain::Tensor> &embeds,
+                                          std::size_t k,
+                                          double min_sim)
+    {
+        std::vector<std::pair<double, std::size_t>> scored;
+        scored.reserve(embeds.size());
+        for (std::size_t i = 0; i < embeds.size(); ++i)
+        {
+            double s = similarity(query, embeds[i]);
+            if (s >= min_sim)
+            {
+                scored.emplace_back(s, i);
+            }
+        }
+        std::sort(scored.begin(), scored.end(),
+                  [](auto &a, auto &b)
+                  { return a.first > b.first; });
+        std::vector<std::size_t> idx;
+        for (std::size_t i = 0; i < std::min(k, scored.size()); ++i)
+        {
+            idx.push_back(scored[i].second);
+        }
+        return idx;
+    }
+
+    std::string synthesize_answer(const std::string &question,
+                                  const std::vector<std::string> &memory_texts,
+                                  const std::vector<std::size_t> &match_idx)
+    {
+        if (match_idx.empty())
+            return {};
+
+        std::string lower_q = to_lower(question);
+        std::string subject = "It";
+        auto pos = lower_q.find("what is ");
+        if (pos != std::string::npos)
+        {
+            std::string tail = question.substr(pos + 7);
+            if (!tail.empty())
+            {
+                subject = tail;
+            }
+        }
+        else
+        {
+            pos = lower_q.find("what do you know about ");
+            if (pos != std::string::npos)
+            {
+                std::string tail = question.substr(pos + 23);
+                if (!tail.empty())
+                {
+                    subject = tail;
+                }
+            }
+        }
+
+        std::string answer = subject + " can be described as: ";
+        for (std::size_t i = 0; i < match_idx.size(); ++i)
+        {
+            answer += memory_texts[match_idx[i]];
+            if (i + 1 < match_idx.size())
+            {
+                answer += "; ";
+            }
+        }
+        return answer;
+    }
 }
 
 int main()
@@ -51,6 +128,7 @@ int main()
         brain::Tensor embed;
     };
     std::vector<MemoryEntry> memory;
+    std::vector<brain::Tensor> memory_embeds;
 
     std::cout << "Brain ready. Type to teach or ask (end with '?' to ask). Type 'stop' to exit.\n";
     std::string line;
@@ -71,22 +149,16 @@ int main()
         std::string answer;
         if (is_question && !memory.empty())
         {
-            double best = -1.0;
-            std::size_t best_idx = 0;
             Tensor query = encode_text(line, sensory_width);
-            for (std::size_t i = 0; i < memory.size(); ++i)
-            {
-                double s = similarity(query, memory[i].embed);
-                if (s > best)
-                {
-                    best = s;
-                    best_idx = i;
-                }
-            }
-            if (best > 0.1)
-            {
-                answer = memory[best_idx].text;
-            }
+            auto idx = topk_matches(query, memory_embeds, 3, 0.05);
+            answer = synthesize_answer(line, [&memory]() {
+                std::vector<std::string> texts;
+                texts.reserve(memory.size());
+                for (const auto &m : memory)
+                    texts.push_back(m.text);
+                return texts;
+            }(),
+                                       idx);
         }
         if (answer.empty() && is_question)
         {
@@ -96,6 +168,7 @@ int main()
         if (!is_question)
         {
             memory.push_back(MemoryEntry{line, obs});
+            memory_embeds.push_back(obs);
         }
 
         brain.record_transition(obs);
