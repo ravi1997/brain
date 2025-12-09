@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <deque>
+#include <map>
 #include <memory>
 #include <random>
 #include <string>
@@ -13,6 +15,46 @@
 namespace brain
 {
     using Tensor = std::vector<double>;
+
+    // Learning phase states for dynamic input processing
+    enum class LearningPhase
+    {
+        ACQUISITION,    // Initial learning phase
+        CONSOLIDATION,  // Memory consolidation phase
+        RETRIEVAL,      // Knowledge retrieval phase
+        TESTING         // Evaluation/test phase
+    };
+
+    // Knowledge hierarchy structure for progressive learning
+    struct KnowledgeNode
+    {
+        std::string concept;
+        Tensor representation;
+        std::vector<std::string> related_concepts;
+        double confidence{1.0};  // How confident we are in this knowledge
+        std::chrono::steady_clock::time_point creation_time;
+        std::chrono::steady_clock::time_point last_accessed;
+        int access_count{1};
+
+        KnowledgeNode() : creation_time(std::chrono::steady_clock::now()),
+                         last_accessed(std::chrono::steady_clock::now()) {}
+    };
+
+    // Information about input processing and its phase
+    struct InputProcessingInfo
+    {
+        LearningPhase current_phase{LearningPhase::ACQUISITION};
+        double phase_confidence{1.0};
+        std::string input_text;
+        Tensor processed_tensor;
+        std::vector<std::string> extracted_concepts;
+        double novelty_score{0.0};  // How novel this input is
+        bool is_conflicting{false}; // Whether this input conflicts with existing knowledge
+        std::string conflict_details;
+        std::chrono::steady_clock::time_point timestamp;
+
+        InputProcessingInfo() : timestamp(std::chrono::steady_clock::now()) {}
+    };
 
     struct BrainIO
     {
@@ -41,6 +83,24 @@ namespace brain
         Tensor next_obs;
         double reward{0.0};
         int action{-1};
+    };
+
+    // Enhanced experience for sophisticated learning
+    struct EnhancedExperience
+    {
+        Tensor observation;
+        Tensor context_before;
+        Tensor context_after;
+        Tensor action_taken;
+        double reward{0.0};
+        double expected_reward{0.0};
+        double prediction_error{0.0};
+        LearningPhase phase{LearningPhase::ACQUISITION};
+        std::vector<std::string> related_concepts;
+        std::chrono::steady_clock::time_point timestamp;
+        double importance{1.0};  // How important this experience is
+
+        EnhancedExperience() : timestamp(std::chrono::steady_clock::now()) {}
     };
 
     inline std::size_t param_count_from_layers(const std::vector<std::size_t> &sizes)
