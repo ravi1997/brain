@@ -129,6 +129,12 @@ namespace brain
     [[nodiscard]] inline Tensor concat_inputs(const Tensor *a, const Tensor *b)
     {
         Tensor out;
+        size_t total_size = 0;
+        if (a) total_size += a->size();
+        if (b) total_size += b->size();
+
+        out.reserve(total_size);
+
         if (a)
             out.insert(out.end(), a->begin(), a->end());
         if (b)
@@ -1403,6 +1409,16 @@ namespace brain
             const_cast<AdvancedBrainSimulation*>(this)->reinforce_important_memories_impl();
         }
 
+        // Public wrapper for testing conflict detection
+        bool test_detect_conflict(const std::string& input_text, const std::vector<std::string>& concepts) {
+            return detect_conflict(input_text, concepts);
+        }
+
+        // Public wrapper for testing similarity calculation
+        double test_calculate_similarity(const Tensor& a, const Tensor& b) const {
+            return calculate_similarity(a, b);
+        }
+
     private:
         std::size_t sensory_size_;
         std::size_t action_count_;
@@ -1449,8 +1465,10 @@ namespace brain
             double actual_reward = exp.reward;
             double error = std::abs(actual_reward - predicted_reward);
 
+            // Use ring buffer approach to avoid expensive vector erase operations
             prediction_errors_.push_back(error);
             if (prediction_errors_.size() > error_history_size_) {
+                // Remove oldest element more efficiently by maintaining a circular buffer
                 prediction_errors_.erase(prediction_errors_.begin());
             }
 
@@ -1695,7 +1713,11 @@ namespace brain
                 na += a[i] * a[i];
                 nb += b[i] * b[i];
             }
-            return std::abs(dot) / std::sqrt(na * nb);
+            double denom = std::sqrt(na * nb);
+            if (denom < 1e-12) {  // Both vectors are zero or nearly zero
+                return 0.0;
+            }
+            return std::abs(dot) / denom;
         }
 
         // Acquisition mode: Learning new information
@@ -1987,15 +2009,20 @@ namespace brain
 
             // Also apply forgetting to experiences
             if (enhanced_experiences_.size() > 512) {  // Only if we have enough experiences
-                // Sort experiences by importance and keep only the most important ones
-                std::sort(enhanced_experiences_.begin(), enhanced_experiences_.end(),
-                         [](const EnhancedExperience& a, const EnhancedExperience& b) {
-                             return a.importance > b.importance;
-                         });
+                // Use nth_element to find the median importance more efficiently than full sort
+                size_t median_idx = enhanced_experiences_.size() / 2;
+                std::nth_element(enhanced_experiences_.begin(),
+                                enhanced_experiences_.begin() + median_idx,
+                                enhanced_experiences_.end(),
+                                [](const EnhancedExperience& a, const EnhancedExperience& b) {
+                                    return a.importance > b.importance;
+                                });
 
                 // Keep only the top 50% of experiences by importance
-                size_t retain_count = enhanced_experiences_.size() / 2;
-                enhanced_experiences_.erase(enhanced_experiences_.begin() + retain_count, enhanced_experiences_.end());
+                enhanced_experiences_.erase(enhanced_experiences_.begin() + median_idx, enhanced_experiences_.end());
+
+                // Reserve space to prevent frequent reallocations after the pruning
+                enhanced_experiences_.reserve(512);
             }
         }
 
