@@ -228,8 +228,8 @@ int main()
             if (knowledge_list.empty()) {
                 std::cout << "  No concepts stored yet.\n";
             } else {
-                for (const auto& concept_entry : knowledge_list) {
-                    std::cout << "  - " << concept_entry << std::endl;
+                for (const auto& knowledge_entry : knowledge_list) {
+                    std::cout << "  - " << knowledge_entry << std::endl;
                 }
             }
             continue;
@@ -287,7 +287,7 @@ int main()
         // Demonstrate conflict resolution
         if (step == 5) {
             std::cout << "\nDemonstrating conflict resolution: Teaching 'mango is a sweet fruit' after 'mango is a fruit'...\n";
-            advanced_brain.make_decision("mango is a sweet fruit", 1.0);
+            [[maybe_unused]] auto decision = advanced_brain.make_decision("mango is a sweet fruit", 1.0);
         }
 
         step++;

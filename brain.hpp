@@ -126,7 +126,7 @@ namespace brain
         virtual std::size_t param_count() const = 0;
     };
 
-    inline Tensor concat_inputs(const Tensor *a, const Tensor *b)
+    [[nodiscard]] inline Tensor concat_inputs(const Tensor *a, const Tensor *b)
     {
         Tensor out;
         if (a)
@@ -148,7 +148,7 @@ namespace brain
         }
     }
 
-    inline int argmax(const Tensor &v)
+    [[nodiscard]] inline int argmax(const Tensor &v)
     {
         if (v.empty())
             return -1;
@@ -165,7 +165,7 @@ namespace brain
         return out;
     }
 
-    inline Tensor softmax(const Tensor &logits, double temperature = 1.0)
+    [[nodiscard]] inline Tensor softmax(const Tensor &logits, double temperature = 1.0)
     {
         Tensor probs(logits.size(), 0.0);
         if (logits.empty())
@@ -652,10 +652,10 @@ namespace brain
             return logits;
         }
 
-        Decision decide(const Tensor &observation,
-                        double reward,
-                        double temperature = 1.0,
-                        bool greedy = false)
+        [[nodiscard]] Decision decide(const Tensor &observation,
+                                     double reward,
+                                     double temperature = 1.0,
+                                     bool greedy = false)
         {
             Tensor logits = act(observation, reward);
             Tensor probs = softmax(logits, temperature);
@@ -1043,7 +1043,7 @@ namespace brain
         }
 
         // Process input and determine the learning phase
-        InputProcessingInfo process_input(const std::string& input_text)
+        [[nodiscard]] InputProcessingInfo process_input(const std::string& input_text)
         {
             InputProcessingInfo info;
             info.input_text = input_text;
@@ -1077,7 +1077,7 @@ namespace brain
         }
 
         // Main decision function with phase-aware processing
-        Decision make_decision(const std::string& input_text, double reward = 0.0)
+        [[nodiscard]] Decision make_decision(const std::string& input_text, double reward = 0.0)
         {
             auto processing_info = process_input(input_text);
             Tensor observation = processing_info.processed_tensor;
@@ -1187,10 +1187,10 @@ namespace brain
             std::string lower_input = to_lower(input_text);
 
             // Check for direct contradictions (not X when X exists, is not X, etc.)
-            for (const auto& [conceptvalue, node] : knowledge_hierarchy_) {
-                if (lower_input.find("not " + conceptvalue) != std::string::npos ||
-                    lower_input.find("is not " + conceptvalue) != std::string::npos ||
-                    lower_input.find("no " + conceptvalue) != std::string::npos) {
+            for (const auto& [concept_key, node] : knowledge_hierarchy_) {
+                if (lower_input.find("not " + concept_key) != std::string::npos ||
+                    lower_input.find("is not " + concept_key) != std::string::npos ||
+                    lower_input.find("no " + concept_key) != std::string::npos) {
                     return true;
                 }
 
@@ -1246,9 +1246,9 @@ namespace brain
             std::string lower_query = to_lower(query);
 
             // Direct match search
-            for (const auto &[conceptvalue, node] : knowledge_hierarchy_)
+            for (const auto &[concept_key, node] : knowledge_hierarchy_)
             {
-                if (lower_query.find(to_lower(conceptvalue)) != std::string::npos)
+                if (lower_query.find(to_lower(concept_key)) != std::string::npos)
                 {
                     results.push_back(node.concept_name + " (confidence: " + std::to_string(node.confidence) + ")");
                 }
@@ -1267,7 +1267,7 @@ namespace brain
             if (results.empty()) {
                 Tensor query_tensor = encode_text(query);
 
-                for (const auto &[conceptvalue, node] : knowledge_hierarchy_)
+                for (const auto &[concept_key, node] : knowledge_hierarchy_)
                 {
                     double similarity = calculate_similarity(query_tensor, node.representation);
 
@@ -1623,7 +1623,7 @@ namespace brain
         }
 
         // Calculate novelty of input
-        double calculate_novelty(const Tensor& tensor, const std::vector<std::string>& /*concepts*/)
+        [[nodiscard]] double calculate_novelty(const Tensor& tensor, const std::vector<std::string>& /*concepts*/)
         {
             if (knowledge_hierarchy_.empty()) {
                 return 1.0; // Completely novel if no knowledge exists
@@ -1632,7 +1632,7 @@ namespace brain
             double min_similarity = 1.0;
 
             // Find most similar existing knowledge
-            for (const auto &[conceptvalue, node] : knowledge_hierarchy_)
+            for (const auto &[concept_key, node] : knowledge_hierarchy_)
             {
                 double sim = calculate_similarity(tensor, node.representation);
                 min_similarity = std::min(min_similarity, 1.0 - sim);
@@ -1642,14 +1642,12 @@ namespace brain
         }
 
         // Check for conflicts with existing knowledge
-        bool detect_conflict(const std::string& input_text, const std::vector<std::string>& concepts)
+        bool detect_conflict(const std::string& input_text, const std::vector<std::string>& /*concepts*/)
         {
-            for (const auto &conceptvalue_unused : concepts)
-            {
-                (void)conceptvalue_unused; // Suppress unused variable warning
-                if (has_conflict(input_text)) {
-                    return true;
-                }
+            // Currently concepts parameter is not used directly in the logic,
+            // but we check for conflicts using has_conflict method
+            if (has_conflict(input_text)) {
+                return true;
             }
             return false;
         }
@@ -1801,7 +1799,7 @@ namespace brain
         void consolidate_memory()
         {
             // Reinforce frequently accessed and high-confidence knowledge
-            for (auto &[conceptvalue, node] : knowledge_hierarchy_)
+            for (auto &[concept_key, node] : knowledge_hierarchy_)
             {
                 // Boost confidence slightly for frequently accessed concepts
                 if (node.access_count > 5) {
@@ -1876,10 +1874,7 @@ namespace brain
             int stable_concepts = 0;
             int total_concepts = 0;
 
-            for (const auto& entry : knowledge_hierarchy_) {
-                const std::string& concept_name = entry.first;
-                const auto& node = entry.second;
-                (void)concept_name; // Suppress unused variable warning, though concept_name could be used for logging/debugging
+            for (const auto& [concept_key, node] : knowledge_hierarchy_) {
                 total_concepts++;
                 if (node.confidence > 0.6) {
                     stable_concepts++;
@@ -2007,10 +2002,7 @@ namespace brain
         void reinforce_important_memories_impl()
         {
             // Increase confidence and access count for high-importance concepts
-            for (auto& entry : knowledge_hierarchy_) {
-                const std::string& concept_name = entry.first;
-                auto& node = entry.second;
-                (void)concept_name; // Suppress unused variable warning, though concept_name could be used for logging/debugging
+            for (auto& [concept_key, node] : knowledge_hierarchy_) {
                 if (node.confidence < 0.3) {
                     // If confidence is very low, it might be due for reinforcement
                     // or could be a candidate for forgetting
