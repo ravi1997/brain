@@ -1623,7 +1623,7 @@ namespace brain
         }
 
         // Calculate novelty of input
-        double calculate_novelty(const Tensor& tensor, const std::vector<std::string>& concepts)
+        double calculate_novelty(const Tensor& tensor, const std::vector<std::string>& /*concepts*/)
         {
             if (knowledge_hierarchy_.empty()) {
                 return 1.0; // Completely novel if no knowledge exists
@@ -1644,8 +1644,9 @@ namespace brain
         // Check for conflicts with existing knowledge
         bool detect_conflict(const std::string& input_text, const std::vector<std::string>& concepts)
         {
-            for (const auto &conceptvalue : concepts)
+            for (const auto &conceptvalue_unused : concepts)
             {
+                (void)conceptvalue_unused; // Suppress unused variable warning
                 if (has_conflict(input_text)) {
                     return true;
                 }
@@ -1875,7 +1876,10 @@ namespace brain
             int stable_concepts = 0;
             int total_concepts = 0;
 
-            for (const auto& [concept, node] : knowledge_hierarchy_) {
+            for (const auto& entry : knowledge_hierarchy_) {
+                const std::string& concept_name = entry.first;
+                const auto& node = entry.second;
+                (void)concept_name; // Suppress unused variable warning, though concept_name could be used for logging/debugging
                 total_concepts++;
                 if (node.confidence > 0.6) {
                     stable_concepts++;
@@ -2003,7 +2007,10 @@ namespace brain
         void reinforce_important_memories_impl()
         {
             // Increase confidence and access count for high-importance concepts
-            for (auto& [concept, node] : knowledge_hierarchy_) {
+            for (auto& entry : knowledge_hierarchy_) {
+                const std::string& concept_name = entry.first;
+                auto& node = entry.second;
+                (void)concept_name; // Suppress unused variable warning, though concept_name could be used for logging/debugging
                 if (node.confidence < 0.3) {
                     // If confidence is very low, it might be due for reinforcement
                     // or could be a candidate for forgetting

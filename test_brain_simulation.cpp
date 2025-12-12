@@ -36,6 +36,7 @@ void test_tensor_operations() {
     // Test argmax
     Tensor values = {0.1, 0.8, 0.3, 0.6};
     int max_idx = argmax(values);
+    (void)max_idx; // Suppress unused variable warning
     assert(max_idx == 1);
     std::cout << "  argmax: PASSED\n";
     
@@ -214,6 +215,7 @@ void test_learning_curve_optimization() {
         // Test error correction after a few steps
         if (i == 25) {
             auto metrics = brain.calculate_learning_metrics();
+            (void)metrics; // Suppress unused variable warning
             assert(metrics.performance >= 0.0);
             assert(metrics.retention >= 0.0 && metrics.retention <= 1.0);
             std::cout << "  learning metrics calculation: PASSED\n";

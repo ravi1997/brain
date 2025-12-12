@@ -228,8 +228,8 @@ int main()
             if (knowledge_list.empty()) {
                 std::cout << "  No concepts stored yet.\n";
             } else {
-                for (const auto& concept : knowledge_list) {
-                    std::cout << "  - " << concept << std::endl;
+                for (const auto& concept_entry : knowledge_list) {
+                    std::cout << "  - " << concept_entry << std::endl;
                 }
             }
             continue;
