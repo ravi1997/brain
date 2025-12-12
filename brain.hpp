@@ -91,6 +91,7 @@ namespace brain
         Tensor observation;
         Tensor context_before;
         Tensor context_after;
+        Tensor next_obs;  // Added to match Experience struct
         Tensor action_taken;
         double reward{0.0};
         double expected_reward{0.0};
@@ -1186,10 +1187,10 @@ namespace brain
             std::string lower_input = to_lower(input_text);
 
             // Check for direct contradictions (not X when X exists, is not X, etc.)
-            for (const auto& [concept, node] : knowledge_hierarchy_) {
-                if (lower_input.find("not " + concept) != std::string::npos ||
-                    lower_input.find("is not " + concept) != std::string::npos ||
-                    lower_input.find("no " + concept) != std::string::npos) {
+            for (const auto& [conceptvalue, node] : knowledge_hierarchy_) {
+                if (lower_input.find("not " + conceptvalue) != std::string::npos ||
+                    lower_input.find("is not " + conceptvalue) != std::string::npos ||
+                    lower_input.find("no " + conceptvalue) != std::string::npos) {
                     return true;
                 }
 
@@ -1245,15 +1246,17 @@ namespace brain
             std::string lower_query = to_lower(query);
 
             // Direct match search
-            for (const auto& [concept, node] : knowledge_hierarchy_) {
-                if (lower_query.find(to_lower(concept)) != std::string::npos) {
-                    results.push_back(node.concept + " (confidence: " + std::to_string(node.confidence) + ")");
+            for (const auto &[conceptvalue, node] : knowledge_hierarchy_)
+            {
+                if (lower_query.find(to_lower(conceptvalue)) != std::string::npos)
+                {
+                    results.push_back(node.concept_name + " (confidence: " + std::to_string(node.confidence) + ")");
                 }
                 // Also check if any related concepts match
                 else {
                     for (const auto& related : node.related_concepts) {
                         if (lower_query.find(to_lower(related)) != std::string::npos) {
-                            results.push_back(node.concept + " -> " + related + " (confidence: " + std::to_string(node.confidence) + ")");
+                            results.push_back(node.concept_name + " -> " + related + " (confidence: " + std::to_string(node.confidence) + ")");
                             break; // Don't add the same concept multiple times
                         }
                     }
@@ -1264,11 +1267,12 @@ namespace brain
             if (results.empty()) {
                 Tensor query_tensor = encode_text(query);
 
-                for (const auto& [concept, node] : knowledge_hierarchy_) {
+                for (const auto &[conceptvalue, node] : knowledge_hierarchy_)
+                {
                     double similarity = calculate_similarity(query_tensor, node.representation);
 
                     if (similarity > 0.3) { // Threshold for semantic similarity
-                        results.push_back(node.concept + " (similarity: " + std::to_string(similarity) + ", confidence: " + std::to_string(node.confidence) + ")");
+                        results.push_back(node.concept_name + " (similarity: " + std::to_string(similarity) + ", confidence: " + std::to_string(node.confidence) + ")");
                     }
                 }
 
@@ -1306,8 +1310,9 @@ namespace brain
         {
             std::string conflict_details = "Conflict detected and resolved";
 
-            for (const auto& concept : concepts) {
-                auto it = knowledge_hierarchy_.find(concept);
+            for (const auto &conceptvalue : concepts)
+            {
+                auto it = knowledge_hierarchy_.find(conceptvalue);
                 if (it != knowledge_hierarchy_.end()) {
                     // Check if we're adding more specific information to an existing concept
                     std::string lower_input = to_lower(input_text);
@@ -1318,9 +1323,10 @@ namespace brain
                         std::string subject = lower_input.substr(0, pos);
                         std::string description = lower_input.substr(pos + 4);
 
-                        if (to_lower(concept) == subject) {
+                        if (to_lower(conceptvalue) == subject)
+                        {
                             // We're adding more detail to an existing concept
-                            conflict_details += ": Enhanced '" + concept + "' with new description";
+                            conflict_details += ": Enhanced '" + conceptvalue + "' with new description";
 
                             // Update the concept representation to include new information
                             Tensor new_rep = encode_text(input_text);
@@ -1358,7 +1364,7 @@ namespace brain
                         }
                     }
 
-                    conflict_details += ": " + concept + " vs. " + input_text;
+                    conflict_details += ": " + conceptvalue + " vs. " + input_text;
                 }
             }
 
@@ -1369,6 +1375,33 @@ namespace brain
         LearningPhase get_current_phase() const { return current_phase_; }
 
         void set_seed(std::uint64_t seed) { rng_.seed(seed); }
+
+        // Real-time learning curve optimization metrics
+        struct LearningCurveMetrics {
+            double performance{0.0};
+            double learning_rate{0.0};
+            double retention{0.0};
+            double forgetting_factor{0.0};
+            double optimal_batch_size{8.0};
+            double difficulty{1.0};
+        };
+
+        // Public methods for testing learning optimization functionality
+        LearningCurveMetrics calculate_learning_metrics() const {
+            return const_cast<AdvancedBrainSimulation*>(this)->calculate_learning_metrics_impl();
+        }
+
+        void optimize_learning_curve() {
+            const_cast<AdvancedBrainSimulation*>(this)->optimize_learning_curve_impl();
+        }
+
+        void selective_forgetting() {
+            const_cast<AdvancedBrainSimulation*>(this)->selective_forgetting_impl();
+        }
+
+        void reinforce_important_memories() {
+            const_cast<AdvancedBrainSimulation*>(this)->reinforce_important_memories_impl();
+        }
 
     private:
         std::size_t sensory_size_;
@@ -1493,211 +1526,9 @@ namespace brain
             return 1.0 / (1.0 + avg_error);
         }
 
-        // Real-time learning curve optimization
-        struct LearningCurveMetrics {
-            double performance{0.0};
-            double learning_rate{0.0};
-            double retention{0.0};
-            double forgetting_factor{0.0};
-            double optimal_batch_size{8.0};
-            double difficulty{1.0};
-        };
 
-        LearningCurveMetrics calculate_learning_metrics() const
-        {
-            LearningCurveMetrics metrics;
 
-            // Calculate performance based on recent experiences
-            double total_performance = 0.0;
-            int valid_count = 0;
 
-            for (const auto& exp : enhanced_experiences_) {
-                if (exp.reward != 0.0) { // Only count experiences with rewards
-                    total_performance += exp.reward;
-                    valid_count++;
-                }
-            }
-
-            metrics.performance = (valid_count > 0) ? total_performance / valid_count : 0.0;
-
-            // Calculate learning rate based on improvement over time
-            if (enhanced_experiences_.size() > 20) {
-                double early_performance = 0.0;
-                double late_performance = 0.0;
-                int early_count = 0, late_count = 0;
-
-                for (size_t i = 0; i < enhanced_experiences_.size(); ++i) {
-                    if (i < enhanced_experiences_.size() / 2) {
-                        if (enhanced_experiences_[i].reward != 0.0) {
-                            early_performance += enhanced_experiences_[i].reward;
-                            early_count++;
-                        }
-                    } else {
-                        if (enhanced_experiences_[i].reward != 0.0) {
-                            late_performance += enhanced_experiences_[i].reward;
-                            late_count++;
-                        }
-                    }
-                }
-
-                double early_avg = (early_count > 0) ? early_performance / early_count : 0.0;
-                double late_avg = (late_count > 0) ? late_performance / late_count : 0.0;
-
-                metrics.learning_rate = (late_avg - early_avg) / (early_avg > 1e-6 ? early_avg : 1.0);
-            }
-
-            // Calculate retention based on knowledge hierarchy stability
-            int stable_concepts = 0;
-            int total_concepts = 0;
-
-            for (const auto& [concept, node] : knowledge_hierarchy_) {
-                total_concepts++;
-                if (node.confidence > 0.6) {
-                    stable_concepts++;
-                }
-            }
-
-            metrics.retention = (total_concepts > 0) ? static_cast<double>(stable_concepts) / total_concepts : 1.0;
-
-            // Estimate forgetting factor based on knowledge decay
-            metrics.forgetting_factor = 1.0 - metrics.retention;
-
-            // Estimate optimal batch size based on current performance
-            if (metrics.performance > 0.7) {
-                metrics.optimal_batch_size = 16.0; // Larger batches when performing well
-            } else if (metrics.performance > 0.4) {
-                metrics.optimal_batch_size = 8.0;  // Medium batches
-            } else {
-                metrics.optimal_batch_size = 4.0;  // Smaller batches for more frequent updates
-            }
-
-            // Estimate difficulty of current concepts
-            if (prediction_errors_.size() > 10) {
-                double error_variance = 0.0;
-                double mean_error = 0.0;
-
-                for (double err : prediction_errors_) {
-                    mean_error += err;
-                }
-                mean_error /= prediction_errors_.size();
-
-                for (double err : prediction_errors_) {
-                    error_variance += (err - mean_error) * (err - mean_error);
-                }
-                error_variance /= prediction_errors_.size();
-
-                metrics.difficulty = 1.0 + error_variance; // Higher variance = more difficult concepts
-            }
-
-            return metrics;
-        }
-
-        // Adjust learning parameters in real-time based on curve optimization
-        void optimize_learning_curve()
-        {
-            LearningCurveMetrics metrics = calculate_learning_metrics();
-
-            // Adjust neural network learning rate based on performance
-            double base_lr = 0.01;
-            double adjusted_lr = base_lr;
-
-            if (metrics.learning_rate < -0.1) {  // Performance is degrading
-                adjusted_lr *= 0.5;  // Reduce learning rate to stabilize
-            } else if (metrics.learning_rate > 0.2) {  // Rapid improvement
-                adjusted_lr *= 1.5;  // Increase learning rate to capitalize
-            }
-
-            // The neural network doesn't have direct access to learning rate here,
-            // but in a real implementation, we'd pass this to the training method
-
-            // Adjust consolidation frequency based on retention
-            if (metrics.retention < 0.5) {
-                consolidation_frequency_ = 50;  // Consolidate more frequently
-            } else if (metrics.retention > 0.8) {
-                consolidation_frequency_ = 150; // Consolidate less frequently
-            }
-
-            // Adjust phase transition thresholds based on performance
-            if (metrics.performance < 0.3) {
-                // Be more exploratory when performing poorly
-                phase_transition_threshold_ = 0.5;  // Lower threshold for phase changes
-            } else if (metrics.performance > 0.8) {
-                // Be more stable when performing well
-                phase_transition_threshold_ = 0.8;  // Higher threshold for phase changes
-            }
-        }
-
-        // Implement selective forgetting based on importance and recency
-        void selective_forgetting()
-        {
-            auto now = std::chrono::steady_clock::now();
-
-            // Prune knowledge nodes based on multiple factors
-            for (auto it = knowledge_hierarchy_.begin(); it != knowledge_hierarchy_.end();) {
-                const auto& node = it->second;
-
-                // Calculate a forgetting score based on multiple factors
-                double forgetting_score = 0.0;
-
-                // Factor 1: Low confidence
-                forgetting_score += (1.0 - node.confidence) * 0.4;
-
-                // Factor 2: Low access frequency (how often it's been accessed relative to age)
-                auto age = std::chrono::duration_cast<std::chrono::hours>(now - node.creation_time).count();
-                if (age > 0) {
-                    double access_rate = static_cast<double>(node.access_count) / (age + 1.0);
-                    // Lower access rate increases forgetting score
-                    forgetting_score += std::max(0.0, (1.0 - access_rate)) * 0.3;
-                }
-
-                // Factor 3: Recency (how long since last access)
-                auto time_since_access = std::chrono::duration_cast<std::chrono::hours>(now - node.last_accessed).count();
-                // More recent access = lower forgetting score
-                forgetting_score += std::min(1.0, time_since_access / 168.0) * 0.3; // 168 hours = 1 week
-
-                // Apply forgetting threshold
-                if (forgetting_score > 0.7) {  // High forgetting score means forget this concept
-                    it = knowledge_hierarchy_.erase(it);
-                } else {
-                    ++it;
-                }
-            }
-
-            // Also apply forgetting to experiences
-            if (enhanced_experiences_.size() > 512) {  // Only if we have enough experiences
-                // Sort experiences by importance and keep only the most important ones
-                std::sort(enhanced_experiences_.begin(), enhanced_experiences_.end(),
-                         [](const EnhancedExperience& a, const EnhancedExperience& b) {
-                             return a.importance > b.importance;
-                         });
-
-                // Keep only the top 50% of experiences by importance
-                size_t retain_count = enhanced_experiences_.size() / 2;
-                enhanced_experiences_.erase(enhanced_experiences_.begin() + retain_count, enhanced_experiences_.end());
-            }
-        }
-
-        // Reinforce important memories
-        void reinforce_important_memories()
-        {
-            // Increase confidence and access count for high-importance concepts
-            for (auto& [concept, node] : knowledge_hierarchy_) {
-                if (node.confidence < 0.3) {
-                    // If confidence is very low, it might be due for reinforcement
-                    // or could be a candidate for forgetting
-                    if (node.access_count < 3) {
-                        // Very low confidence and rarely accessed - reduce importance
-                        node.confidence *= 0.9;
-                    } else {
-                        // Low confidence but accessed multiple times - reinforce
-                        node.confidence = std::min(1.0, node.confidence + 0.05);
-                    }
-                } else if (node.confidence > 0.8) {
-                    // High confidence concept - maintain or slightly increase
-                    node.confidence = std::min(1.0, node.confidence + 0.01);
-                }
-            }
-        }
 
         // Helper function to encode text to tensor
         Tensor encode_text(const std::string& text) const
@@ -1756,7 +1587,7 @@ namespace brain
         }
 
         // Extract concepts from text
-        std::vector<std::string> extract_concepts(const std::string& input_text)
+        std::vector<std::string> extract_concepts(const std::string& input_text) const
         {
             std::vector<std::string> concepts;
             std::string lower_input = to_lower(input_text);
@@ -1783,11 +1614,9 @@ namespace brain
             }
 
             // Filter and process concepts
-            for (const auto& concept : potential_concepts) {
-                bool is_existing = knowledge_hierarchy_.find(concept) != knowledge_hierarchy_.end();
-                if (!is_existing) {
-                    concepts.push_back(concept);
-                }
+            for (const auto &conceptvalue : potential_concepts)
+            {
+                concepts.push_back(conceptvalue);
             }
 
             return concepts;
@@ -1803,7 +1632,8 @@ namespace brain
             double min_similarity = 1.0;
 
             // Find most similar existing knowledge
-            for (const auto& [concept, node] : knowledge_hierarchy_) {
+            for (const auto &[conceptvalue, node] : knowledge_hierarchy_)
+            {
                 double sim = calculate_similarity(tensor, node.representation);
                 min_similarity = std::min(min_similarity, 1.0 - sim);
             }
@@ -1814,35 +1644,13 @@ namespace brain
         // Check for conflicts with existing knowledge
         bool detect_conflict(const std::string& input_text, const std::vector<std::string>& concepts)
         {
-            for (const auto& concept : concepts) {
+            for (const auto &conceptvalue : concepts)
+            {
                 if (has_conflict(input_text)) {
                     return true;
                 }
             }
             return false;
-        }
-
-        // Resolve conflicts with existing knowledge
-        std::string resolve_conflict(const std::string& input_text, const std::vector<std::string>& concepts)
-        {
-            std::string conflict_details = "Conflict detected with existing knowledge";
-
-            for (const auto& concept : concepts) {
-                auto it = knowledge_hierarchy_.find(concept);
-                if (it != knowledge_hierarchy_.end()) {
-                    // For now, we'll just update the node with new information
-                    // In a more sophisticated system, this would involve more complex reasoning
-                    conflict_details += ": " + concept + " vs. " + input_text;
-
-                    // Update the node's representation to include the new information
-                    it->second.representation = encode_text(input_text);
-                    it->second.confidence = std::min(1.0, it->second.confidence + 0.1); // Increase confidence
-                    it->second.access_count++;
-                    it->second.last_accessed = std::chrono::steady_clock::now();
-                }
-            }
-
-            return conflict_details;
         }
 
         // Update learning phase based on multiple factors
@@ -1962,8 +1770,9 @@ namespace brain
         // Update knowledge hierarchy based on experience
         void update_knowledge_hierarchy(const InputProcessingInfo& info, double reward)
         {
-            for (const auto& concept : info.extracted_concepts) {
-                auto it = knowledge_hierarchy_.find(concept);
+            for (const auto &conceptvalue : info.extracted_concepts)
+            {
+                auto it = knowledge_hierarchy_.find(conceptvalue);
                 if (it != knowledge_hierarchy_.end()) {
                     // Update existing concept
                     it->second.access_count++;
@@ -1978,11 +1787,11 @@ namespace brain
                 } else {
                     // Add new concept
                     KnowledgeNode node;
-                    node.concept = concept;
-                    node.representation = encode_text(concept);
+                    node.concept_name = conceptvalue;
+                    node.representation = encode_text(conceptvalue);
                     node.confidence = (reward > 0) ? 0.5 + 0.3 * reward : 0.3;
                     node.access_count = 1;
-                    knowledge_hierarchy_[concept] = node;
+                    knowledge_hierarchy_[conceptvalue] = node;
                 }
             }
         }
@@ -1991,7 +1800,8 @@ namespace brain
         void consolidate_memory()
         {
             // Reinforce frequently accessed and high-confidence knowledge
-            for (auto& [concept, node] : knowledge_hierarchy_) {
+            for (auto &[conceptvalue, node] : knowledge_hierarchy_)
+            {
                 // Boost confidence slightly for frequently accessed concepts
                 if (node.access_count > 5) {
                     node.confidence = std::min(1.0, node.confidence + 0.01);
@@ -2014,6 +1824,201 @@ namespace brain
                 sum += val;
             }
             return sum / static_cast<double>(context.size());
+        }
+
+    private:
+        // Private helper methods with implementations
+        LearningCurveMetrics calculate_learning_metrics_impl() const
+        {
+            LearningCurveMetrics metrics;
+
+            // Calculate performance based on recent experiences
+            double total_performance = 0.0;
+            int valid_count = 0;
+
+            for (const auto& exp : enhanced_experiences_) {
+                if (exp.reward != 0.0) { // Only count experiences with rewards
+                    total_performance += exp.reward;
+                    valid_count++;
+                }
+            }
+
+            metrics.performance = (valid_count > 0) ? total_performance / valid_count : 0.0;
+
+            // Calculate learning rate based on improvement over time
+            if (enhanced_experiences_.size() > 20) {
+                double early_performance = 0.0;
+                double late_performance = 0.0;
+                int early_count = 0, late_count = 0;
+
+                for (size_t i = 0; i < enhanced_experiences_.size(); ++i) {
+                    if (i < enhanced_experiences_.size() / 2) {
+                        if (enhanced_experiences_[i].reward != 0.0) {
+                            early_performance += enhanced_experiences_[i].reward;
+                            early_count++;
+                        }
+                    } else {
+                        if (enhanced_experiences_[i].reward != 0.0) {
+                            late_performance += enhanced_experiences_[i].reward;
+                            late_count++;
+                        }
+                    }
+                }
+
+                double early_avg = (early_count > 0) ? early_performance / early_count : 0.0;
+                double late_avg = (late_count > 0) ? late_performance / late_count : 0.0;
+
+                metrics.learning_rate = (late_avg - early_avg) / (early_avg > 1e-6 ? early_avg : 1.0);
+            }
+
+            // Calculate retention based on knowledge hierarchy stability
+            int stable_concepts = 0;
+            int total_concepts = 0;
+
+            for (const auto& [concept, node] : knowledge_hierarchy_) {
+                total_concepts++;
+                if (node.confidence > 0.6) {
+                    stable_concepts++;
+                }
+            }
+
+            metrics.retention = (total_concepts > 0) ? static_cast<double>(stable_concepts) / total_concepts : 1.0;
+
+            // Estimate forgetting factor based on knowledge decay
+            metrics.forgetting_factor = 1.0 - metrics.retention;
+
+            // Estimate optimal batch size based on current performance
+            if (metrics.performance > 0.7) {
+                metrics.optimal_batch_size = 16.0; // Larger batches when performing well
+            } else if (metrics.performance > 0.4) {
+                metrics.optimal_batch_size = 8.0;  // Medium batches
+            } else {
+                metrics.optimal_batch_size = 4.0;  // Smaller batches for more frequent updates
+            }
+
+            // Estimate difficulty of current concepts
+            if (prediction_errors_.size() > 10) {
+                double error_variance = 0.0;
+                double mean_error = 0.0;
+
+                for (double err : prediction_errors_) {
+                    mean_error += err;
+                }
+                mean_error /= prediction_errors_.size();
+
+                for (double err : prediction_errors_) {
+                    error_variance += (err - mean_error) * (err - mean_error);
+                }
+                error_variance /= prediction_errors_.size();
+
+                metrics.difficulty = 1.0 + error_variance; // Higher variance = more difficult concepts
+            }
+
+            return metrics;
+        }
+
+        void optimize_learning_curve_impl()
+        {
+            LearningCurveMetrics metrics = calculate_learning_metrics_impl();
+
+            // Adjust neural network learning rate based on performance
+            double base_lr = 0.01;
+            double adjusted_lr = base_lr;
+
+            if (metrics.learning_rate < -0.1) {  // Performance is degrading
+                adjusted_lr *= 0.5;  // Reduce learning rate to stabilize
+            } else if (metrics.learning_rate > 0.2) {  // Rapid improvement
+                adjusted_lr *= 1.5;  // Increase learning rate to capitalize
+            }
+
+            // The neural network doesn't have direct access to learning rate here,
+            // but in a real implementation, we'd pass this to the training method
+
+            // Adjust consolidation frequency based on retention
+            if (metrics.retention < 0.5) {
+                consolidation_frequency_ = 50;  // Consolidate more frequently
+            } else if (metrics.retention > 0.8) {
+                consolidation_frequency_ = 150; // Consolidate less frequently
+            }
+
+            // Adjust phase transition thresholds based on performance
+            if (metrics.performance < 0.3) {
+                // Be more exploratory when performing poorly
+                phase_transition_threshold_ = 0.5;  // Lower threshold for phase changes
+            } else if (metrics.performance > 0.8) {
+                // Be more stable when performing well
+                phase_transition_threshold_ = 0.8;  // Higher threshold for phase changes
+            }
+        }
+
+        void selective_forgetting_impl()
+        {
+            auto now = std::chrono::steady_clock::now();
+
+            // Prune knowledge nodes based on multiple factors
+            for (auto it = knowledge_hierarchy_.begin(); it != knowledge_hierarchy_.end();) {
+                const auto& node = it->second;
+
+                // Calculate a forgetting score based on multiple factors
+                double forgetting_score = 0.0;
+
+                // Factor 1: Low confidence
+                forgetting_score += (1.0 - node.confidence) * 0.4;
+
+                // Factor 2: Low access frequency (how often it's been accessed relative to age)
+                auto age = std::chrono::duration_cast<std::chrono::hours>(now - node.creation_time).count();
+                if (age > 0) {
+                    double access_rate = static_cast<double>(node.access_count) / (age + 1.0);
+                    // Lower access rate increases forgetting score
+                    forgetting_score += std::max(0.0, (1.0 - access_rate)) * 0.3;
+                }
+
+                // Factor 3: Recency (how long since last access)
+                auto time_since_access = std::chrono::duration_cast<std::chrono::hours>(now - node.last_accessed).count();
+                // More recent access = lower forgetting score
+                forgetting_score += std::min(1.0, time_since_access / 168.0) * 0.3; // 168 hours = 1 week
+
+                // Apply forgetting threshold
+                if (forgetting_score > 0.7) {  // High forgetting score means forget this concept
+                    it = knowledge_hierarchy_.erase(it);
+                } else {
+                    ++it;
+                }
+            }
+
+            // Also apply forgetting to experiences
+            if (enhanced_experiences_.size() > 512) {  // Only if we have enough experiences
+                // Sort experiences by importance and keep only the most important ones
+                std::sort(enhanced_experiences_.begin(), enhanced_experiences_.end(),
+                         [](const EnhancedExperience& a, const EnhancedExperience& b) {
+                             return a.importance > b.importance;
+                         });
+
+                // Keep only the top 50% of experiences by importance
+                size_t retain_count = enhanced_experiences_.size() / 2;
+                enhanced_experiences_.erase(enhanced_experiences_.begin() + retain_count, enhanced_experiences_.end());
+            }
+        }
+
+        void reinforce_important_memories_impl()
+        {
+            // Increase confidence and access count for high-importance concepts
+            for (auto& [concept, node] : knowledge_hierarchy_) {
+                if (node.confidence < 0.3) {
+                    // If confidence is very low, it might be due for reinforcement
+                    // or could be a candidate for forgetting
+                    if (node.access_count < 3) {
+                        // Very low confidence and rarely accessed - reduce importance
+                        node.confidence *= 0.9;
+                    } else {
+                        // Low confidence but accessed multiple times - reinforce
+                        node.confidence = std::min(1.0, node.confidence + 0.05);
+                    }
+                } else if (node.confidence > 0.8) {
+                    // High confidence concept - maintain or slightly increase
+                    node.confidence = std::min(1.0, node.confidence + 0.01);
+                }
+            }
         }
     };
 
