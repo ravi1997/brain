@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <chrono>
+#include <sstream>
 
 #include "brain.hpp"
 
@@ -134,105 +135,171 @@ namespace
         }
         return out;
     }
+
+    // Enhanced function for parsing input and understanding context
+    std::vector<std::string> extract_key_concepts(const std::string& input)
+    {
+        std::vector<std::string> concepts;
+        std::string lower_input = to_lower(input);
+
+        // Tokenize simple concepts
+        std::istringstream iss(lower_input);
+        std::string token;
+        while (iss >> token) {
+            // Remove punctuation and filter by length
+            std::string clean_token;
+            for (char c : token) {
+                if (std::isalnum(c)) {
+                    clean_token += c;
+                }
+            }
+            if (clean_token.length() >= 3 && clean_token.length() <= 20) {
+                concepts.push_back(clean_token);
+            }
+        }
+
+        return concepts;
+    }
 }
 
 int main()
 {
     using namespace brain;
-    constexpr std::size_t sensory_width = 64;
-    CognitiveBrain brain(/*sensory*/ sensory_width, /*actions*/ 4, /*context*/ 128);
-    brain.set_experience_limit(1024);
-    brain.set_seed(42);
+    constexpr std::size_t sensory_width = 128;  // Increased for better representation
+    constexpr std::size_t action_count = 8;     // More complex actions
 
-    struct MemoryEntry
-    {
-        std::string text;
-        brain::Tensor embed;
-        std::chrono::steady_clock::time_point t;
-    };
-    std::vector<MemoryEntry> memory;
-    std::vector<brain::Tensor> memory_embeds;
-    std::vector<std::string> memory_texts;
+    // Create the advanced brain simulation
+    AdvancedBrainSimulation advanced_brain(sensory_width, action_count, 256);
+    advanced_brain.set_seed(42);
 
-    std::cout << "Brain ready. Type to teach or ask (end with '?' to ask). Type 'stop' to exit.\n";
+    std::cout << "+--------------------------------------------------------+\n";
+    std::cout << "|      ADVANCED BRAIN SIMULATION SYSTEM v2.0              |\n";
+    std::cout << "|  Mimicking Human Neural Learning Patterns                |\n";
+    std::cout << "|  Adaptive Neural Networks with Dynamic Input Processing  |\n";
+    std::cout << "+--------------------------------------------------------+\n";
+    std::cout << "\n";
+    std::cout << "System ready. Available commands:\n";
+    std::cout << "  - Type statements to learn (e.g., 'mango is a fruit')\n";
+    std::cout << "  - Type questions to retrieve knowledge (e.g., 'what is mango?')\n";
+    std::cout << "  - Type 'test' to enter testing phase\n";
+    std::cout << "  - Type 'status' to check current learning phase\n";
+    std::cout << "  - Type 'knowledge' to see stored concepts\n";
+    std::cout << "  - Type 'quit' to exit\n\n";
+
     std::string line;
     int step = 0;
-    while (std::getline(std::cin, line))
+
+    while (true)
     {
-        if (line == "stop" || line == "quit" || line == "exit")
+        std::cout << "> ";
+        std::getline(std::cin, line);
+
+        if (line == "quit" || line == "exit" || line == "stop")
         {
+            std::cout << "Shutting down the brain simulation...\n";
             break;
         }
 
-        const bool is_question = line.find('?') != std::string::npos;
-        Tensor obs = encode_text(line, sensory_width);
-        double reward = is_question ? 0.0 : 1.0;
-
-        Decision d = brain.decide(obs, reward, /*temperature*/ is_question ? 0.6 : 1.0, /*greedy*/ is_question);
-
-        std::string answer;
-        if (is_question && !memory.empty())
+        if (line == "status")
         {
-            Tensor query = encode_text(line, sensory_width);
-            auto idx = topk_matches(query, memory_embeds, 3, 0.05);
-            answer = synthesize_answer(line, memory_texts, idx);
-        }
-        if (answer.empty() && is_question)
-        {
-            answer = "[thinking] action=" + std::to_string(d.action);
-        }
-
-        if (!is_question)
-        {
-            memory.push_back(MemoryEntry{line, obs, std::chrono::steady_clock::now()});
-            memory_embeds.push_back(obs);
-            memory_texts.push_back(line);
-        }
-
-        brain.record_transition(obs);
-
-        if ((step + 1) % 4 == 0)
-        {
-            brain.learn_from_experience(/*epochs*/ 1, /*batch*/ 8, /*lr_value*/ 0.01, /*lr_world*/ 0.005);
-        }
-
-        if (!is_question)
-            answer = line;
-
-        const auto now = std::chrono::steady_clock::now();
-        if ((step % 6 == 0) && !memory.empty())
-        {
-            // Simple rehearsal: resurface older memories
-            for (std::size_t i = 0; i < memory.size(); ++i)
+            std::cout << "Current learning phase: ";
+            switch (advanced_brain.get_current_phase())
             {
-                auto age = std::chrono::duration_cast<std::chrono::seconds>(now - memory[i].t).count();
-                if (age > 30)
-                {
-                    memory[i].t = now;
-                    memory_embeds[i] = memory[i].embed;
+                case LearningPhase::ACQUISITION:
+                    std::cout << "ACQUISITION (Learning new information)\n";
+                    break;
+                case LearningPhase::CONSOLIDATION:
+                    std::cout << "CONSOLIDATION (Strengthening memories)\n";
+                    break;
+                case LearningPhase::RETRIEVAL:
+                    std::cout << "RETRIEVAL (Accessing stored knowledge)\n";
+                    break;
+                case LearningPhase::TESTING:
+                    std::cout << "TESTING (Evaluating learned knowledge)\n";
+                    break;
+            }
+            continue;
+        }
+
+        if (line == "knowledge")
+        {
+            std::cout << "Stored concepts in the knowledge hierarchy:\n";
+            auto knowledge_list = advanced_brain.query_knowledge("");  // Get all knowledge
+            if (knowledge_list.empty()) {
+                std::cout << "  No concepts stored yet.\n";
+            } else {
+                for (const auto& concept : knowledge_list) {
+                    std::cout << "  - " << concept << std::endl;
                 }
             }
+            continue;
         }
 
-        if (memory.size() > 2048)
+        // Process the input through the advanced brain simulation
+        bool is_question = line.find('?') != std::string::npos;
+        double reward = is_question ? 0.1 : 1.0;  // Lower reward for questions (retrieval), higher for learning
+        if (line == "test") {
+            reward = 0.5;  // Moderate reward for testing
+        }
+
+        Decision decision = advanced_brain.make_decision(line, reward);
+
+        std::string response = "Processed: " + line;
+
+        // Generate intelligent responses based on learning phase
+        LearningPhase current_phase = advanced_brain.get_current_phase();
+        switch (current_phase)
         {
-            memory.erase(memory.begin(), memory.begin() + 512);
-            memory_embeds.erase(memory_embeds.begin(), memory_embeds.begin() + 512);
-            if (memory_texts.size() > 512)
-                memory_texts.erase(memory_texts.begin(), memory_texts.begin() + 512);
+            case LearningPhase::ACQUISITION:
+                response = "Learning new concept: '" + line + "'";
+                break;
+            case LearningPhase::CONSOLIDATION:
+                response = "Consolidating knowledge related to: '" + line + "'";
+                break;
+            case LearningPhase::RETRIEVAL:
+                response = "Retrieved information: '" + line + "'";
+                break;
+            case LearningPhase::TESTING:
+                response = "Testing knowledge application: '" + line + "'";
+                break;
         }
 
-        if (is_question && answer.empty() && !memory_texts.empty())
+        std::cout << "Response: " << response
+                  << " | Phase: ";
+        switch (current_phase)
         {
-            auto unique = unique_phrases(memory_texts);
-            if (!unique.empty())
-            {
-                answer = synthesize_answer(line, unique, std::vector<std::size_t>{0});
-            }
+            case LearningPhase::ACQUISITION: std::cout << "Learn"; break;
+            case LearningPhase::CONSOLIDATION: std::cout << "Consolidate"; break;
+            case LearningPhase::RETRIEVAL: std::cout << "Retrieve"; break;
+            case LearningPhase::TESTING: std::cout << "Test"; break;
+        }
+        std::cout << " | Action: " << decision.action
+                  << " | Value: " << decision.value << std::endl;
+
+        // Demonstrate hierarchical knowledge building
+        if (step == 0) {
+            std::cout << "\nExample: Adding initial knowledge to hierarchy...\n";
+            advanced_brain.add_knowledge("fruit", {"edible", "sweet"}, 0.9);
+            advanced_brain.add_knowledge("mango", {"fruit", "tropical"}, 0.8);
+            advanced_brain.add_knowledge("apple", {"fruit", "red"}, 0.7);
         }
 
-        std::cout << (is_question ? "Answer: " : "Learned: ") << answer
-                  << " | value " << d.value << " | action " << d.action << '\n';
-        ++step;
+        // Demonstrate conflict resolution
+        if (step == 5) {
+            std::cout << "\nDemonstrating conflict resolution: Teaching 'mango is a sweet fruit' after 'mango is a fruit'...\n";
+            advanced_brain.make_decision("mango is a sweet fruit", 1.0);
+        }
+
+        step++;
+    }
+
+    std::cout << "\nAdvanced Brain Simulation terminated.\n";
+    std::cout << "Final learning phase: ";
+    switch (advanced_brain.get_current_phase())
+    {
+        case LearningPhase::ACQUISITION: std::cout << "ACQUISITION\n"; break;
+        case LearningPhase::CONSOLIDATION: std::cout << "CONSOLIDATION\n"; break;
+        case LearningPhase::RETRIEVAL: std::cout << "RETRIEVAL\n"; break;
+        case LearningPhase::TESTING: std::cout << "TESTING\n"; break;
     }
 }

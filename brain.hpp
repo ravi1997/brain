@@ -28,7 +28,7 @@ namespace brain
     // Knowledge hierarchy structure for progressive learning
     struct KnowledgeNode
     {
-        std::string concept;
+        std::string concept_name;
         Tensor representation;
         std::vector<std::string> related_concepts;
         double confidence{1.0};  // How confident we are in this knowledge
@@ -749,6 +749,1272 @@ namespace brain
         double last_reward_{0.0};
         std::vector<Experience> experiences_;
         std::size_t max_experiences_{512};
+    };
+
+    // Multi-layered cognitive processing modules
+    class SensoryProcessingModule : public BrainModule
+    {
+    public:
+        SensoryProcessingModule(std::string name,
+                               std::size_t input_size,
+                               std::size_t output_size,
+                               dnn::Activation activation = dnn::Activation::Relu)
+            : name_(std::move(name)),
+              input_size_(input_size),
+              output_size_(output_size),
+              net_({input_size, (input_size + output_size) / 2, output_size}, activation, dnn::Activation::Tanh)
+        {
+        }
+
+        BrainOutput step(const BrainIO &in, double /*dt*/) override
+        {
+            if (!in.sensory_input)
+                return {};
+
+            Tensor input = concat_inputs(in.sensory_input, in.context_input);
+            if (input.size() != input_size_)
+                fit_to_size(input, input_size_);
+
+            Tensor features = net_.predict(input);
+            return {features, features};
+        }
+
+        std::string name() const override { return name_; }
+        std::size_t param_count() const override { return param_count_from_layers({input_size_, (input_size_ + output_size_) / 2, output_size_}); }
+
+    private:
+        std::string name_;
+        std::size_t input_size_;
+        std::size_t output_size_;
+        dnn::NeuralNetwork net_;
+    };
+
+    class MemoryConsolidationModule : public BrainModule
+    {
+    public:
+        MemoryConsolidationModule(std::string name,
+                                 std::size_t input_size,
+                                 std::size_t context_size,
+                                 std::size_t hidden_size,
+                                 double leak_rate = 0.01)
+            : name_(std::move(name)),
+              hidden_size_(hidden_size),
+              leak_rate_(leak_rate),
+              net_({input_size + context_size, hidden_size, context_size}, dnn::Activation::Tanh, dnn::Activation::Tanh),
+              state_(context_size, 0.0)
+        {
+        }
+
+        BrainOutput step(const BrainIO &in, double dt) override
+        {
+            if (!in.sensory_input && !in.context_input)
+                return {};
+
+            Tensor input = concat_inputs(in.sensory_input, in.context_input);
+            fit_to_size(input, net_.input_size());
+
+            // Apply leak to state
+            if (leak_rate_ > 0.0) {
+                double decay = std::exp(-leak_rate_ * dt);
+                for (double &s : state_) {
+                    s *= decay;
+                }
+            }
+
+            Tensor output = net_.predict(input);
+
+            // Update state with new output
+            for (size_t i = 0; i < std::min(state_.size(), output.size()); ++i) {
+                state_[i] = output[i];
+            }
+
+            return {output, state_};
+        }
+
+        std::string name() const override { return name_; }
+        std::size_t param_count() const override { return param_count_from_layers({net_.input_size(), net_.output_size()}); }
+
+        const Tensor& get_state() const { return state_; }
+        void reset_state() { std::fill(state_.begin(), state_.end(), 0.0); }
+
+    private:
+        std::string name_;
+        std::size_t hidden_size_;
+        double leak_rate_;
+        dnn::NeuralNetwork net_;
+        Tensor state_;
+    };
+
+    class PatternRecognitionModule : public BrainModule
+    {
+    public:
+        PatternRecognitionModule(std::string name,
+                                std::size_t input_size,
+                                std::size_t pattern_size,
+                                std::size_t num_patterns)
+            : name_(std::move(name)),
+              input_size_(input_size),
+              pattern_size_(pattern_size),
+              num_patterns_(num_patterns),
+              pattern_net_({input_size, (input_size + pattern_size * num_patterns) / 2, pattern_size * num_patterns}, dnn::Activation::Relu, dnn::Activation::Tanh),
+              pattern_weights_(pattern_size * num_patterns, 0.0),
+              pattern_activations_(num_patterns, 0.0)
+        {
+        }
+
+        BrainOutput step(const BrainIO &in, double /*dt*/) override
+        {
+            if (!in.sensory_input && !in.context_input)
+                return {};
+
+            Tensor input = concat_inputs(in.sensory_input, in.context_input);
+            fit_to_size(input, input_size_);
+
+            // Get pattern representations from network
+            Tensor patterns = pattern_net_.predict(input);
+            fit_to_size(patterns, pattern_size_ * num_patterns_);
+
+            // Calculate similarity with stored patterns
+            std::fill(pattern_activations_.begin(), pattern_activations_.end(), 0.0);
+
+            for (size_t p = 0; p < num_patterns_; ++p) {
+                double sim = 0.0;
+                double norm1 = 1e-9, norm2 = 1e-9;
+
+                for (size_t i = 0; i < pattern_size_; ++i) {
+                    double val1 = patterns[p * pattern_size_ + i];
+                    double val2 = pattern_weights_[p * pattern_size_ + i];
+                    sim += val1 * val2;
+                    norm1 += val1 * val1;
+                    norm2 += val2 * val2;
+                }
+
+                pattern_activations_[p] = sim / std::sqrt(norm1 * norm2);
+            }
+
+            // Return top activation
+            int max_idx = argmax(pattern_activations_);
+            Tensor result(pattern_size_, 0.0);
+            for (size_t i = 0; i < pattern_size_; ++i) {
+                result[i] = patterns[max_idx * pattern_size_ + i];
+            }
+
+            return {result, pattern_activations_};
+        }
+
+        std::string name() const override { return name_; }
+        std::size_t param_count() const override { return param_count_from_layers({input_size_, (input_size_ + pattern_size_ * num_patterns_) / 2, pattern_size_ * num_patterns_}); }
+
+    private:
+        std::string name_;
+        std::size_t input_size_;
+        std::size_t pattern_size_;
+        std::size_t num_patterns_;
+        dnn::NeuralNetwork pattern_net_;
+        Tensor pattern_weights_;
+        Tensor pattern_activations_;
+    };
+
+    class KnowledgeAbstractionModule : public BrainModule
+    {
+    public:
+        KnowledgeAbstractionModule(std::string name,
+                                  std::size_t input_size,
+                                  std::size_t output_size,
+                                  std::size_t abstraction_levels = 3)
+            : name_(std::move(name)),
+              input_size_(input_size),
+              output_size_(output_size),
+              abstraction_levels_(abstraction_levels)
+        {
+            // Create hierarchical abstraction networks
+            for (size_t level = 0; level < abstraction_levels_; ++level) {
+                size_t layer_input = (level == 0) ? input_size_ : output_size_;
+                abstraction_nets_.emplace_back(
+                    std::vector<std::size_t>{layer_input, (layer_input + output_size_) / 2, output_size_},
+                    dnn::Activation::Relu,
+                    dnn::Activation::Tanh
+                );
+            }
+            abstraction_cache_.resize(abstraction_levels_);
+        }
+
+        BrainOutput step(const BrainIO &in, double /*dt*/) override
+        {
+            if (!in.sensory_input && !in.context_input)
+                return {};
+
+            Tensor input = concat_inputs(in.sensory_input, in.context_input);
+            fit_to_size(input, input_size_);
+
+            // Process through abstraction levels
+            Tensor current = input;
+
+            for (size_t level = 0; level < abstraction_levels_; ++level) {
+                if (level > 0) {
+                    fit_to_size(current, abstraction_nets_[level].input_size());
+                }
+
+                Tensor next = abstraction_nets_[level].predict(current);
+                fit_to_size(next, output_size_);
+                current = next;
+                abstraction_cache_[level] = current;
+            }
+
+            return {current, current};
+        }
+
+        std::string name() const override { return name_; }
+        std::size_t param_count() const override {
+            size_t total = 0;
+            for (const auto& net : abstraction_nets_) {
+                total += param_count_from_layers({net.input_size(), net.output_size()});
+            }
+            return total;
+        }
+
+    private:
+        std::string name_;
+        std::size_t input_size_;
+        std::size_t output_size_;
+        std::size_t abstraction_levels_;
+        std::vector<dnn::NeuralNetwork> abstraction_nets_;
+        std::vector<Tensor> abstraction_cache_;
+    };
+
+    // Advanced Brain Simulation System with sophisticated learning algorithms
+    class AdvancedBrainSimulation
+    {
+    public:
+        AdvancedBrainSimulation(std::size_t sensory_size,
+                               std::size_t action_count,
+                               std::size_t context_size = 128)
+            : sensory_size_(sensory_size),
+              action_count_(action_count),
+              context_size_(context_size),
+              current_phase_(LearningPhase::ACQUISITION),
+              phase_transition_threshold_(0.7),
+              novelty_threshold_(0.3),
+              memory_capacity_(4096),
+              consolidation_frequency_(100)
+        {
+            // Initialize components
+            engine_.set_context_size(context_size_);
+            engine_.set_dt(0.02);
+            engine_.set_settling_steps(3);
+            engine_.set_context_blend(0.7);
+            engine_.set_context_clip(4.0);
+
+            // Create sophisticated multi-layered cognitive modules
+            auto sensory_processor = std::make_unique<SensoryProcessingModule>(
+                "sensory_processor", sensory_size_ + context_size_, context_size_);
+
+            auto memory_consolidator = std::make_unique<MemoryConsolidationModule>(
+                "memory_consolidator", sensory_size_ + context_size_, context_size_, context_size_ * 2, 0.005);
+            memory_consolidator_ = memory_consolidator.get();
+
+            auto pattern_recognizer = std::make_unique<PatternRecognitionModule>(
+                "pattern_recognizer", context_size_ * 2, context_size_ / 2, 8);
+            pattern_recognizer_ = pattern_recognizer.get();
+
+            auto knowledge_abstractor = std::make_unique<KnowledgeAbstractionModule>(
+                "knowledge_abstractor", context_size_ * 2, context_size_, 3);
+            knowledge_abstractor_ = knowledge_abstractor.get();
+
+            auto world_model = std::make_unique<WorldModelModule>(
+                "world_model", sensory_size_, context_size_, context_size_ * 2);
+            world_model_ = world_model.get();
+
+            std::vector<std::size_t> policy_sizes{context_size_ * 2, context_size_, action_count_};
+            auto policy = std::make_unique<PolicyModule>(
+                "policy", policy_sizes, dnn::Activation::Relu, dnn::Activation::Linear);
+
+            // Add modules to engine
+            sensory_idx_ = engine_.add_module(std::move(sensory_processor), true, true);
+            memory_idx_ = engine_.add_module(std::move(memory_consolidator), true, true);
+            pattern_idx_ = engine_.add_module(std::move(pattern_recognizer), true, true);
+            abstraction_idx_ = engine_.add_module(std::move(knowledge_abstractor), true, true);
+            world_idx_ = engine_.add_module(std::move(world_model), true, true);
+            policy_idx_ = engine_.add_module(std::move(policy), false, true);
+
+            // Initialize random number generator
+            rng_.seed(std::random_device{}());
+        }
+
+        // Process input and determine the learning phase
+        InputProcessingInfo process_input(const std::string& input_text)
+        {
+            InputProcessingInfo info;
+            info.input_text = input_text;
+            info.processed_tensor = encode_text(input_text);
+
+            // Detect learning phase based on input characteristics
+            info.current_phase = detect_learning_phase(input_text);
+
+            // Extract concepts from input
+            info.extracted_concepts = extract_concepts(input_text);
+
+            // Calculate novelty score
+            info.novelty_score = calculate_novelty(info.processed_tensor, info.extracted_concepts);
+
+            // Check for conflicts with existing knowledge
+            info.is_conflicting = detect_conflict(input_text, info.extracted_concepts);
+            if (info.is_conflicting) {
+                info.conflict_details = resolve_conflict(input_text, info.extracted_concepts);
+            }
+
+            // Update phase based on all factors
+            update_learning_phase(info);
+
+            // Store the processed information
+            recent_inputs_.push_front(info);
+            if (recent_inputs_.size() > 100) {
+                recent_inputs_.pop_back();
+            }
+
+            return info;
+        }
+
+        // Main decision function with phase-aware processing
+        Decision make_decision(const std::string& input_text, double reward = 0.0)
+        {
+            auto processing_info = process_input(input_text);
+            Tensor observation = processing_info.processed_tensor;
+
+            // Adjust reward based on phase
+            double adjusted_reward = reward;
+            if (processing_info.current_phase == LearningPhase::ACQUISITION && reward > 0) {
+                adjusted_reward *= 1.2; // Boost reward for learning phase
+            } else if (processing_info.current_phase == LearningPhase::TESTING && reward > 0) {
+                adjusted_reward *= 0.8; // Lower reward for testing phase
+            }
+
+            // Store the enhanced experience with phase information
+            EnhancedExperience exp;
+            exp.observation = observation;
+            exp.context_before = engine_.context();
+            exp.reward = adjusted_reward;
+            exp.phase = processing_info.current_phase;
+            exp.related_concepts = processing_info.extracted_concepts;
+
+            // Perform action based on the current phase
+            Tensor logits;
+            switch (processing_info.current_phase) {
+                case LearningPhase::ACQUISITION:
+                    logits = acquisition_mode(observation, adjusted_reward);
+                    break;
+                case LearningPhase::CONSOLIDATION:
+                    logits = consolidation_mode(observation, adjusted_reward);
+                    break;
+                case LearningPhase::RETRIEVAL:
+                    logits = retrieval_mode(observation, adjusted_reward);
+                    break;
+                case LearningPhase::TESTING:
+                    logits = testing_mode(observation, adjusted_reward);
+                    break;
+            }
+
+            // Store the experience
+            exp.context_after = engine_.context();
+            exp.action_taken = logits;
+            enhanced_experiences_.push_back(exp);
+            if (enhanced_experiences_.size() > max_enhanced_experiences_) {
+                enhanced_experiences_.erase(enhanced_experiences_.begin());
+            }
+
+            // Update knowledge hierarchy based on the outcome
+            update_knowledge_hierarchy(processing_info, adjusted_reward);
+
+            // Apply memory consolidation if needed
+            if (step_count_ % consolidation_frequency_ == 0) {
+                consolidate_memory();
+            }
+
+            // Calculate probabilities and make decision
+            Tensor probs = softmax(logits, determine_temperature(processing_info.current_phase));
+            int action = sample_from_probs(probs, rng_);
+
+            Decision decision;
+            decision.action = action;
+            decision.logits = logits;
+            decision.probs = probs;
+            decision.value = value_estimate();
+
+            step_count_++;
+
+            return decision;
+        }
+
+        // Add knowledge to the hierarchy
+        void add_knowledge(const std::string& concept_name, const std::vector<std::string>& related_concepts, double confidence = 1.0)
+        {
+            KnowledgeNode node;
+            node.concept_name = concept_name;
+            node.related_concepts = related_concepts;
+            node.confidence = confidence;
+            node.representation = encode_text(concept_name);
+
+            knowledge_hierarchy_[concept_name] = node;
+
+            // Update related concepts
+            for (const auto& related : related_concepts) {
+                auto it = knowledge_hierarchy_.find(related);
+                if (it != knowledge_hierarchy_.end()) {
+                    bool already_related = false;
+                    for (const auto& existing : it->second.related_concepts) {
+                        if (existing == concept_name) {
+                            already_related = true;
+                            break;
+                        }
+                    }
+                    if (!already_related) {
+                        it->second.related_concepts.push_back(concept_name);
+                    }
+                } else {
+                    KnowledgeNode related_node;
+                    related_node.concept_name = related;
+                    related_node.related_concepts = {concept_name};
+                    related_node.representation = encode_text(related);
+                    knowledge_hierarchy_[related] = related_node;
+                }
+            }
+        }
+
+        // Enhanced conflict detection with more sophisticated reasoning
+        bool has_conflict(const std::string& input_text) const
+        {
+            std::string lower_input = to_lower(input_text);
+
+            // Check for direct contradictions (not X when X exists, is not X, etc.)
+            for (const auto& [concept, node] : knowledge_hierarchy_) {
+                if (lower_input.find("not " + concept) != std::string::npos ||
+                    lower_input.find("is not " + concept) != std::string::npos ||
+                    lower_input.find("no " + concept) != std::string::npos) {
+                    return true;
+                }
+
+                // Check if the input contradicts a known relationship
+                for (const auto& related : node.related_concepts) {
+                    if (lower_input.find("not " + related) != std::string::npos ||
+                        lower_input.find("is not " + related) != std::string::npos) {
+                        return true;
+                    }
+                }
+            }
+
+            // Check for hierarchical contradictions (e.g., saying X is Y when X is known to be Z which conflicts with Y)
+            std::vector<std::string> new_concepts = extract_concepts(input_text);
+            for (const auto& new_concept : new_concepts) {
+                auto existing_it = knowledge_hierarchy_.find(new_concept);
+                if (existing_it != knowledge_hierarchy_.end()) {
+                    // Check if the new statement contradicts existing relationships
+                    if (lower_input.find("is") != std::string::npos) {
+                        // Analyze "X is Y" statements for conflicts with existing "X is Z"
+                        std::string::size_type pos = lower_input.find("is");
+                        std::string subject = lower_input.substr(0, pos);
+                        std::string predicate = lower_input.substr(pos + 2);
+
+                        // Remove common words
+                        std::vector<std::string> new_subject_concepts = extract_concepts(subject);
+                        std::vector<std::string> new_predicate_concepts = extract_concepts(predicate);
+
+                        for (const auto& s_concept : new_subject_concepts) {
+                            auto s_it = knowledge_hierarchy_.find(s_concept);
+                            if (s_it != knowledge_hierarchy_.end()) {
+                                for (const auto& p_concept : new_predicate_concepts) {
+                                    for (const auto& related : s_it->second.related_concepts) {
+                                        if (p_concept == related) {
+                                            // This might be consistent - skip conflict
+                                            continue;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        // Enhanced query with semantic similarity and fuzzy matching
+        std::vector<std::string> query_knowledge(const std::string& query) const
+        {
+            std::vector<std::string> results;
+            std::string lower_query = to_lower(query);
+
+            // Direct match search
+            for (const auto& [concept, node] : knowledge_hierarchy_) {
+                if (lower_query.find(to_lower(concept)) != std::string::npos) {
+                    results.push_back(node.concept + " (confidence: " + std::to_string(node.confidence) + ")");
+                }
+                // Also check if any related concepts match
+                else {
+                    for (const auto& related : node.related_concepts) {
+                        if (lower_query.find(to_lower(related)) != std::string::npos) {
+                            results.push_back(node.concept + " -> " + related + " (confidence: " + std::to_string(node.confidence) + ")");
+                            break; // Don't add the same concept multiple times
+                        }
+                    }
+                }
+            }
+
+            // If no direct matches, try semantic similarity
+            if (results.empty()) {
+                Tensor query_tensor = encode_text(query);
+
+                for (const auto& [concept, node] : knowledge_hierarchy_) {
+                    double similarity = calculate_similarity(query_tensor, node.representation);
+
+                    if (similarity > 0.3) { // Threshold for semantic similarity
+                        results.push_back(node.concept + " (similarity: " + std::to_string(similarity) + ", confidence: " + std::to_string(node.confidence) + ")");
+                    }
+                }
+
+                // Sort by similarity if using semantic search
+                std::sort(results.begin(), results.end(),
+                         [](const std::string& a, const std::string& b) {
+                             // Extract similarity values and compare
+                             size_t pos_a = a.find("similarity: ");
+                             size_t pos_b = b.find("similarity: ");
+                             if (pos_a != std::string::npos && pos_b != std::string::npos) {
+                                 pos_a += 12; // Length of "similarity: "
+                                 pos_b += 12;
+
+                                 std::string sim_str_a = a.substr(pos_a);
+                                 std::string sim_str_b = b.substr(pos_b);
+
+                                 // Extract the number part before next comma or parenthesis
+                                 size_t end_a = sim_str_a.find(", ");
+                                 size_t end_b = sim_str_b.find(", ");
+
+                                 double sim_a = std::stod(sim_str_a.substr(0, end_a));
+                                 double sim_b = std::stod(sim_str_b.substr(0, end_b));
+
+                                 return sim_a > sim_b;
+                             }
+                             return a < b;
+                         });
+            }
+
+            return results;
+        }
+
+        // Enhanced conflict resolution with hierarchical knowledge building
+        std::string resolve_conflict(const std::string& input_text, const std::vector<std::string>& concepts)
+        {
+            std::string conflict_details = "Conflict detected and resolved";
+
+            for (const auto& concept : concepts) {
+                auto it = knowledge_hierarchy_.find(concept);
+                if (it != knowledge_hierarchy_.end()) {
+                    // Check if we're adding more specific information to an existing concept
+                    std::string lower_input = to_lower(input_text);
+
+                    // If the new input contains more specific details, enhance the existing knowledge
+                    if (lower_input.find(" is ") != std::string::npos) {
+                        std::string::size_type pos = lower_input.find(" is ");
+                        std::string subject = lower_input.substr(0, pos);
+                        std::string description = lower_input.substr(pos + 4);
+
+                        if (to_lower(concept) == subject) {
+                            // We're adding more detail to an existing concept
+                            conflict_details += ": Enhanced '" + concept + "' with new description";
+
+                            // Update the concept representation to include new information
+                            Tensor new_rep = encode_text(input_text);
+                            // Blend the old and new representations
+                            if (it->second.representation.size() == new_rep.size()) {
+                                for (size_t i = 0; i < it->second.representation.size(); ++i) {
+                                    // Weight the new information but preserve some of the old
+                                    it->second.representation[i] = 0.3 * it->second.representation[i] + 0.7 * new_rep[i];
+                                }
+                            } else {
+                                it->second.representation = new_rep;
+                            }
+
+                            // Update confidence
+                            it->second.confidence = std::min(1.0, it->second.confidence + 0.1);
+
+                            // Extract additional related concepts from the description
+                            std::vector<std::string> new_related = extract_concepts(description);
+                            for (const auto& new_rel : new_related) {
+                                bool exists = false;
+                                for (const auto& existing_rel : it->second.related_concepts) {
+                                    if (to_lower(existing_rel) == to_lower(new_rel)) {
+                                        exists = true;
+                                        break;
+                                    }
+                                }
+                                if (!exists) {
+                                    it->second.related_concepts.push_back(new_rel);
+                                }
+                            }
+
+                            it->second.last_accessed = std::chrono::steady_clock::now();
+                            it->second.access_count++;
+                            break;
+                        }
+                    }
+
+                    conflict_details += ": " + concept + " vs. " + input_text;
+                }
+            }
+
+            return conflict_details;
+        }
+
+        // Get current learning phase
+        LearningPhase get_current_phase() const { return current_phase_; }
+
+        void set_seed(std::uint64_t seed) { rng_.seed(seed); }
+
+    private:
+        std::size_t sensory_size_;
+        std::size_t action_count_;
+        std::size_t context_size_;
+        BrainEngine engine_;
+        int sensory_idx_{-1};
+        int memory_idx_{-1};
+        int pattern_idx_{-1};
+        int abstraction_idx_{-1};
+        int world_idx_{-1};
+        int policy_idx_{-1};
+        WorldModelModule* world_model_{nullptr};
+        MemoryConsolidationModule* memory_consolidator_{nullptr};
+        PatternRecognitionModule* pattern_recognizer_{nullptr};
+        KnowledgeAbstractionModule* knowledge_abstractor_{nullptr};
+
+        std::map<std::string, KnowledgeNode> knowledge_hierarchy_;
+        std::vector<EnhancedExperience> enhanced_experiences_;
+        std::size_t max_enhanced_experiences_{1024};
+
+        LearningPhase current_phase_;
+        double phase_transition_threshold_;
+        double novelty_threshold_;
+        std::size_t memory_capacity_;
+        std::size_t consolidation_frequency_;
+        std::deque<InputProcessingInfo> recent_inputs_;
+
+        // Error correction and adaptive weight adjustment components
+        std::vector<double> prediction_errors_;
+        std::vector<double> adaptive_weights_;
+        std::vector<double> error_history_;
+        double error_correction_rate_{0.01};
+        double weight_adaptation_rate_{0.005};
+        std::size_t error_history_size_{100};
+
+        std::mt19937_64 rng_;
+        std::size_t step_count_{0};
+
+        // Update error correction based on prediction accuracy
+        void update_error_correction(const EnhancedExperience& exp)
+        {
+            // Calculate prediction error
+            double predicted_reward = exp.expected_reward;
+            double actual_reward = exp.reward;
+            double error = std::abs(actual_reward - predicted_reward);
+
+            prediction_errors_.push_back(error);
+            if (prediction_errors_.size() > error_history_size_) {
+                prediction_errors_.erase(prediction_errors_.begin());
+            }
+
+            // Adjust adaptive weights based on error patterns
+            if (prediction_errors_.size() >= 2) {
+                // Calculate error trend
+                double recent_avg = 0.0;
+                double prev_avg = 0.0;
+
+                size_t mid_point = prediction_errors_.size() / 2;
+
+                for (size_t i = 0; i < mid_point; ++i) {
+                    prev_avg += prediction_errors_[i];
+                }
+                prev_avg /= static_cast<double>(mid_point);
+
+                for (size_t i = mid_point; i < prediction_errors_.size(); ++i) {
+                    recent_avg += prediction_errors_[i];
+                }
+                recent_avg /= static_cast<double>(prediction_errors_.size() - mid_point);
+
+                // Adjust weights based on error trend
+                if (recent_avg > prev_avg * 1.1) { // Error is increasing
+                    // Increase adaptation rate to correct faster
+                    error_correction_rate_ = std::min(error_correction_rate_ * 1.05, 0.1);
+                    weight_adaptation_rate_ = std::min(weight_adaptation_rate_ * 1.02, 0.05);
+                } else if (recent_avg < prev_avg * 0.9) { // Error is decreasing
+                    // Decrease adaptation rate for stability
+                    error_correction_rate_ = std::max(error_correction_rate_ * 0.95, 0.005);
+                    weight_adaptation_rate_ = std::max(weight_adaptation_rate_ * 0.98, 0.001);
+                }
+            }
+
+            // Update neural network weights based on error
+            update_network_weights(exp);
+        }
+
+        // Update neural network weights adaptively
+        void update_network_weights(const EnhancedExperience& exp)
+        {
+            // This is a simplified weight update - in a real implementation,
+            // this would interface with the actual network parameters
+            for (auto& weight : adaptive_weights_) {
+                // Apply small adjustments based on experience importance
+                weight += (exp.importance - 0.5) * weight_adaptation_rate_;
+                // Keep weights in reasonable range
+                weight = std::clamp(weight, -2.0, 2.0);
+            }
+
+            // If we have a world model, train it with the new experience
+            if (world_model_ && step_count_ > 10) {  // Wait for some initial data
+                // Create training data from experience
+                std::vector<Tensor> X = {exp.observation};
+                std::vector<Tensor> Y = {exp.next_obs};
+                world_model_->train(X, Y, 1, 1, 0.01 * exp.importance);
+            }
+        }
+
+        // Calculate prediction accuracy
+        double calculate_prediction_accuracy() const
+        {
+            if (prediction_errors_.empty()) {
+                return 1.0; // Assume perfect initially
+            }
+
+            double avg_error = 0.0;
+            for (double error : prediction_errors_) {
+                avg_error += error;
+            }
+            avg_error /= static_cast<double>(prediction_errors_.size());
+
+            // Convert to accuracy (lower error = higher accuracy)
+            return 1.0 / (1.0 + avg_error);
+        }
+
+        // Real-time learning curve optimization
+        struct LearningCurveMetrics {
+            double performance{0.0};
+            double learning_rate{0.0};
+            double retention{0.0};
+            double forgetting_factor{0.0};
+            double optimal_batch_size{8.0};
+            double difficulty{1.0};
+        };
+
+        LearningCurveMetrics calculate_learning_metrics() const
+        {
+            LearningCurveMetrics metrics;
+
+            // Calculate performance based on recent experiences
+            double total_performance = 0.0;
+            int valid_count = 0;
+
+            for (const auto& exp : enhanced_experiences_) {
+                if (exp.reward != 0.0) { // Only count experiences with rewards
+                    total_performance += exp.reward;
+                    valid_count++;
+                }
+            }
+
+            metrics.performance = (valid_count > 0) ? total_performance / valid_count : 0.0;
+
+            // Calculate learning rate based on improvement over time
+            if (enhanced_experiences_.size() > 20) {
+                double early_performance = 0.0;
+                double late_performance = 0.0;
+                int early_count = 0, late_count = 0;
+
+                for (size_t i = 0; i < enhanced_experiences_.size(); ++i) {
+                    if (i < enhanced_experiences_.size() / 2) {
+                        if (enhanced_experiences_[i].reward != 0.0) {
+                            early_performance += enhanced_experiences_[i].reward;
+                            early_count++;
+                        }
+                    } else {
+                        if (enhanced_experiences_[i].reward != 0.0) {
+                            late_performance += enhanced_experiences_[i].reward;
+                            late_count++;
+                        }
+                    }
+                }
+
+                double early_avg = (early_count > 0) ? early_performance / early_count : 0.0;
+                double late_avg = (late_count > 0) ? late_performance / late_count : 0.0;
+
+                metrics.learning_rate = (late_avg - early_avg) / (early_avg > 1e-6 ? early_avg : 1.0);
+            }
+
+            // Calculate retention based on knowledge hierarchy stability
+            int stable_concepts = 0;
+            int total_concepts = 0;
+
+            for (const auto& [concept, node] : knowledge_hierarchy_) {
+                total_concepts++;
+                if (node.confidence > 0.6) {
+                    stable_concepts++;
+                }
+            }
+
+            metrics.retention = (total_concepts > 0) ? static_cast<double>(stable_concepts) / total_concepts : 1.0;
+
+            // Estimate forgetting factor based on knowledge decay
+            metrics.forgetting_factor = 1.0 - metrics.retention;
+
+            // Estimate optimal batch size based on current performance
+            if (metrics.performance > 0.7) {
+                metrics.optimal_batch_size = 16.0; // Larger batches when performing well
+            } else if (metrics.performance > 0.4) {
+                metrics.optimal_batch_size = 8.0;  // Medium batches
+            } else {
+                metrics.optimal_batch_size = 4.0;  // Smaller batches for more frequent updates
+            }
+
+            // Estimate difficulty of current concepts
+            if (prediction_errors_.size() > 10) {
+                double error_variance = 0.0;
+                double mean_error = 0.0;
+
+                for (double err : prediction_errors_) {
+                    mean_error += err;
+                }
+                mean_error /= prediction_errors_.size();
+
+                for (double err : prediction_errors_) {
+                    error_variance += (err - mean_error) * (err - mean_error);
+                }
+                error_variance /= prediction_errors_.size();
+
+                metrics.difficulty = 1.0 + error_variance; // Higher variance = more difficult concepts
+            }
+
+            return metrics;
+        }
+
+        // Adjust learning parameters in real-time based on curve optimization
+        void optimize_learning_curve()
+        {
+            LearningCurveMetrics metrics = calculate_learning_metrics();
+
+            // Adjust neural network learning rate based on performance
+            double base_lr = 0.01;
+            double adjusted_lr = base_lr;
+
+            if (metrics.learning_rate < -0.1) {  // Performance is degrading
+                adjusted_lr *= 0.5;  // Reduce learning rate to stabilize
+            } else if (metrics.learning_rate > 0.2) {  // Rapid improvement
+                adjusted_lr *= 1.5;  // Increase learning rate to capitalize
+            }
+
+            // The neural network doesn't have direct access to learning rate here,
+            // but in a real implementation, we'd pass this to the training method
+
+            // Adjust consolidation frequency based on retention
+            if (metrics.retention < 0.5) {
+                consolidation_frequency_ = 50;  // Consolidate more frequently
+            } else if (metrics.retention > 0.8) {
+                consolidation_frequency_ = 150; // Consolidate less frequently
+            }
+
+            // Adjust phase transition thresholds based on performance
+            if (metrics.performance < 0.3) {
+                // Be more exploratory when performing poorly
+                phase_transition_threshold_ = 0.5;  // Lower threshold for phase changes
+            } else if (metrics.performance > 0.8) {
+                // Be more stable when performing well
+                phase_transition_threshold_ = 0.8;  // Higher threshold for phase changes
+            }
+        }
+
+        // Implement selective forgetting based on importance and recency
+        void selective_forgetting()
+        {
+            auto now = std::chrono::steady_clock::now();
+
+            // Prune knowledge nodes based on multiple factors
+            for (auto it = knowledge_hierarchy_.begin(); it != knowledge_hierarchy_.end();) {
+                const auto& node = it->second;
+
+                // Calculate a forgetting score based on multiple factors
+                double forgetting_score = 0.0;
+
+                // Factor 1: Low confidence
+                forgetting_score += (1.0 - node.confidence) * 0.4;
+
+                // Factor 2: Low access frequency (how often it's been accessed relative to age)
+                auto age = std::chrono::duration_cast<std::chrono::hours>(now - node.creation_time).count();
+                if (age > 0) {
+                    double access_rate = static_cast<double>(node.access_count) / (age + 1.0);
+                    // Lower access rate increases forgetting score
+                    forgetting_score += std::max(0.0, (1.0 - access_rate)) * 0.3;
+                }
+
+                // Factor 3: Recency (how long since last access)
+                auto time_since_access = std::chrono::duration_cast<std::chrono::hours>(now - node.last_accessed).count();
+                // More recent access = lower forgetting score
+                forgetting_score += std::min(1.0, time_since_access / 168.0) * 0.3; // 168 hours = 1 week
+
+                // Apply forgetting threshold
+                if (forgetting_score > 0.7) {  // High forgetting score means forget this concept
+                    it = knowledge_hierarchy_.erase(it);
+                } else {
+                    ++it;
+                }
+            }
+
+            // Also apply forgetting to experiences
+            if (enhanced_experiences_.size() > 512) {  // Only if we have enough experiences
+                // Sort experiences by importance and keep only the most important ones
+                std::sort(enhanced_experiences_.begin(), enhanced_experiences_.end(),
+                         [](const EnhancedExperience& a, const EnhancedExperience& b) {
+                             return a.importance > b.importance;
+                         });
+
+                // Keep only the top 50% of experiences by importance
+                size_t retain_count = enhanced_experiences_.size() / 2;
+                enhanced_experiences_.erase(enhanced_experiences_.begin() + retain_count, enhanced_experiences_.end());
+            }
+        }
+
+        // Reinforce important memories
+        void reinforce_important_memories()
+        {
+            // Increase confidence and access count for high-importance concepts
+            for (auto& [concept, node] : knowledge_hierarchy_) {
+                if (node.confidence < 0.3) {
+                    // If confidence is very low, it might be due for reinforcement
+                    // or could be a candidate for forgetting
+                    if (node.access_count < 3) {
+                        // Very low confidence and rarely accessed - reduce importance
+                        node.confidence *= 0.9;
+                    } else {
+                        // Low confidence but accessed multiple times - reinforce
+                        node.confidence = std::min(1.0, node.confidence + 0.05);
+                    }
+                } else if (node.confidence > 0.8) {
+                    // High confidence concept - maintain or slightly increase
+                    node.confidence = std::min(1.0, node.confidence + 0.01);
+                }
+            }
+        }
+
+        // Helper function to encode text to tensor
+        Tensor encode_text(const std::string& text) const
+        {
+            Tensor v(sensory_size_, 0.0);
+            const std::size_t len = std::min(sensory_size_, text.size());
+            for (std::size_t i = 0; i < len; ++i) {
+                const unsigned char c = static_cast<unsigned char>(text[i]);
+                const double norm = (static_cast<double>(c) / 127.0) * 2.0 - 1.0;
+                v[i] = norm;
+            }
+            return v;
+        }
+
+        // Helper function to convert string to lowercase
+        std::string to_lower(std::string s) const
+        {
+            std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c)
+                           { return static_cast<char>(std::tolower(c)); });
+            return s;
+        }
+
+        // Phase detection based on input characteristics
+        LearningPhase detect_learning_phase(const std::string& input_text)
+        {
+            std::string lower_input = to_lower(input_text);
+
+            // Check for question patterns
+            bool is_question = input_text.find('?') != std::string::npos;
+            if (is_question) {
+                return LearningPhase::RETRIEVAL; // Questions often involve retrieval
+            }
+
+            // Check for learning patterns
+            if (lower_input.find("what is") != std::string::npos ||
+                lower_input.find("how does") != std::string::npos ||
+                lower_input.find("explain") != std::string::npos ||
+                lower_input.find("learn") != std::string::npos) {
+                return LearningPhase::ACQUISITION;
+            }
+
+            // Check for testing patterns
+            if (lower_input.find("test") != std::string::npos ||
+                lower_input.find("quiz") != std::string::npos ||
+                lower_input.find("evaluate") != std::string::npos) {
+                return LearningPhase::TESTING;
+            }
+
+            // Default to acquisition if this is new content
+            if (recent_inputs_.empty()) {
+                return LearningPhase::ACQUISITION;
+            }
+
+            // Otherwise, return the current phase
+            return current_phase_;
+        }
+
+        // Extract concepts from text
+        std::vector<std::string> extract_concepts(const std::string& input_text)
+        {
+            std::vector<std::string> concepts;
+            std::string lower_input = to_lower(input_text);
+
+            // Simple concept extraction - in a real system this would be more sophisticated
+            std::vector<std::string> potential_concepts;
+
+            // Split by common delimiters
+            std::string word;
+            for (char c : lower_input) {
+                if (std::isalnum(c) || c == ' ') {
+                    word += c;
+                } else {
+                    if (!word.empty()) {
+                        if (word.size() > 2) { // Filter out short words
+                            potential_concepts.push_back(word);
+                        }
+                        word.clear();
+                    }
+                }
+            }
+            if (!word.empty() && word.size() > 2) {
+                potential_concepts.push_back(word);
+            }
+
+            // Filter and process concepts
+            for (const auto& concept : potential_concepts) {
+                bool is_existing = knowledge_hierarchy_.find(concept) != knowledge_hierarchy_.end();
+                if (!is_existing) {
+                    concepts.push_back(concept);
+                }
+            }
+
+            return concepts;
+        }
+
+        // Calculate novelty of input
+        double calculate_novelty(const Tensor& tensor, const std::vector<std::string>& concepts)
+        {
+            if (knowledge_hierarchy_.empty()) {
+                return 1.0; // Completely novel if no knowledge exists
+            }
+
+            double min_similarity = 1.0;
+
+            // Find most similar existing knowledge
+            for (const auto& [concept, node] : knowledge_hierarchy_) {
+                double sim = calculate_similarity(tensor, node.representation);
+                min_similarity = std::min(min_similarity, 1.0 - sim);
+            }
+
+            return min_similarity;
+        }
+
+        // Check for conflicts with existing knowledge
+        bool detect_conflict(const std::string& input_text, const std::vector<std::string>& concepts)
+        {
+            for (const auto& concept : concepts) {
+                if (has_conflict(input_text)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Resolve conflicts with existing knowledge
+        std::string resolve_conflict(const std::string& input_text, const std::vector<std::string>& concepts)
+        {
+            std::string conflict_details = "Conflict detected with existing knowledge";
+
+            for (const auto& concept : concepts) {
+                auto it = knowledge_hierarchy_.find(concept);
+                if (it != knowledge_hierarchy_.end()) {
+                    // For now, we'll just update the node with new information
+                    // In a more sophisticated system, this would involve more complex reasoning
+                    conflict_details += ": " + concept + " vs. " + input_text;
+
+                    // Update the node's representation to include the new information
+                    it->second.representation = encode_text(input_text);
+                    it->second.confidence = std::min(1.0, it->second.confidence + 0.1); // Increase confidence
+                    it->second.access_count++;
+                    it->second.last_accessed = std::chrono::steady_clock::now();
+                }
+            }
+
+            return conflict_details;
+        }
+
+        // Update learning phase based on multiple factors
+        void update_learning_phase(InputProcessingInfo& info)
+        {
+            // Adjust phase based on novelty
+            if (info.novelty_score > 0.8) {
+                info.current_phase = LearningPhase::ACQUISITION;
+            } else if (info.novelty_score < 0.2) {
+                info.current_phase = LearningPhase::RETRIEVAL; // Familiar content
+            }
+
+            // Adjust phase based on conflict status
+            if (info.is_conflicting) {
+                info.current_phase = LearningPhase::CONSOLIDATION; // Need to consolidate conflicting info
+            }
+
+            // Calculate phase confidence
+            if (info.current_phase == current_phase_) {
+                info.phase_confidence = std::min(1.0, info.phase_confidence + 0.1);
+            } else {
+                info.phase_confidence = std::max(0.1, info.phase_confidence - 0.1);
+            }
+
+            // Update global phase if confident
+            if (info.phase_confidence > phase_transition_threshold_) {
+                current_phase_ = info.current_phase;
+            }
+        }
+
+        // Calculate similarity between tensors
+        double calculate_similarity(const Tensor& a, const Tensor& b) const
+        {
+            const std::size_t n = std::min(a.size(), b.size());
+            if (n == 0) return 0.0;
+
+            double dot = 0.0;
+            double na = 1e-9;
+            double nb = 1e-9;
+            for (std::size_t i = 0; i < n; ++i)
+            {
+                dot += a[i] * b[i];
+                na += a[i] * a[i];
+                nb += b[i] * b[i];
+            }
+            return std::abs(dot) / std::sqrt(na * nb);
+        }
+
+        // Acquisition mode: Learning new information
+        Tensor acquisition_mode(const Tensor& observation, double reward)
+        {
+            // In acquisition mode, we focus on learning and exploration
+            Tensor input = observation;
+            fit_to_size(input, sensory_size_ + 1);
+            input.back() = reward * 1.2; // Enhanced reward in acquisition mode
+
+            return engine_.step(input, policy_idx_);
+        }
+
+        // Consolidation mode: Strengthening and organizing learned information
+        Tensor consolidation_mode(const Tensor& observation, double reward)
+        {
+            // In consolidation mode, we reinforce existing knowledge
+            Tensor input = observation;
+            fit_to_size(input, sensory_size_ + 1);
+            input.back() = reward * 0.9; // Slightly reduced reward
+
+            // Trigger consolidation by updating context more slowly
+            engine_.set_context_blend(0.4);
+
+            Tensor result = engine_.step(input, policy_idx_);
+
+            // Reset context blend
+            engine_.set_context_blend(0.7);
+
+            return result;
+        }
+
+        // Retrieval mode: Accessing stored information
+        Tensor retrieval_mode(const Tensor& observation, double reward)
+        {
+            // In retrieval mode, we focus on accessing stored knowledge
+            Tensor input = observation;
+            fit_to_size(input, sensory_size_ + 1);
+            input.back() = reward; // Normal reward
+
+            return engine_.step(input, policy_idx_);
+        }
+
+        // Testing mode: Evaluating learned knowledge
+        Tensor testing_mode(const Tensor& observation, double reward)
+        {
+            // In testing mode, we evaluate performance without learning adjustments
+            Tensor input = observation;
+            fit_to_size(input, sensory_size_ + 1);
+            input.back() = reward * 0.8; // Reduced reward
+
+            return engine_.step(input, policy_idx_);
+        }
+
+        // Determine appropriate temperature based on phase
+        double determine_temperature(LearningPhase phase) const
+        {
+            switch (phase) {
+                case LearningPhase::ACQUISITION:
+                    return 1.2; // Higher temperature for exploration in learning
+                case LearningPhase::CONSOLIDATION:
+                    return 0.7; // Lower temperature for reinforcement
+                case LearningPhase::RETRIEVAL:
+                    return 0.5; // Low temperature for focused retrieval
+                case LearningPhase::TESTING:
+                    return 0.3; // Lowest temperature for accurate testing
+            }
+            return 1.0;
+        }
+
+        // Update knowledge hierarchy based on experience
+        void update_knowledge_hierarchy(const InputProcessingInfo& info, double reward)
+        {
+            for (const auto& concept : info.extracted_concepts) {
+                auto it = knowledge_hierarchy_.find(concept);
+                if (it != knowledge_hierarchy_.end()) {
+                    // Update existing concept
+                    it->second.access_count++;
+                    it->second.last_accessed = std::chrono::steady_clock::now();
+
+                    // Adjust confidence based on reward
+                    if (reward > 0) {
+                        it->second.confidence = std::min(1.0, it->second.confidence + 0.05 * reward);
+                    } else {
+                        it->second.confidence = std::max(0.1, it->second.confidence + 0.02 * reward);
+                    }
+                } else {
+                    // Add new concept
+                    KnowledgeNode node;
+                    node.concept = concept;
+                    node.representation = encode_text(concept);
+                    node.confidence = (reward > 0) ? 0.5 + 0.3 * reward : 0.3;
+                    node.access_count = 1;
+                    knowledge_hierarchy_[concept] = node;
+                }
+            }
+        }
+
+        // Consolidate memory by reinforcing important information
+        void consolidate_memory()
+        {
+            // Reinforce frequently accessed and high-confidence knowledge
+            for (auto& [concept, node] : knowledge_hierarchy_) {
+                // Boost confidence slightly for frequently accessed concepts
+                if (node.access_count > 5) {
+                    node.confidence = std::min(1.0, node.confidence + 0.01);
+                }
+
+                // Reset access count for next consolidation period
+                node.access_count = 0;
+            }
+        }
+
+        // Value estimation from the current state
+        double value_estimate() const
+        {
+            // Simple value estimation based on current context
+            const auto& context = engine_.context();
+            if (context.empty()) return 0.0;
+
+            double sum = 0.0;
+            for (double val : context) {
+                sum += val;
+            }
+            return sum / static_cast<double>(context.size());
+        }
     };
 
 } // namespace brain
