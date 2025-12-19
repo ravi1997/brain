@@ -1,16 +1,30 @@
 cmake_minimum_required(VERSION 3.20)
-project(brain_sim LANGUAGES CXX)
+project(brain_replica VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_executable(brain main.cpp)
-target_include_directories(brain PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_compile_options(brain PRIVATE -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable)
+# Warning flags
+if(MSVC)
+    add_compile_options(/W3 /permissive- /volatile:iso)
+else()
+    add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion)
+endif()
 
-add_executable(test_brain test_brain_simulation.cpp)
-target_include_directories(test_brain PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_compile_options(test_brain PRIVATE -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable)
-target_compile_features(brain PRIVATE cxx_std_23)
-target_compile_features(test_brain PRIVATE cxx_std_23)
+# Threading support (needed for dnn.hpp parallel execution)
+find_package(Threads REQUIRED)
+
+# The main executable
+add_executable(brain_replica main.cpp)
+
+# Link threads (for std::execution::par_unseq in dnn.hpp)
+target_link_libraries(brain_replica PRIVATE Threads::Threads)
+
+# TBB is often required for parallel algorithms on GCC/Clang
+# We'll try to find it, but won't hard fail if not present (implementation might vary)
+# dnn.hpp uses std::execution, which often relies on TBB on Linux.
+find_package(TBB)
+if(TBB_FOUND)
+    target_link_libraries(brain_replica PRIVATE TBB::tbb)
+endif()
