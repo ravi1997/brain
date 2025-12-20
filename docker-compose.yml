@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  brain:
+    build: .
+    image: brain_replica
+    volumes:
+      - .:/app
+    # Override the default command to build and run the executable
+    # This allows for incremental builds when source files change
+    command: >
+      bash -c "mkdir -p build && cd build && cmake .. && make -j$(nproc) && ./brain_replica"
+    # standard options for interactive run
+    stdin_open: true
+    tty: true

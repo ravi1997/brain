@@ -1,10 +1,8 @@
 #!/bin/bash
 set -e
 
-# Build the Docker image
-echo "Building Docker image..."
-docker build -t brain_replica .
-
-# Run the container
-echo "Running Brain Replica..."
-docker run --rm -it brain_replica
+# Start the container using Docker Compose
+# This uses the configuration in docker-compose.yml to mount the current directory
+# and perform an incremental build inside the container.
+echo "Starting Brain Replica with Docker Compose..."
+docker compose up brain

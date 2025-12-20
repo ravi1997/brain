@@ -11,6 +11,8 @@
 #include <random>
 #include <string>
 #include <vector>
+#include <fstream>
+
 
 namespace dnn
 {
@@ -391,6 +393,64 @@ namespace dnn
                 }
             }
         }
+        void save(std::ostream &os) const {
+            os.write(reinterpret_cast<const char*>(&in_size), sizeof(in_size));
+            os.write(reinterpret_cast<const char*>(&out_size), sizeof(out_size));
+            
+            auto write_vec = [&](const auto& vec) {
+                size_t sz = vec.size();
+                os.write(reinterpret_cast<const char*>(&sz), sizeof(sz));
+                if (sz > 0) os.write(reinterpret_cast<const char*>(vec.data()), static_cast<std::streamsize>(sz * sizeof(typename std::decay_t<decltype(vec)>::value_type)));
+            };
+
+            write_vec(weights);
+            write_vec(biases);
+            write_vec(eligibility_traces);
+            write_vec(homeostatic_targets);
+            write_vec(plasticity_rates);
+            
+            // Vector of bool is special, serialize element-wise or cast
+            // For simplicity/safety with vector<bool> specialization:
+            size_t pm_size = synaptic_pruning_mask.size();
+            os.write(reinterpret_cast<const char*>(&pm_size), sizeof(pm_size));
+            for(bool b : synaptic_pruning_mask) {
+                char c = b ? 1 : 0;
+                os.write(&c, 1);
+            }
+        }
+
+        void load(std::istream &is) {
+            is.read(reinterpret_cast<char*>(&in_size), sizeof(in_size));
+            is.read(reinterpret_cast<char*>(&out_size), sizeof(out_size));
+            
+            auto read_vec = [&](auto& vec) {
+                size_t sz;
+                is.read(reinterpret_cast<char*>(&sz), sizeof(sz));
+                vec.resize(sz);
+                if(sz > 0) is.read(reinterpret_cast<char*>(vec.data()), static_cast<std::streamsize>(sz * sizeof(typename std::decay_t<decltype(vec)>::value_type)));
+            };
+
+            read_vec(weights);
+            read_vec(biases);
+            read_vec(eligibility_traces);
+            read_vec(homeostatic_targets);
+            read_vec(plasticity_rates);
+            
+            size_t pm_size;
+            is.read(reinterpret_cast<char*>(&pm_size), sizeof(pm_size));
+            synaptic_pruning_mask.resize(pm_size);
+            for(size_t i=0; i<pm_size; ++i) {
+                char c;
+                is.read(&c, 1);
+                synaptic_pruning_mask[i] = (c != 0);
+            }
+            
+            // Resize caches
+            z_cache.resize(out_size);
+            a_cache.resize(out_size);
+            indices.resize(out_size);
+            std::iota(indices.begin(), indices.end(), std::size_t{0});
+        }
     };
 
     class NeuralNetwork
@@ -564,6 +624,40 @@ namespace dnn
                                biases.begin(),
                                [lr](double b, double g)
                                { return b - lr * g; });
+            }
+            void save(std::ostream &os) const {
+                os.write(reinterpret_cast<const char*>(&in_size), sizeof(in_size));
+                os.write(reinterpret_cast<const char*>(&out_size), sizeof(out_size));
+                
+                auto write_vec = [&](const std::vector<double>& vec) {
+                    size_t sz = vec.size();
+                    os.write(reinterpret_cast<const char*>(&sz), sizeof(sz));
+                    if(sz > 0) os.write(reinterpret_cast<const char*>(vec.data()), static_cast<std::streamsize>(sz * sizeof(double)));
+                };
+
+                write_vec(weights);
+                write_vec(biases);
+            }
+
+            void load(std::istream &is) {
+                is.read(reinterpret_cast<char*>(&in_size), sizeof(in_size));
+                is.read(reinterpret_cast<char*>(&out_size), sizeof(out_size));
+                
+                auto read_vec = [&](std::vector<double>& vec) {
+                    size_t sz;
+                    is.read(reinterpret_cast<char*>(&sz), sizeof(sz));
+                    vec.resize(sz);
+                    if(sz > 0) is.read(reinterpret_cast<char*>(vec.data()), static_cast<std::streamsize>(sz * sizeof(double)));
+                };
+
+                read_vec(weights);
+                read_vec(biases);
+                
+                // Resize caches
+                z_cache.resize(out_size);
+                a_cache.resize(out_size);
+                indices.resize(out_size);
+                std::iota(indices.begin(), indices.end(), std::size_t{0});
             }
         };
 
@@ -980,6 +1074,69 @@ namespace dnn
                         " - avg loss: " + std::to_string(avg_loss));
                 }
             }
+        }
+
+        void save(std::ostream& os) const {
+            // Save flags
+            os.write(reinterpret_cast<const char*>(&use_plasticity_), sizeof(use_plasticity_));
+            
+            // Save Plastic Layers
+            size_t num_plastic = plastic_layers_.size();
+            os.write(reinterpret_cast<const char*>(&num_plastic), sizeof(num_plastic));
+            for (const auto& layer : plastic_layers_) {
+                layer.save(os);
+            }
+
+            // Save Dense Layers
+            size_t num_dense = layers_.size();
+            os.write(reinterpret_cast<const char*>(&num_dense), sizeof(num_dense));
+            for (const auto& layer : layers_) {
+                layer.save(os);
+            }
+        }
+
+        void load(std::istream& is) {
+            is.read(reinterpret_cast<char*>(&use_plasticity_), sizeof(use_plasticity_));
+            
+            size_t num_plastic;
+            is.read(reinterpret_cast<char*>(&num_plastic), sizeof(num_plastic));
+            plastic_layers_.resize(num_plastic);
+            for (auto& layer : plastic_layers_) {
+                layer.load(is);
+            }
+
+            size_t num_dense;
+            is.read(reinterpret_cast<char*>(&num_dense), sizeof(num_dense));
+            layers_.resize(num_dense);
+            for (auto& layer : layers_) {
+                layer.load(is);
+            }
+            
+            // Rebuild buffers logic:
+            forward_buffers_.clear();
+            if (!plastic_layers_.empty()) {
+                forward_buffers_.resize(plastic_layers_.size() + 1);
+                forward_buffers_[0].resize(plastic_layers_[0].in_size);
+                for(size_t i=0; i<plastic_layers_.size(); ++i) 
+                    forward_buffers_[i+1].resize(plastic_layers_[i].out_size);
+            } else if (!layers_.empty()) {
+                forward_buffers_.resize(layers_.size() + 1);
+                forward_buffers_[0].resize(layers_[0].in_size);
+                for(size_t i=0; i<layers_.size(); ++i) 
+                    forward_buffers_[i+1].resize(layers_[i].out_size);
+            }
+        }
+
+        void save(const std::string& filename) const {
+            std::ofstream os(filename, std::ios::binary);
+            if (!os) return; 
+            save(os);
+        }
+
+        void load(const std::string& filename) {
+            std::ifstream is(filename, std::ios::binary);
+            if (!is) return;
+            load(is);
         }
 
     private:

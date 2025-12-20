@@ -1,13 +1,16 @@
-FROM ubuntu:24.04
+FROM debian:bookworm
 
-# Install build essentials and modern C++ compiler
+# Install build essentials
 RUN apt-get update && apt-get install -y \
     build-essential \
     cmake \
-    g++-13 \
+    g++ \
     libtbb-dev \
     git \
+    curl \
     && rm -rf /var/lib/apt/lists/*
+
+COPY words.txt /usr/share/dict/words
 
 # Set GCC 13 as default
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 --slave /usr/bin/g++ g++ /usr/bin/g++-13
