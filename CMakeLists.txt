@@ -16,10 +16,10 @@ endif()
 find_package(Threads REQUIRED)
 
 # The main executable
-add_executable(brain_replica main.cpp)
+add_executable(brain_replica main.cpp dnn.cpp brain.cpp memory_store.cpp)
 
 # Link threads (for std::execution::par_unseq in dnn.hpp)
-target_link_libraries(brain_replica PRIVATE Threads::Threads)
+target_link_libraries(brain_replica PRIVATE Threads::Threads sqlite3)
 
 # TBB is often required for parallel algorithms on GCC/Clang
 # We'll try to find it, but won't hard fail if not present (implementation might vary)

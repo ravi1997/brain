@@ -6,6 +6,8 @@ RUN apt-get update && apt-get install -y \
     cmake \
     g++ \
     libtbb-dev \
+    libsqlite3-dev \
+    libgtest-dev \
     git \
     curl \
     && rm -rf /var/lib/apt/lists/*
