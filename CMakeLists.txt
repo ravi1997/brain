@@ -28,3 +28,6 @@ find_package(TBB)
 if(TBB_FOUND)
     target_link_libraries(brain_replica PRIVATE TBB::tbb)
 endif()
+
+# Tests
+add_subdirectory(tests)

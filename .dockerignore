@@ -1,0 +1,5 @@
+build/
+.git/
+.gitignore
+brain_memories.db
+brain_journal.txt

@@ -14,8 +14,8 @@ RUN apt-get update && apt-get install -y \
 
 COPY words.txt /usr/share/dict/words
 
-# Set GCC 13 as default
-RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 --slave /usr/bin/g++ g++ /usr/bin/g++-13
+# Default GCC is fine (GCC 12 on Bookworm)
+# RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 --slave /usr/bin/g++ g++ /usr/bin/g++-13
 
 WORKDIR /app
 
@@ -23,6 +23,6 @@ WORKDIR /app
 COPY . .
 
 # Build
-RUN mkdir build && cd build && cmake .. && make
+RUN mkdir -p build && cd build && cmake .. && make
 
 CMD ["./build/brain_replica"]
