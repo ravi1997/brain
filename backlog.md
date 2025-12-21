@@ -1,8 +1,8 @@
 # Project Backlog
 
 ## 🚨 High Priority
-- [/] Expand e2e test coverage for dashboard
-- [ ] Voice interface integration
+- [x] Expand e2e test coverage for dashboard
+- [/] Voice interface integration
 - [ ] Optimize main loop performance
 - [x] Add persistence for cognitive states
 - [x] Improve natural language understanding (NLU) accuracy

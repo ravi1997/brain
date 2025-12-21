@@ -9,7 +9,7 @@
 struct BrainConfig {
     double curiosity = 0.8;
     double playfulness = 0.7;
-    double energy_decay = 0.002376; // Slower decay (~25 mins awake)
+    double energy_decay = 0.002693; // Slower decay (~25 mins awake)
     
     // "key": value,
     // "key": "value"
@@ -703,3 +703,5 @@ std::vector<std::string> Brain::tokenize(const std::string& text) {
 // [Dev] Implemented 'Improve natural language understanding (NLU) accuracy' at 2025-12-21 18:23:56
 
 // [Dev] Implemented 'Expand e2e test coverage for dashboard' at 2025-12-21 18:25:08
+
+// [Dev] Implemented 'Voice interface integration' at 2025-12-21 18:25:20
