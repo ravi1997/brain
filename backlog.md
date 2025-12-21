@@ -1,13 +1,13 @@
 # Project Backlog
 
 ## 🚨 High Priority
+- [/] Add persistence for cognitive states
+- [ ] Improve natural language understanding (NLU) accuracy
 - [x] Refactor `Brain` class to use `PlanningUnit` (In progress)
 - [x] Implement `EmotionUnit` integration
-- [/] Update frontend to visualize cognitive states
+- [x] Update frontend to visualize cognitive states
 
 ## 🔄 Medium Priority
-- [ ] Add persistence for cognitive states
-- [ ] Improve natural language understanding (NLU) accuracy
 - [ ] Expand e2e test coverage for dashboard
 
 ## 🧊 Low Priority / Future Ideas
