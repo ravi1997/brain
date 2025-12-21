@@ -119,6 +119,21 @@ public:
                 control_server->broadcast(brain.get_json_state());
             }
         }).detach();
+
+        // Background thread to push System Stats to 9008
+        std::thread([this]() {
+            while(true) {
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+                // Mock System Stats
+                long long mem = brain.get_knowledge_size();
+                std::stringstream ss;
+                ss << "{\"cpu\": " << (rand() % 20 + 10) << ", ";
+                ss << "\"memory_usage\": " << mem << ", ";
+                ss << "\"synapses\": " << (Brain::VOCAB_SIZE * Brain::VECTOR_DIM) << ", ";
+                ss << "\"uptime\": " << (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now().time_since_epoch()).count()) << "}";
+                extra_server->broadcast(ss.str());
+            }
+        }).detach();
     }
     
     void stop() {

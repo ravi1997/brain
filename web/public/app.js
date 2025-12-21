@@ -53,6 +53,9 @@ const BrainClient = {
         this.connect(9007, 'research'); // Research
         this.connect(9005, 'chat');     // Chat
         this.connect(9003, 'logs');     // Logs
+        this.connect(9004, 'errors');   // Errors
+        this.connect(9008, 'system');   // System/Extra
+        this.connect(9009, 'admin');    // Admin
         this.connect(9011, 'control');  // Personality Control
     },
 
@@ -92,6 +95,9 @@ const ViewManager = {
         if (viewId === 'tasks') this.setupTasks();
         if (viewId === 'neural') this.setupNeural();
         if (viewId === 'personas') this.setupPersonas();
+        if (viewId === 'library') this.setupLibrary();
+        if (viewId === 'system') this.setupSystem();
+        if (viewId === 'admin') this.setupAdmin();
         if (viewId === 'terminal') this.setupTerminal();
     },
 
@@ -226,6 +232,44 @@ const ViewManager = {
             // Let's just set it to a high value to simulate "injection"
             BrainClient.send('control', JSON.stringify({ [type]: 0.9 }));
         };
+    },
+
+
+
+    setupLibrary() {
+        BrainClient.subscribe('research', (data) => {
+            const el = document.getElementById('library-content');
+            if (el) {
+                const div = document.createElement('div');
+                div.className = 'task-item'; // reuse style
+                div.textContent = data;
+                el.prepend(div);
+            }
+        });
+    },
+
+    setupSystem() {
+        BrainClient.subscribe('system', (json) => {
+            try {
+                const data = JSON.parse(json);
+                document.getElementById('sys-cpu').textContent = data.cpu + '%';
+                document.getElementById('sys-mem').textContent = (data.memory_usage / 1024).toFixed(1) + 'KB';
+                document.getElementById('sys-syn').textContent = data.synapses;
+            } catch (e) { }
+        });
+    },
+
+    setupAdmin() {
+        window.sendAdmin = (cmd) => {
+            BrainClient.send('admin', cmd);
+            const log = document.getElementById('admin-log');
+            if (log) log.textContent = `> Sent command: ${cmd}...`;
+        };
+
+        BrainClient.subscribe('admin', (data) => {
+            const log = document.getElementById('admin-log');
+            if (log) log.textContent = `Response: ${data}`;
+        });
     },
 
     setupTerminal() {

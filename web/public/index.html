@@ -35,6 +35,18 @@
                     <i class="fa-solid fa-sliders"></i>
                     <span>Personas</span>
                 </li>
+                <li data-view="library">
+                    <i class="fa-solid fa-book"></i>
+                    <span>Library</span>
+                </li>
+                 <li data-view="system">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>System</span>
+                </li>
+                 <li data-view="admin">
+                    <i class="fa-solid fa-lock"></i>
+                    <span>Admin</span>
+                </li>
                 <li data-view="terminal">
                     <i class="fa-solid fa-terminal"></i>
                     <span>Terminal</span>
@@ -169,6 +181,48 @@
         </div>
     </template>
     
+    <template id="tmpl-library">
+        <div class="card full-height">
+            <h3>RESEARCH LIBRARY (PORT 9007)</h3>
+            <div id="library-content" class="terminal-window" style="font-family: var(--font-ui); line-height: 1.6;">
+                <div class="meta">Waiting for research data...</div>
+            </div>
+        </div>
+    </template>
+    
+    <template id="tmpl-system">
+        <div class="grid-dashboard">
+             <div class="card stat-big">
+                <h3>CPU LOAD</h3>
+                <div class="big-val" id="sys-cpu">0%</div>
+            </div>
+             <div class="card stat-big">
+                <h3>MEMORY</h3>
+                <div class="big-val" id="sys-mem">0KB</div>
+            </div>
+             <div class="card stat-big">
+                <h3>SYNAPSES</h3>
+                <div class="big-val" id="sys-syn">0</div>
+            </div>
+             <div class="card focus-card">
+                <h3>NETWORK DIAGNOSTICS (PORT 9008)</h3>
+                <canvas id="net-viz" style="width: 100%; height: 200px;"></canvas>
+            </div>
+        </div>
+    </template>
+    
+    <template id="tmpl-admin">
+        <div class="card">
+            <h3>ADMIN OPERATIONS (PORT 9009)</h3>
+            <div style="display: flex; gap: 20px; margin-top: 20px;">
+                <button class="inject-btn" onclick="sendAdmin('save')">SAVE STATE</button>
+                <button class="inject-btn" onclick="sendAdmin('compress')">COMPRESS WEIGHTS</button>
+                <button class="inject-btn warn" onclick="sendAdmin('reset')">FACTORY RESET</button>
+            </div>
+            <div id="admin-log" style="margin-top: 20px; color: #888; font-family: var(--font-mono);"></div>
+        </div>
+    </template>
+
     <template id="tmpl-neural">
         <div class="neural-grid">
             <div class="card full-height">
