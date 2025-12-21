@@ -12,6 +12,9 @@ else()
     add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion)
 endif()
 
+# Include vendor libraries
+include_directories(include)
+
 # Threading support (needed for dnn.hpp parallel execution)
 find_package(Threads REQUIRED)
 

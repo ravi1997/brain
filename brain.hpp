@@ -10,8 +10,10 @@
 #include <algorithm>
 #include <thread>
 #include <chrono>
+#include <deque>
 #include <atomic>
 #include <mutex>
+#include <map>
 #include <filesystem>
 #include <fstream>
 
@@ -87,12 +89,20 @@ public:
     std::chrono::steady_clock::time_point last_yawn;
     std::string current_thought = "Idle";
     
+    // Research Queue
+    std::deque<std::string> research_queue;
+    std::vector<std::string> learned_topics;
+
     // Explicit Memory (Database)
     std::unique_ptr<MemoryStore> memory_store;
     std::string db_path = "brain_memories.db";
 
-    static constexpr size_t VOCAB_SIZE = 128; // ASCII covers basic needs
+    // Word-based hashing (1000 buckets)
+    static constexpr size_t VOCAB_SIZE = 1000; 
     static constexpr size_t VECTOR_DIM = 64;  
+    
+    // Reverse mapping for decoding
+    std::map<size_t, std::string> vocab_decode;
 
     Brain();
     ~Brain();
@@ -100,12 +110,17 @@ public:
     std::string interact(const std::string& input_text);
     std::string decode_output(const std::vector<double>& logits);
     bool CheckPrintable(char c);
+    
+    // Helpers
+    std::vector<std::string> tokenize(const std::string& text);
+    void log_activity(const std::string& msg); // Background logging
 
     // "Sleep" / Consolidation
     void sleep();
     
     // Active Research
     std::string research(const std::string& topic);
+    std::string deep_research(const std::string& topic);
 
     long long get_knowledge_size();
 

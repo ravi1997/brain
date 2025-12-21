@@ -9,10 +9,8 @@
 struct BrainConfig {
     double curiosity = 0.8;
     double playfulness = 0.7;
-    double energy_decay = 0.05;
+    double energy_decay = 0.002; // Slower decay (~25 mins awake)
     
-    // Helper to load from simple JSON-like file
-    // Supports:
     // "key": value,
     // "key": "value"
     static BrainConfig load(const std::string& path) {
@@ -111,12 +109,21 @@ std::string Brain::interact(const std::string& input_text) {
 
     // 1. Sensual Perception (Encoding)
     std::vector<double> input_vec(VOCAB_SIZE, 0.0);
-    // Simple Bag-of-Chars for the input 'sentence' vector
-    // In a real RNN we'd Step through it. Here we sum.
-    for (char c_raw : input_text) {
-        unsigned char c = static_cast<unsigned char>(c_raw);
-        if (c < 128) input_vec[c] += 1.0;
+    
+    // Convert to words (Bag of Words Hashing)
+    auto tokens = tokenize(input_text);
+    for (const auto& word : tokens) {
+        // Hash string to 0..999
+        std::hash<std::string> hasher;
+        size_t idx = hasher(word) % VOCAB_SIZE;
+        input_vec[idx] += 1.0;
+        
+        // Learn the word mapping
+        if (vocab_decode.find(idx) == vocab_decode.end()) {
+            vocab_decode[idx] = word;
+        }
     }
+
     // Normalize
     double max_val = 1.0; 
     for(double v : input_vec) if(v > max_val) max_val = v;
@@ -160,13 +167,16 @@ std::string Brain::decode_output(const std::vector<double>& logits) {
     // Sort descending
     std::sort(scores.begin(), scores.end(), [](auto& a, auto& b){ return a.first > b.first; });
 
-    // Let's take top 3 distinct chars to form a "word"
+    // Output top 3 words
     for(size_t i=0; i<3; ++i) {
         if (scores[i].first > 0.01) { // Threshold
-           char c = static_cast<char>(scores[i].second);
-           if (CheckPrintable(c)) result += c;
+           size_t idx = static_cast<size_t>(scores[i].second);
+           if (vocab_decode.count(idx)) {
+               result += vocab_decode[idx] + " ";
+           }
         }
     }
+    
     if (result.empty()) return "...";
     return result;
 }
@@ -188,15 +198,36 @@ void Brain::sleep() {
 }
 
 std::string Brain::research(const std::string& topic) {
+    // UNLOCK to allow main thread to be responsive
+    {
+        std::lock_guard<std::recursive_mutex> lock(brain_mutex);
+        log_activity("[Background]: Researching " + topic + "...");
+    }
+    
+    // Fetch with links (network bound)
+    auto result = research_tools::fetch_comprehensive(topic);
+    
+    // RE-LOCK to update state
     std::lock_guard<std::recursive_mutex> lock(brain_mutex);
-    safe_print("[Brain is researching " + topic + "...]");
-    std::string content = research_tools::fetch_summary(topic);
+    std::string content = result.summary;
+    
+    // Add sub-topics to queue (if interesting/unique)
+    int added = 0;
+    for (const auto& sub : result.related_topics) {
+        if (added < 5 && std::find(learned_topics.begin(), learned_topics.end(), sub) == learned_topics.end()) {
+            if (sub.find("List of") == std::string::npos && sub.find("Wikipedia") == std::string::npos) {
+                 research_queue.push_back(sub);
+                 added++;
+            }
+        }
+    }
+    learned_topics.push_back(topic);
     
     if (content.find("No information found") != std::string::npos || content.find("Connection Failed") != std::string::npos) {
         return content;
     }
 
-    safe_print("[Brain found info, reading (" + std::to_string(content.length()) + " chars)...]");
+    log_activity("[Background]: Read " + std::to_string(content.length()) + " chars on " + topic);
     
     // Feed the content into the brain to "learn" it
     std::stringstream ss(content);
@@ -206,7 +237,7 @@ std::string Brain::research(const std::string& topic) {
         if (segment.length() < 3) continue;
         
         // "Read" (interact calls interact which calls reinforce)
-        interact(segment);
+        interact(segment); // This reinforces new words!
         // "Reinforce" highly
         memory_center->network.consolidate_memories(memory_center->current_activity);
         
@@ -218,7 +249,18 @@ std::string Brain::research(const std::string& topic) {
         memory_store->store("Research", content, topic);
     }
     
-    return "I learned about " + topic + "! " + content.substr(0, 50) + "...";
+    return "I learned about " + topic + "! " + content.substr(0, 50) + "... (Found " + std::to_string(result.related_topics.size()) + " related topics)";
+}
+
+
+
+std::string Brain::deep_research(const std::string& topic) {
+    std::lock_guard<std::recursive_mutex> lock(brain_mutex);
+    // Clear queue to focus on this
+    research_queue.clear();
+    
+    // Initial fetches
+    return research(topic);
 }
 
 long long Brain::get_knowledge_size() {
@@ -239,25 +281,43 @@ void Brain::automata_loop() {
         emotions.boredom = std::min(1.0, emotions.boredom + 0.05);
 
         // 2. Decide to act?
-        if (emotions.energy < 0.15) {
-            auto now = std::chrono::steady_clock::now();
-            if (std::chrono::duration_cast<std::chrono::seconds>(now - last_yawn).count() > 60) {
-                safe_print("\n[Brain]: *Yawns loudly* I'm sleepy...");
-                last_yawn = now;
-            }
+        if (emotions.energy < 0.1) {
+            log_activity("Energy critical (" + std::to_string(emotions.energy) + "). Going to sleep...");
+            sleep(); // Auto-recover
+            log_activity("Woke up refreshed!");
+        } else if (emotions.energy < 0.2) {
+             // Just yawn warnings
+             auto now = std::chrono::steady_clock::now();
+             if (std::chrono::duration_cast<std::chrono::seconds>(now - last_yawn).count() > 60) {
+                 // safe_print("\n[Brain]: *Yawns loudly* I'm sleepy...");
+                 last_yawn = now;
+             }
         } else if (emotions.boredom > 0.95) { 
             // Do something fun!
             current_thought = "Bored... looking for something to do.";
-            safe_print("\n[Brain]: I'm very bored! I'm going to look up something random!");
+            log_activity("Bored. Researcher random topic...");
             
             std::vector<std::string> ideas = {"Dinosaurs", "Space", "Candy", "Robots", "Cats"};
             std::string topic = ideas[static_cast<size_t>(rand()) % ideas.size()];
             research(topic);
             emotions.boredom = 0.0; // Satisfied
         
-        } else if (emotions.happiness > 0.8) {
+        } else if (!research_queue.empty() && emotions.energy > 0.3) {
+            // Autonomous Deep Learning
+            std::string topic = research_queue.front();
+            research_queue.pop_front();
+            
+            // Check if already learned
+             if (std::find(learned_topics.begin(), learned_topics.end(), topic) == learned_topics.end()) {
+                log_activity("Diving deeper into " + topic + "...");
+                research(topic);
+                emotions.boredom = 0.0;
+             }
+        } 
+        
+        else if (emotions.happiness > 0.8) {
             // Happy humming
-             if (rand() % 10 == 0) safe_print("\n[Brain]: *Hums a happy tune*");
+             // if (rand() % 10 == 0) safe_print("\n[Brain]: *Hums a happy tune*");
         }
     }
 }
@@ -283,6 +343,16 @@ void Brain::save(const std::string& filename) {
     os.write(reinterpret_cast<char*>(&personality), sizeof(Personality));
     os.write(reinterpret_cast<char*>(&emotions), sizeof(Emotions));
     
+    // Save Vocab
+    size_t vocab_count = vocab_decode.size();
+    os.write(reinterpret_cast<char*>(&vocab_count), sizeof(size_t));
+    for (const auto& [idx, word] : vocab_decode) {
+        os.write(reinterpret_cast<const char*>(&idx), sizeof(size_t));
+        size_t len = word.length();
+        os.write(reinterpret_cast<const char*>(&len), sizeof(size_t));
+        os.write(word.c_str(), len);
+    }
+    
     language_encoder->network.save(os);
     language_decoder->network.save(os);
     memory_center->network.save(os);
@@ -304,10 +374,48 @@ void Brain::load(const std::string& filename) {
     is.read(reinterpret_cast<char*>(&personality), sizeof(Personality));
     is.read(reinterpret_cast<char*>(&emotions), sizeof(Emotions));
     
+    // Load Vocab
+    size_t vocab_count = 0;
+    if (is.read(reinterpret_cast<char*>(&vocab_count), sizeof(size_t))) {
+        for (size_t i = 0; i < vocab_count; ++i) {
+            size_t idx, len;
+            is.read(reinterpret_cast<char*>(&idx), sizeof(size_t));
+            is.read(reinterpret_cast<char*>(&len), sizeof(size_t));
+            std::string word(len, ' ');
+            is.read(&word[0], len);
+            vocab_decode[idx] = word;
+        }
+    }
+    
     language_encoder->network.load(is);
     language_decoder->network.load(is);
     memory_center->network.load(is);
     cognitive_center->network.load(is);
     
     safe_print("[Brain]: Memories restored.");
+}
+
+// Helpers
+void Brain::log_activity(const std::string& msg) {
+    std::ofstream log_file("brain.log", std::ios::app);
+    if (log_file) {
+        auto now = std::chrono::system_clock::now();
+        std::time_t now_c = std::chrono::system_clock::to_time_t(now);
+        log_file << std::put_time(std::localtime(&now_c), "%F %T") << " " << msg << std::endl;
+    }
+}
+
+std::vector<std::string> Brain::tokenize(const std::string& text) {
+    std::vector<std::string> tokens;
+    std::string current;
+    for (char c : text) {
+        if (std::isalnum(c)) {
+            current += static_cast<char>(std::tolower(c));
+        } else if (!current.empty()) {
+            tokens.push_back(current);
+            current.clear();
+        }
+    }
+    if (!current.empty()) tokens.push_back(current);
+    return tokens;
 }

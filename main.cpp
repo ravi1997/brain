@@ -13,11 +13,9 @@ int main() {
         std::string input;
         while (true) {
             // We use standard cin, which might block. 
-            // The background thread will print using safe_print potentially while we wait.
-            // PROMPT handling is tricky with async output.
-            // We'll just print a prompt.
+            // The background thread will print to logs, so we can have a clean prompt.
             
-            std::cout << "> "; 
+            std::cout << "\n> User: "; 
             if (!std::getline(std::cin, input)) break;
             if (input == "exit") break;
             if (input.empty()) continue;
@@ -83,14 +81,22 @@ int main() {
                  continue;
             }
 
+            if (input.rfind("deep ", 0) == 0) {
+                 std::string topic = input.substr(5);
+                 std::cout << "> Brain: Starting deep dive into " + topic + " (check logs)..." << std::endl;
+                 brain.deep_research(topic);
+                 continue;
+            }
+
             if (input.rfind("research ", 0) == 0) {
                  std::string topic = input.substr(9);
-                 safe_print(brain.research(topic));
+                 std::cout << "> Brain: Queued research on " + topic << std::endl;
+                 brain.research(topic);
                  continue;
             }
 
             std::string response = brain.interact(input);
-            safe_print("Brain: " + response);
+            std::cout << "> Brain: " << response << std::endl;
         }
     } catch (const std::exception& e) {
         std::cerr << "Critical Failure: " << e.what() << std::endl;
