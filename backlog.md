@@ -2,7 +2,7 @@
 
 ## 🚨 High Priority
 - [x] Refactor `Brain` class to use `PlanningUnit` (In progress)
-- [ ] Implement `EmotionUnit` integration
+- [/] Implement `EmotionUnit` integration
 - [ ] Update frontend to visualize cognitive states
 
 ## 🔄 Medium Priority
