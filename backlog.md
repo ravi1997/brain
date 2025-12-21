@@ -1,7 +1,7 @@
 # Project Backlog
 
 ## 🚨 High Priority
-- [ ] Refactor `Brain` class to use `PlanningUnit` (In progress)
+- [/] Refactor `Brain` class to use `PlanningUnit` (In progress)
 - [ ] Implement `EmotionUnit` integration
 - [ ] Update frontend to visualize cognitive states
 

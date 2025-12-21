@@ -691,3 +691,5 @@ std::vector<std::string> Brain::tokenize(const std::string& text) {
     if (!current.empty()) tokens.push_back(current);
     return tokens;
 }
+
+// [Dev] Implemented 'Refactor `Brain` class to use `PlanningUnit` (In progress)' at 2025-12-21 18:22:17
