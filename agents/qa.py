@@ -11,7 +11,7 @@ class QAAgent:
         try:
             # 1. Build
             logger.info(f"[{self.name}] Building backend...")
-            run_command("docker compose build brain_replica")
+            run_command("docker compose build brain")
             
             # 2. Test (Mock test for speed in this demo, or real build check)
             # In a real scenario we would run: run_command("npm test", cwd="../web")
