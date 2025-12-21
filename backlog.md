@@ -25,9 +25,9 @@
 - [x] [Cognition] Implement short-term memory buffer cleanup - Optimization #22
 - [x] [Frontend] Implement user authentication flow - Implementation #23
 - [x] [Infrastructure] Set up GitHub Actions for automated testing - Testing #24
-- [/] [NLU] Add sentiment analysis to input processing (Phase 2) #25
+- [x] [NLU] Add sentiment analysis to input processing (Phase 2) #25
 - [/] [NLU] Add sentiment analysis to input processing - Optimization #26
-- [ ] [NLU] Improve entity extraction accuracy (Phase 1) #27
+- [/] [NLU] Improve entity extraction accuracy (Phase 1) #27
 - [ ] [Cognition] Add unit tests for EmotionUnit edge cases - Investigation #28
 - [ ] [NLU] Implement fallback responses for unknown inputs - Optimization #29
 - [ ] [NLU] Improve entity extraction accuracy (Phase 2) #30

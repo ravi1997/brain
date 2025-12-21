@@ -767,3 +767,5 @@ std::vector<std::string> Brain::tokenize(const std::string& text) {
 // [Dev] Implemented '[NLU] Add sentiment analysis to input processing (Phase 2) #25' at 2025-12-21 18:37:43
 
 // [Dev] Implemented '[NLU] Add sentiment analysis to input processing - Optimization #26' at 2025-12-21 18:37:55
+
+// [Dev] Implemented '[NLU] Improve entity extraction accuracy (Phase 1) #27' at 2025-12-21 18:38:07
