@@ -1,87 +1,100 @@
 # Brain Replica
 
-**Brain Replica** is an experimental AI simulation engine written in C++20. It models a simplified biological brain with distinct cortical regions, plastic neural networks, and simulated emotional states.
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
+![C++ Standard](https://img.shields.io/badge/standard-C%2B%2B20-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Docker](https://img.shields.io/badge/deployment-docker-blue)
+
+**Brain Replica** is an advanced, experimental AI simulation engine designed to model a simplified biological brain. Unlike traditional LLMs, it features distinct cortical regions, plastic neural networks with Hebbian learning, and simulated emotional states, all running in a continuous autonomous loop.
 
 ## Key Features
 
-*   **Plastic Neural Networks**: Implements a custom neural network engine (`dnn.hpp`, `dnn.cpp`) supporting both standard backpropagation and Hebbian learning with homeostatic regulation.
-*   **Cognitive Architecture**: Divided into specialized regions:
-    *   **Broca's Area**: Language encoding.
-    *   **Wernicke's Area**: Language decoding.
-    *   **Hippocampus**: Memory consolidation.
-    *   **Prefrontal Cortex**: Cognitive processing and decision making.
-*   **Simulated Autonomy**: The "Brain" runs on a background thread (`Brain::automata_loop`), experiencing boredom, fatigue, and curiosity. It will spontaneously "research" topics or "sleep" based on its energy levels.
-*   **Durable Memory**: Uses **SQLite** (`brain_memories.db`) to persist thoughts, research, and interactions across sessions.
-*   **Configurable Persona**: Personality traits (curiosity, playfulness, energy decay) are tunable via `config.json`.
+*   **🧠 Plastic Neural Networks**: Custom engine (`dnn.hpp`) supporting backpropagation and Hebbian learning with homeostatic regulation.
+*   **🏙️ Cognitive Architecture**:
+    *   **Broca/Wernicke Areas**: Natural Language Processing.
+    *   **Hippocampus**: Associative Memory & Consolidation.
+    *   **Prefrontal Cortex**: Decision Making & Planning.
+*   **⚡ Autonomous Agency**: Runs on a background thread (`Brain::automata_loop`), experiencing fatigue, boredom, and curiosity.
+*   **💾 O(1) Memory Retrieval**: High-performance inverted index for instant memory access (`MemoryStore`).
+*   **🚀 Redis Caching**: Integrated **Redis** layer for caching frequent cognitive queries.
+*   **⚛️ Modern React Dashboard**: Real-time visualization of the brain's internal state, thoughts, and vitals using **React** + **Vite**.
+
+## Tech Stack
+
+*   **Core**: C++20
+*   **Database**: SQLite (Persistent Memory)
+*   **Caching**: Redis
+*   **Frontend**: React, Vite, WebSocket
+*   **Infrastructure**: Docker, Docker Compose
 
 ## Getting Started
 
 ### Prerequisites
 
-*   **Docker** and **Docker Compose**
-*   (Optional) C++20 compiler if building locally without Docker.
+*   [Docker](https://docs.docker.com/get-docker/) & Docker Compose
 
-## Usage
+### Quick Start
 
-### 1. Start the Brain (Background)
-Run this once to start the persistent brain process:
-```bash
-./start.sh
-```
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/brain-replica.git
+    cd brain-replica
+    ```
 
-### 2. Talk to the Brain
-To interact with the running brain:
+2.  **Start the System:**
+    ```bash
+    docker-compose up --build -d
+    ```
+    *This starts the Brain backend (port 9001-9010), Redis (6379), and the Web Dashboard (5000).*
+
+3.  **Access the Dashboard:**
+    Open [http://localhost:5000](http://localhost:5000) in your browser.
+
+### Terminal Interaction
+
+You can also interact directly via the terminal:
+
 ```bash
 ./connect.sh
 ```
-*Press `Ctrl+P`, then `Ctrl+Q` to detach without stopping.*
+*(Press `Ctrl+P`, then `Ctrl+Q` to detach)*
 
-### 3. Stop
-```bash
-./stop.sh
-```
+## Configuration
 
-### 4. Training (Batch)
-To feed a list of topics:
-```bash
-./train.sh
-```
-
-### Configuration
-
-You can tune the brain's behavior by editing `config.json`. Changes take effect upon restart.
+Tune the brain's personality in `config.json`:
 
 ```json
 {
-    "curiosity": 0.9,      // Likelihood of random research
-    "playfulness": 0.6,    // Affects tone (future)
-    "energy_decay": 0.02   // How fast it gets tired
+    "curiosity": 0.9,      // Probability of random research
+    "playfulness": 0.6,    // Affects response tone
+    "energy_decay": 0.02   // Fatigue rate
 }
+```
+
+## Architecture
+
+The system follows a modular architecture:
+
+```mermaid
+graph TD
+    User[User / Web UI] <-->|WebSocket| Brain
+    Brain[Brain Engine (C++)] <-->|Read/Write| Redis[Redis Cache]
+    Brain <-->|Persist| SQLite[SQLite Memory DB]
+    Brain -->|Process| Cortex[Cortical Regions]
+    Cortex -->|Learn| DNN[Neural Network]
 ```
 
 ## Development
 
-### Project Structure
+*   **Backend**: `src/` (C++20)
+*   **Frontend**: `web/client/` (React)
+*   **Tests**: `tests/` (GoogleTest)
 
-*   `src/`:
-    *   `main.cpp`: Entry point and REPL.
-    *   `brain.hpp/cpp`: High-level simulation logic and state management.
-    *   `dnn.hpp/cpp`: Neural network engine implementation.
-    *   `memory_store.hpp/cpp`: SQLite database abstraction.
-*   `tests/`: a GoogleTest suite for validating core components.
-
-### Running Tests
-
-Unit tests run inside the Docker container to ensure environment consistency.
-
+### Running Tests (Docker)
 ```bash
-./test.sh
+./test_in_docker.sh
 ```
 
-## Theory of Operation
+## License
 
-The core learning mechanism uses **Anti-Hebbian** and **ABCD** (Activity-Based Decay) rules alongside gradient descent. The `PlasticLayer` adjusts weights not just based on error (supervisor) but also based on the correlation of input/output activity, simulating biological synaptic plasticity.
-
-### License
-
-Project is open for research and educational purposes.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

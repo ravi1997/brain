@@ -20,12 +20,15 @@ add_executable(brain_tests
     test_memory.cpp
     test_nlu.cpp
     test_context.cpp
+    test_memory_optimization.cpp
+    test_redis.cpp
 )
 
 target_link_libraries(brain_tests
     gtest_main
     sqlite3
     tbb
+    hiredis
 )
 
 include(GoogleTest)

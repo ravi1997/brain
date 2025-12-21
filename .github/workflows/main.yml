@@ -1,0 +1,19 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build and Run Tests
+        # Ensure executable permission just in case
+        run: |
+          chmod +x test_in_docker.sh
+          ./test_in_docker.sh

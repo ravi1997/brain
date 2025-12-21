@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     g++ \
     libtbb-dev \
     libsqlite3-dev \
+    libhiredis-dev \
     git \
     curl \
     python3 \

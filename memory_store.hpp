@@ -13,6 +13,8 @@ struct Memory {
     std::string tags;
 };
 
+#include <unordered_map>
+
 class MemoryStore {
 public:
     MemoryStore(const std::string& db_path);
@@ -28,6 +30,10 @@ private:
     sqlite3* db_ = nullptr;
     std::string db_path_;
     mutable std::mutex db_mutex_;
+    // Inverted Index: Token -> List of Memory IDs
+    std::unordered_map<std::string, std::vector<int>> inverted_index_;
 
     bool execute(const std::string& sql);
+    void build_index();
+    void index_memory(int id, const std::string& content);
 };

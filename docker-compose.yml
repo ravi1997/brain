@@ -15,6 +15,9 @@ services:
       - "9011:9011"
     stdin_open: true
     tty: true
+    depends_on:
+      - redis
+
 
   web:
     build: ./web
@@ -24,4 +27,8 @@ services:
       - brain
     links:
       - brain:brain
+
+  redis:
+    image: redis:alpine
+
 

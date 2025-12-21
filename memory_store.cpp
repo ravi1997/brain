@@ -1,6 +1,11 @@
 #include "memory_store.hpp"
+#include "memory_store.hpp"
+#include "redis_client.hpp"
 #include <chrono>
 #include <iostream>
+#include <sstream>
+#include <algorithm>
+#include <cctype>
 
 MemoryStore::MemoryStore(const std::string& db_path) : db_path_(db_path) {}
 
@@ -25,7 +30,10 @@ bool MemoryStore::init() {
                       "content TEXT,"
                       "tags TEXT);";
     
-    return execute(sql);
+    if (!execute(sql)) return false;
+    
+    build_index();
+    return true;
 }
 
 bool MemoryStore::execute(const std::string& sql) {
@@ -61,21 +69,85 @@ bool MemoryStore::store(const std::string& type, const std::string& content, con
         return false;
     }
     sqlite3_finalize(stmt);
+    
+    // Index the new memory
+    int id = static_cast<int>(sqlite3_last_insert_rowid(db_));
+    index_memory(id, content);
+    
+    // Invalidate relevant cache - simplistic approach: clear specific keys? 
+    // For now, we accept cache is slightly stale for 60s or we rely on TTL.
+    
     return true;
 }
 
+// Global or static instance to share connection across calls
+static RedisClient redis_cache_("redis");
+
 std::vector<Memory> MemoryStore::query(const std::string& keyword) {
     std::lock_guard<std::mutex> lock(db_mutex_);
+    
+    // Cache Key
+    std::string cache_key = "query:" + keyword;
+    
     std::vector<Memory> results;
+
+    // 1. Check Redis
+    auto cached = redis_cache_.get(cache_key);
+    if (cached) {
+        // Deserialize CSV: ID|Timestamp|Type|Content|Tags\n
+        std::stringstream ss(cached.value());
+        std::string line;
+        while (std::getline(ss, line)) {
+            if (line.empty()) continue;
+            std::stringstream line_ss(line);
+            std::string segment;
+            std::vector<std::string> parts;
+            while(std::getline(line_ss, segment, '|')) {
+                parts.push_back(segment);
+            }
+            if (parts.size() >= 5) {
+                Memory m;
+                m.id = std::stoi(parts[0]);
+                m.timestamp = std::stoll(parts[1]);
+                m.type = parts[2];
+                m.content = parts[3];
+                m.tags = parts[4];
+                results.push_back(m);
+            }
+        }
+        return results;
+    }
+    
+    
     if (!db_) return results;
 
-    std::string sql_str = "SELECT id, timestamp, type, content, tags FROM memories WHERE content LIKE ? ORDER BY timestamp DESC LIMIT 20;";
+
+    // Normalize keyword
+    std::string term = keyword;
+    std::transform(term.begin(), term.end(), term.begin(), ::tolower);
+    
+    if (inverted_index_.find(term) == inverted_index_.end()) {
+        return results; // No matches found (O(1))
+    }
+
+    const auto& ids = inverted_index_[term];
+    if (ids.empty()) return results;
+
+    // Create SQL for specific IDs
+    // Get last 20 IDs (most recent)
+    std::string id_list = "";
+    int count = 0;
+    // Iterate backwards
+    for (auto it = ids.rbegin(); it != ids.rend(); ++it) {
+        if (!id_list.empty()) id_list += ",";
+        id_list += std::to_string(*it);
+        if (++count >= 20) break;
+    }
+
+    std::string sql_str = "SELECT id, timestamp, type, content, tags FROM memories WHERE id IN (" + id_list + ") ORDER BY timestamp DESC;";
     sqlite3_stmt* stmt;
     
     if (sqlite3_prepare_v2(db_, sql_str.c_str(), -1, &stmt, 0) != SQLITE_OK) return results;
-
-    std::string pattern = "%" + keyword + "%";
-    sqlite3_bind_text(stmt, 1, pattern.c_str(), -1, SQLITE_STATIC);
 
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         Memory m;
@@ -87,7 +159,55 @@ std::vector<Memory> MemoryStore::query(const std::string& keyword) {
         results.push_back(m);
     }
     sqlite3_finalize(stmt);
+    
+    // Store in Redis (Serialize)
+    if (!results.empty()) {
+        std::string serialized = "";
+        for (const auto& m : results) {
+            serialized += std::to_string(m.id) + "|" + 
+                          std::to_string(m.timestamp) + "|" + 
+                          m.type + "|" + 
+                          m.content + "|" + 
+                          m.tags + "\n";
+        }
+        redis_cache_.set(cache_key, serialized, 60); // TTL 60s
+    }
+    
     return results;
+}
+
+void MemoryStore::build_index() {
+    inverted_index_.clear();
+    std::string sql = "SELECT id, content FROM memories ORDER BY id ASC;";
+    sqlite3_stmt* stmt;
+    if (sqlite3_prepare_v2(db_, sql.c_str(), -1, &stmt, 0) != SQLITE_OK) return;
+
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        int id = sqlite3_column_int(stmt, 0);
+        std::string content = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+        index_memory(id, content);
+    }
+    sqlite3_finalize(stmt);
+    std::cout << "[MemoryStore] Index built. Tokens: " << inverted_index_.size() << std::endl;
+}
+
+void MemoryStore::index_memory(int id, const std::string& content) {
+    std::string local_content = content;
+    // Simple tokenizer: split by non-alpha
+    for (size_t i = 0; i < local_content.size(); ++i) {
+        if (std::isalpha(local_content[i])) {
+             local_content[i] = static_cast<char>(std::tolower(local_content[i]));
+        } else {
+             local_content[i] = ' ';
+        }
+    }
+    
+    std::stringstream ss(local_content);
+    std::string token;
+    while (ss >> token) {
+        if (token.length() < 3) continue; // Skip small words
+        inverted_index_[token].push_back(id);
+    }
 }
 
 std::vector<Memory> MemoryStore::get_recent(int limit) {

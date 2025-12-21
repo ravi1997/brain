@@ -6,9 +6,9 @@
 - [x] [Frontend] Modernize UI and add Cognition view (User Request)
 - [x] [Infrastructure] Add health check endpoint for monitoring - Testing #3
 - [x] [NLU] Add support for multi-turn conversation context (Phase 1) #4
-- [ ] [Infrastructure] Set up GitHub Actions for automated testing - Investigation #5
-- [ ] [Frontend] Refactor dashboard to use React components - Refactor #6
-- [ ] [Cognition] Refactor memory retrieval for O(1) access - Testing #7
+- [x] [Infrastructure] Set up GitHub Actions for automated testing - Investigation #5
+- [x] [Frontend] Refactor dashboard to use React components - Refactor #6
+- [x] [Cognition] Refactor memory retrieval for O(1) access - Testing #7
 - [ ] [Infrastructure] Implement redis caching for frequent queries - Testing #8
 - [ ] [NLU] Improve entity extraction accuracy (Phase 1) #9
 - [ ] [Frontend] Refactor dashboard to use React components - Refactor #10
