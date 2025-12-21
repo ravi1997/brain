@@ -2,7 +2,7 @@
 
 ## 🚨 High Priority
 - [/] Add persistence for cognitive states
-- [ ] Improve natural language understanding (NLU) accuracy
+- [/] Improve natural language understanding (NLU) accuracy
 - [x] Refactor `Brain` class to use `PlanningUnit` (In progress)
 - [x] Implement `EmotionUnit` integration
 - [x] Update frontend to visualize cognitive states
