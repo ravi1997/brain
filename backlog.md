@@ -3,7 +3,7 @@
 ## 🚨 High Priority
 - [x] Expand e2e test coverage for dashboard
 - [x] Voice interface integration
-- [/] Optimize main loop performance
+- [x] Optimize main loop performance
 - [x] Add persistence for cognitive states
 - [x] Improve natural language understanding (NLU) accuracy
 - [x] Refactor `Brain` class to use `PlanningUnit` (In progress)
@@ -14,7 +14,7 @@
 
 
 ## 🧊 Low Priority / Future Ideas
-- [ ] migration to a graph database for knowledge storage?
+- [/] migration to a graph database for knowledge storage?
 - [ ] Multi-user support
 
 ## ✅ Completed

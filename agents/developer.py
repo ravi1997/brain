@@ -44,16 +44,9 @@ class DeveloperAgent:
         with open(BACKLOG_PATH, 'r') as f:
             lines = f.readlines()
             
-        # simple parser: look for [ ] under High Priority
-        in_high_priority = False
+        # Parse entire file for first available task
         for line in lines:
-            if "## 🚨 High Priority" in line:
-                in_high_priority = True
-                continue
-            if line.startswith("##") and in_high_priority: # Next section
-                break
-                
-            if in_high_priority and "- [ ]" in line:
+            if "- [ ]" in line:
                 # Extract task text
                 return line.split("- [ ]")[1].strip()
         
