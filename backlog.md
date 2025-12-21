@@ -1,32 +1,11 @@
 # Project Backlog
 
 ## 🚨 High Priority
-- [x] Expand e2e test coverage for dashboard
-- [x] Voice interface integration
-- [x] Optimize main loop performance
-- [x] Add persistence for cognitive states
-- [x] Improve natural language understanding (NLU) accuracy
-- [x] Refactor `Brain` class to use `PlanningUnit` (In progress)
-- [x] Implement `EmotionUnit` integration
-- [x] Update frontend to visualize cognitive states
-
-## 🔄 Medium Priority
-
-
-## 🧊 Low Priority / Future Ideas
-- [x] migration to a graph database for knowledge storage?
-- [x] Multi-user support
-
-## ✅ Completed
-- [x] (No items yet)
-
-
-## 🔮 Future Roadmap (Realistic Generated)
 - [x] [NLU] Improve entity extraction accuracy - Optimization #1
 - [x] [Infrastructure] Dockerize build environment for consistent CI (Phase 1) #2
 - [x] [Infrastructure] Add health check endpoint for monitoring - Testing #3
 - [x] [NLU] Add support for multi-turn conversation context (Phase 1) #4
-- [x] [Infrastructure] Set up GitHub Actions for automated testing - Investigation #5
+- [/] [Infrastructure] Set up GitHub Actions for automated testing - Investigation #5
 - [/] [Frontend] Refactor dashboard to use React components - Refactor #6
 - [ ] [Cognition] Refactor memory retrieval for O(1) access - Testing #7
 - [ ] [Infrastructure] Implement redis caching for frequent queries - Testing #8
@@ -1022,6 +1001,19 @@
 - [ ] [NLU] Add support for multi-turn conversation context - Optimization #998
 - [ ] [Infrastructure] Dockerize build environment for consistent CI - Refactor #999
 - [ ] [Frontend] Add robust error handling for websocket disconnections (Phase 2) #1000
+
+## 🔄 Medium Priority
+
+
+## 🧊 Low Priority / Future Ideas
+- [x] migration to a graph database for knowledge storage?
+- [x] Multi-user support
+
+## ✅ Completed
+- [x] (No items yet)
+
+
+## 🔮 Future Roadmap (Realistic Generated)
 
 ## 🎨 UI / UX Enhancements
 - [ ] Add dark mode toggle to the dashboard header
