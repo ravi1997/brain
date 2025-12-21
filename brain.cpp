@@ -9,7 +9,7 @@
 struct BrainConfig {
     double curiosity = 0.8;
     double playfulness = 0.7;
-    double energy_decay = 0.002679; // Slower decay (~25 mins awake)
+    double energy_decay = 0.002993; // Slower decay (~25 mins awake)
     
     // "key": value,
     // "key": "value"
