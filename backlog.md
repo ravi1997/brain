@@ -18,4 +18,4 @@
 - [x] Multi-user support
 
 ## ✅ Completed
-- [/] (No items yet)
+- [x] (No items yet)
