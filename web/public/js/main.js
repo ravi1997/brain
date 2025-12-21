@@ -10,8 +10,6 @@ import { LibraryFeature } from './features/library.js';
 import { SystemFeature } from './features/system.js';
 import { AdminFeature } from './features/admin.js';
 import { TerminalFeature } from './features/terminal.js';
-import { VoiceFeature } from './features/voice.js';
-import { CognitionFeature } from './features/cognition.js';
 
 // Route Configuration
 const routes = {
@@ -22,8 +20,7 @@ const routes = {
     'library': LibraryFeature,
     'system': SystemFeature,
     'admin': AdminFeature,
-    'terminal': TerminalFeature,
-    'cognition': CognitionFeature
+    'terminal': TerminalFeature
 };
 
 // Boot

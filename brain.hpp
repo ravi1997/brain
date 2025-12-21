@@ -35,11 +35,14 @@ struct Personality {
     double energy_decay = 0.05; 
 };
 
-#include "cognition/emotion_unit.hpp"
-#include "cognition/reasoning_unit.hpp"
-#include "cognition/decision_unit.hpp"
-#include "cognition/planning_unit.hpp"
-#include "cognition/learning_unit.hpp"
+struct Emotions {
+    double happiness = 0.5; // 0-1
+    double sadness = 0.0;   // 0-1
+    double anger = 0.0;     // 0-1
+    double fear = 0.0;      // 0-1
+    double energy = 1.0;    // 0-1
+    double boredom = 0.0;   // 0-1 (High = bored)
+};
 
 // Region represents a distinct functional area of the brain
 class Region {
@@ -80,26 +83,18 @@ private:
 
 class Brain {
 public:
-    // Legacy Neural Regions (to be slowly phased out or integrated)
-    std::unique_ptr<Region> language_encoder; 
-    std::unique_ptr<Region> language_decoder; 
-    std::unique_ptr<Region> memory_center;   
-    std::unique_ptr<Region> cognitive_center;
-
-    // Cognitive Units 2.0
-    std::unique_ptr<EmotionUnit> emotion_unit;
-    std::unique_ptr<ReasoningUnit> reasoning_unit;
-    std::unique_ptr<DecisionUnit> decision_unit;
-    std::unique_ptr<PlanningUnit> planning_unit;
-    std::unique_ptr<LearningUnit> learning_unit;
+    std::unique_ptr<Region> language_encoder; // Broca's
+    std::unique_ptr<Region> language_decoder; // Wernicke's
+    std::unique_ptr<Region> memory_center;   // Hippocampus
+    std::unique_ptr<Region> cognitive_center;// Prefrontal Cortex
 
     Personality personality;
-    // Emotions emotions; // DEPRECATED: Replaced by emotion_unit
+    Emotions emotions;
     Reflex reflex;
     TaskManager task_manager;
     
     std::atomic<bool> running{true};
-    mutable std::recursive_mutex brain_mutex; 
+    mutable std::recursive_mutex brain_mutex; // Protects shared state (recursive to allow internal calls)
     std::thread background_thread;
     std::chrono::steady_clock::time_point last_yawn;
     std::string current_thought = "Idle";

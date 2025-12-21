@@ -71,30 +71,7 @@ body::before {
     100% { opacity: 0.1; }
 }
 
-.mic-btn {
-    background: transparent;
-    border: 1px solid var(--primary-cyan);
-    color: var(--primary-cyan);
-    font-size: 1.2rem;
-    cursor: pointer;
-    padding: 5px 12px;
-    border-radius: 4px;
-    transition: all 0.2s;
-    margin-right: 20px;
-}
-.mic-btn:hover {
-    background: rgba(0, 243, 255, 0.1);
-    box-shadow: 0 0 10px var(--primary-cyan);
-}
-.mic-btn.recording {
-    border-color: #ff5555;
-    animation: pulse-red 1s infinite;
-}
-@keyframes pulse-red {
-    0% { box-shadow: 0 0 5px #ff5555; }
-    50% { box-shadow: 0 0 15px #ff5555; }
-    100% { box-shadow: 0 0 5px #ff5555; }
-}
+/* APP SHELL */
 .app-shell {
     display: flex;
     height: 100vh;
