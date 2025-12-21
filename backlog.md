@@ -23,8 +23,8 @@
 
 ## 🔮 Future Roadmap (Realistic Generated)
 - [x] [NLU] Improve entity extraction accuracy - Optimization #1
-- [/] [Infrastructure] Dockerize build environment for consistent CI (Phase 1) #2
-- [ ] [Infrastructure] Add health check endpoint for monitoring - Testing #3
+- [x] [Infrastructure] Dockerize build environment for consistent CI (Phase 1) #2
+- [/] [Infrastructure] Add health check endpoint for monitoring - Testing #3
 - [ ] [NLU] Add support for multi-turn conversation context (Phase 1) #4
 - [ ] [Infrastructure] Set up GitHub Actions for automated testing - Investigation #5
 - [ ] [Frontend] Refactor dashboard to use React components - Refactor #6
