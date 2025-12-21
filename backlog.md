@@ -28,7 +28,7 @@
 - [x] [NLU] Add sentiment analysis to input processing (Phase 2) #25
 - [x] [NLU] Add sentiment analysis to input processing - Optimization #26
 - [x] [NLU] Improve entity extraction accuracy (Phase 1) #27
-- [/] [Cognition] Add unit tests for EmotionUnit edge cases - Investigation #28
+- [x] [Cognition] Add unit tests for EmotionUnit edge cases - Investigation #28
 - [/] [NLU] Implement fallback responses for unknown inputs - Optimization #29
 - [ ] [NLU] Improve entity extraction accuracy (Phase 2) #30
 - [ ] [Infrastructure] Implement crash reporting service - Implementation #31
