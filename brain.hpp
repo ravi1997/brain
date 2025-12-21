@@ -87,6 +87,9 @@ public:
     std::unique_ptr<Region> language_decoder; // Wernicke's
     std::unique_ptr<Region> memory_center;   // Hippocampus
     std::unique_ptr<Region> cognitive_center;// Prefrontal Cortex
+    
+    // NLU Helpers
+    std::vector<std::string> extract_entities(const std::string& text);
 
     Personality personality;
     Emotions emotions;

@@ -1,7 +1,7 @@
 # Project Backlog
 
 ## 🚨 High Priority
-- [ ] [NLU] Improve entity extraction accuracy - Optimization #1
+- [x] [NLU] Improve entity extraction accuracy - Optimization #1
 - [ ] [Infrastructure] Dockerize build environment for consistent CI (Phase 1) #2
 - [ ] [Infrastructure] Add health check endpoint for monitoring - Testing #3
 - [ ] [NLU] Add support for multi-turn conversation context (Phase 1) #4

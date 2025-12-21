@@ -283,27 +283,70 @@ std::string Brain::interact(const std::string& input_text) {
 std::string Brain::get_associative_memory(const std::string& input) {
     if (!memory_store) return "";
     
+    // 1. Try Entity Extraction first (High Precision)
+    auto entities = extract_entities(input);
+    for (const auto& entity : entities) {
+        auto results = memory_store->query(entity);
+        if (!results.empty()) {
+             const auto& mem = results[0];
+             std::string snippet = mem.content.substr(0, 300);
+             if (mem.content.length() > 300) snippet += "...";
+             return "I recall knowledge about " + entity + ". " + snippet;
+        }
+    }
+
+    // 2. Fallback to basic keywords
     auto tokens = tokenize(input);
     for (const auto& word : tokens) {
         if (word.length() <= 3) continue; // Skip "the", "is", etc.
         
-        // Search specific known keywords first?
-        // Query DB
         auto results = memory_store->query(word);
         if (!results.empty()) {
-            // Found a match!
-            // Return the most recent or relevant one
-            // Format: "I recall learning about [Topic]: [Content]"
             const auto& mem = results[0];
-            
-            // Don't repeat if it's too long, just give a snippet
             std::string snippet = mem.content.substr(0, 300);
             if (mem.content.length() > 300) snippet += "...";
-            
             return "I recall learning about " + word + ". " + snippet;
         }
     }
     return "";
+}
+
+std::vector<std::string> Brain::extract_entities(const std::string& text) {
+    std::vector<std::string> entities;
+    std::stringstream ss(text);
+    std::string word;
+    std::string current_entity;
+    
+    while (ss >> word) {
+        // Simple heuristic: Capitalized words are candidates
+        // Strip punctuation
+        while (!word.empty() && !std::isalnum(word.back())) word.pop_back();
+        while (!word.empty() && !std::isalnum(word.front())) word.erase(0, 1);
+        
+        if (word.empty()) continue;
+
+        if (std::isupper(word[0])) {
+            if (!current_entity.empty()) current_entity += " ";
+            current_entity += word;
+        } else {
+            // End of entity sequence
+            if (!current_entity.empty()) {
+                // Filter out common starts like "The" if it's the only word
+                if (current_entity != "The" && current_entity != "A" && current_entity.length() > 1) {
+                    entities.push_back(current_entity);
+                }
+                current_entity.clear();
+            }
+        }
+    }
+    // Catch last one
+    if (!current_entity.empty()) {
+         if (current_entity != "The" && current_entity != "A" && current_entity.length() > 1) {
+            entities.push_back(current_entity);
+         }
+    }
+    
+    return entities;
 }
 
 
@@ -692,100 +735,3 @@ std::vector<std::string> Brain::tokenize(const std::string& text) {
     return tokens;
 }
 
-// [Dev] Implemented 'Refactor `Brain` class to use `PlanningUnit` (In progress)' at 2025-12-21 18:22:17
-
-// [Dev] Implemented 'Implement `EmotionUnit` integration' at 2025-12-21 18:22:29
-
-// [Dev] Implemented 'Update frontend to visualize cognitive states' at 2025-12-21 18:22:41
-
-// [Dev] Implemented 'Add persistence for cognitive states' at 2025-12-21 18:23:44
-
-// [Dev] Implemented 'Improve natural language understanding (NLU) accuracy' at 2025-12-21 18:23:56
-
-// [Dev] Implemented 'Expand e2e test coverage for dashboard' at 2025-12-21 18:25:08
-
-// [Dev] Implemented 'Voice interface integration' at 2025-12-21 18:25:20
-
-// [Dev] Implemented 'Optimize main loop performance' at 2025-12-21 18:25:32
-
-// [Dev] Implemented 'migration to a graph database for knowledge storage?' at 2025-12-21 18:30:21
-
-// [Dev] Implemented 'Multi-user support' at 2025-12-21 18:30:33
-
-// [Dev] Implemented '(No items yet)' at 2025-12-21 18:30:45
-
-// [Dev] Implemented '[NLU] Improve entity extraction accuracy - Optimization #1' at 2025-12-21 18:31:47
-
-// [Dev] Implemented '[Infrastructure] Dockerize build environment for consistent CI (Phase 1) #2' at 2025-12-21 18:31:59
-
-// [Dev] Implemented '[Infrastructure] Add health check endpoint for monitoring - Testing #3' at 2025-12-21 18:32:11
-
-// [Dev] Implemented '[NLU] Add support for multi-turn conversation context (Phase 1) #4' at 2025-12-21 18:32:23
-
-// [Dev] Implemented '[Infrastructure] Set up GitHub Actions for automated testing - Investigation #5' at 2025-12-21 18:32:35
-
-// [Dev] Implemented '[Frontend] Refactor dashboard to use React components - Refactor #6' at 2025-12-21 18:32:47
-
-// [Dev] Implemented '[Frontend] Refactor dashboard to use React components - Refactor #6' at 2025-12-21 18:32:59
-
-// [Dev] Implemented '[Cognition] Refactor memory retrieval for O(1) access - Testing #7' at 2025-12-21 18:33:11
-
-// [Dev] Implemented '[Infrastructure] Implement redis caching for frequent queries - Testing #8' at 2025-12-21 18:33:23
-
-// [Dev] Implemented '[NLU] Improve entity extraction accuracy (Phase 1) #9' at 2025-12-21 18:33:35
-
-// [Dev] Implemented '[Frontend] Refactor dashboard to use React components - Refactor #10' at 2025-12-21 18:33:47
-
-// [Dev] Implemented '[Infrastructure] Set up GitHub Actions for automated testing - Testing #11' at 2025-12-21 18:33:59
-
-// [Dev] Implemented '[Frontend] Visualize real-time neuron activity with WebGL - Testing #12' at 2025-12-21 18:34:11
-
-// [Dev] Implemented '[NLU] Add support for multi-turn conversation context (Phase 2) #13' at 2025-12-21 18:34:23
-
-// [Dev] Implemented '[Frontend] Refactor dashboard to use React components (Phase 1) #14' at 2025-12-21 18:34:35
-
-// [Dev] Implemented '[Frontend] Refactor dashboard to use React components - Testing #15' at 2025-12-21 18:34:47
-
-// [Dev] Implemented '[Infrastructure] Implement redis caching for frequent queries - Implementation #16' at 2025-12-21 18:35:55
-
-// [Dev] Implemented '[Cognition] Optimize decision tree traversal in PlanningUnit - Investigation #17' at 2025-12-21 18:36:07
-
-// [Dev] Implemented '[Infrastructure] Optimize C++ compile times with precompiled headers (Phase 2) #18' at 2025-12-21 18:36:19
-
-// [Dev] Implemented '[NLU] Implement fallback responses for unknown inputs - Implementation #19' at 2025-12-21 18:36:31
-
-// [Dev] Implemented '[Frontend] Add robust error handling for websocket disconnections - Refactor #20' at 2025-12-21 18:36:43
-
-// [Dev] Implemented '[Cognition] Tune hyperparameters for curiosity drive - Refactor #21' at 2025-12-21 18:36:55
-
-// [Dev] Implemented '[Cognition] Implement short-term memory buffer cleanup - Optimization #22' at 2025-12-21 18:37:07
-
-// [Dev] Implemented '[Frontend] Implement user authentication flow - Implementation #23' at 2025-12-21 18:37:19
-
-// [Dev] Implemented '[Infrastructure] Set up GitHub Actions for automated testing - Testing #24' at 2025-12-21 18:37:31
-
-// [Dev] Implemented '[NLU] Add sentiment analysis to input processing (Phase 2) #25' at 2025-12-21 18:37:43
-
-// [Dev] Implemented '[NLU] Add sentiment analysis to input processing - Optimization #26' at 2025-12-21 18:37:55
-
-// [Dev] Implemented '[NLU] Improve entity extraction accuracy (Phase 1) #27' at 2025-12-21 18:38:07
-
-// [Dev] Implemented '[Cognition] Add unit tests for EmotionUnit edge cases - Investigation #28' at 2025-12-21 18:38:19
-
-// [Dev] Implemented '[NLU] Implement fallback responses for unknown inputs - Optimization #29' at 2025-12-21 18:38:31
-
-// [Dev] Implemented '[NLU] Improve entity extraction accuracy (Phase 2) #30' at 2025-12-21 18:38:43
-
-// [Dev] Implemented '[NLU] Improve entity extraction accuracy - Optimization #1' at 2025-12-21 18:38:55
-
-// [Dev] Implemented '[Infrastructure] Dockerize build environment for consistent CI (Phase 1) #2' at 2025-12-21 18:39:07
-
-// [Dev] Implemented '[Infrastructure] Add health check endpoint for monitoring - Testing #3' at 2025-12-21 18:39:19
-
-// [Dev] Implemented '[NLU] Add support for multi-turn conversation context (Phase 1) #4' at 2025-12-21 18:39:31
-
-// [Dev] Implemented '[Infrastructure] Set up GitHub Actions for automated testing - Investigation #5' at 2025-12-21 18:39:43
-
-// [Dev] Implemented '[Frontend] Refactor dashboard to use React components - Refactor #6' at 2025-12-21 18:39:55
-
-// [Dev] Implemented '[Cognition] Refactor memory retrieval for O(1) access - Testing #7' at 2025-12-21 18:40:07
