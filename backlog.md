@@ -19,9 +19,9 @@
 - [x] [Infrastructure] Implement redis caching for frequent queries - Implementation #16
 - [x] [Cognition] Optimize decision tree traversal in PlanningUnit - Investigation #17
 - [x] [Infrastructure] Optimize C++ compile times with precompiled headers (Phase 2) #18
-- [/] [NLU] Implement fallback responses for unknown inputs - Implementation #19
+- [x] [NLU] Implement fallback responses for unknown inputs - Implementation #19
 - [/] [Frontend] Add robust error handling for websocket disconnections - Refactor #20
-- [ ] [Cognition] Tune hyperparameters for curiosity drive - Refactor #21
+- [/] [Cognition] Tune hyperparameters for curiosity drive - Refactor #21
 - [ ] [Cognition] Implement short-term memory buffer cleanup - Optimization #22
 - [ ] [Frontend] Implement user authentication flow - Implementation #23
 - [ ] [Infrastructure] Set up GitHub Actions for automated testing - Testing #24
