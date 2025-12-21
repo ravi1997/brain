@@ -18,6 +18,7 @@
 #include <map>
 #include <filesystem>
 #include <fstream>
+#include <unordered_set>
 
 // Simple thread-safe logger
 inline void safe_print(const std::string& msg) {
@@ -125,6 +126,11 @@ public:
     
     // Synonym Mapping (Word -> Root Meaning)
     std::map<std::string, std::string> synonyms;
+    
+    // NLU Helpers
+    std::unordered_set<std::string> stopwords_;
+    void load_stopwords();
+    bool is_stop_word(const std::string& word);
 
     Brain();
     ~Brain();

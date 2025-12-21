@@ -103,6 +103,8 @@ Brain::Brain() {
     synonyms["clever"] = "intelligent";
     synonyms["dumb"] = "stupid";
     synonyms["dull"] = "stupid";
+    
+    load_stopwords();
     // ... load more from file if needed
 }
 
@@ -348,13 +350,27 @@ std::string Brain::get_associative_memory(const std::string& input) {
 
 std::vector<std::string> Brain::extract_entities(const std::string& text) {
     std::vector<std::string> entities;
+    
+    // 1. Regex Extraction for specific patterns
+    
+    // Dates / Times (Simple)
+    // Matches: 5pm, 10:30am, today, tomorrow, yesterday
+    std::regex time_pattern(R"(\b(\d{1,2}(:\d{2})?(am|pm|AM|PM)|today|tomorrow|yesterday)\b)");
+    std::sregex_iterator next(text.begin(), text.end(), time_pattern);
+    std::sregex_iterator end;
+    while (next != end) {
+        std::smatch match = *next;
+        entities.push_back(match.str());
+        next++;
+    }
+
+    // 2. Capitalized Phrases (Named Entities)
     std::stringstream ss(text);
     std::string word;
     std::string current_entity;
     
     while (ss >> word) {
-        // Simple heuristic: Capitalized words are candidates
-        // Strip punctuation
+        // Strip punctuation from ends
         while (!word.empty() && !std::isalnum(word.back())) word.pop_back();
         while (!word.empty() && !std::isalnum(word.front())) word.erase(0, 1);
         
@@ -366,8 +382,8 @@ std::vector<std::string> Brain::extract_entities(const std::string& text) {
         } else {
             // End of entity sequence
             if (!current_entity.empty()) {
-                // Filter out common starts like "The" if it's the only word
-                if (current_entity != "The" && current_entity != "A" && current_entity.length() > 1) {
+                // Filter
+                if (!is_stop_word(current_entity) && current_entity.length() > 1) {
                     entities.push_back(current_entity);
                 }
                 current_entity.clear();
@@ -376,12 +392,41 @@ std::vector<std::string> Brain::extract_entities(const std::string& text) {
     }
     // Catch last one
     if (!current_entity.empty()) {
-         if (current_entity != "The" && current_entity != "A" && current_entity.length() > 1) {
+         if (!is_stop_word(current_entity) && current_entity.length() > 1) {
             entities.push_back(current_entity);
          }
     }
     
     return entities;
+}
+
+void Brain::load_stopwords() {
+    std::ifstream file("data/stopwords.txt");
+    if (!file.is_open()) {
+        // Fallback or try parent dir
+        file.open("../data/stopwords.txt");
+    }
+    
+    if (file.is_open()) {
+        std::string line;
+        while (std::getline(file, line)) {
+            // Trim
+            line.erase(0, line.find_first_not_of(" \t\r\n"));
+            line.erase(line.find_last_not_of(" \t\r\n") + 1);
+            if (!line.empty()) {
+                std::transform(line.begin(), line.end(), line.begin(), ::tolower);
+                stopwords_.insert(line);
+            }
+        }
+        safe_print("[Brain]: Loaded " + std::to_string(stopwords_.size()) + " stop words.");
+    }
+}
+
+bool Brain::is_stop_word(const std::string& word) {
+    if (stopwords_.empty()) return false;
+    std::string lower = word;
+    std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+    return stopwords_.count(lower) > 0;
 }
 
 

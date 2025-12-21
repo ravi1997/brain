@@ -22,6 +22,7 @@ add_executable(brain_tests
     test_context.cpp
     test_memory_optimization.cpp
     test_redis.cpp
+    test_nlu_improved.cpp
 )
 
 target_link_libraries(brain_tests
