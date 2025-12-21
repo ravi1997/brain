@@ -115,20 +115,20 @@ std::string Brain::interact(const std::string& input_text) {
     std::lock_guard<std::recursive_mutex> lock(brain_mutex);
     
     // Persona Check
-    if (emotions.energy < 0.2) {
+    if (emotion_unit->state.energy < 0.2) {
         return "*Yawns* I'm too tired... I need sleep...";
     }
 
     // Interaction boosts happiness (attention)
-    emotions.happiness = std::min(1.0, emotions.happiness + 0.1);
-    emotions.boredom = std::max(0.0, emotions.boredom - 0.2); // Not bored anymore
+    emotion_unit->state.happiness = std::min(1.0, emotion_unit->state.happiness + 0.1);
+    emotion_unit->state.boredom = std::max(0.0, emotion_unit->state.boredom - 0.2); // Not bored anymore
 
     // 1. Reflex / Instinct Logic
     std::string instinct = reflex.get_reaction(input_text);
     if (!instinct.empty()) {
         emit_log("[Reflex]: Activated for '" + input_text + "'");
-        emotions.boredom = std::max(0.0, emotions.boredom - 0.1);
-        emotions.happiness = std::min(1.0, emotions.happiness + 0.05);
+        emotion_unit->state.boredom = std::max(0.0, emotion_unit->state.boredom - 0.1);
+        emotion_unit->state.happiness = std::min(1.0, emotion_unit->state.happiness + 0.05);
         return instinct;
     }
 
@@ -240,7 +240,7 @@ std::string Brain::interact(const std::string& input_text) {
 
     // PERSONALITY MODULATION
     // Anger = All Caps
-    if (emotions.anger > 0.7) {
+    if (emotion_unit->state.anger > 0.7) {
         std::transform(response_text.begin(), response_text.end(), response_text.begin(), ::toupper);
         response_text += "!!!";
     }
@@ -344,9 +344,9 @@ void Brain::sleep() {
     cognitive_center->network.consolidate_memories(cognitive_center->current_activity);
     
     // Restore stats
-    emotions.energy = 1.0;
-    emotions.happiness = std::min(1.0, emotions.happiness + 0.2);
-    emotions.boredom = 0.0;
+    emotion_unit->state.energy = 1.0;
+    emotion_unit->state.happiness = std::min(1.0, emotion_unit->state.happiness + 0.2);
+    emotion_unit->state.boredom = 0.0;
 }
 
 std::string Brain::research(const std::string& topic) {
@@ -489,15 +489,15 @@ void Brain::automata_loop() {
             std::lock_guard<std::recursive_mutex> lock(brain_mutex);
             
             // Goal: Learn (Boredom)
-            if (emotions.boredom > 0.8) {
+            if (emotion_unit->state.boredom > 0.8) {
                  std::vector<std::string> ideas = {"Physics", "History", "AI", "Space", "Oceans"};
                  std::string topic = ideas[rand() % ideas.size()];
                  task_manager.add_task("Research " + topic, TaskType::RESEARCH, TaskPriority::LOW);
-                 emotions.boredom = 0.5; // Reduced just by planning it
+                 emotion_unit->state.boredom = 0.5; // Reduced just by planning it
             }
             
             // Goal: Rest (Energy)
-            if (emotions.energy < 0.2) {
+            if (emotion_unit->state.energy < 0.2) {
                 task_manager.add_task("Sleep Cycle", TaskType::SLEEP, TaskPriority::HIGH);
             }
         }
@@ -506,22 +506,17 @@ void Brain::automata_loop() {
         Task* current = task_manager.get_next_task();
         if (current) {
             std::string desc = current->description;
-            
-            // Emit Deliberation
-            emit_log("[Cognition]: Decided to execute task #" + std::to_string(current->id) + ": " + desc);
+            // ... (omitted snippet)
             
             if (current->type == TaskType::RESEARCH) {
-                // Extract topic "Research X"
                 std::string topic = desc.substr(9);
                 research(topic);
             } 
             else if (current->type == TaskType::SLEEP) {
                 sleep();
-                emotions.energy = 1.0;
+                emotion_unit->state.energy = 1.0;
             }
-            else if (current->type == TaskType::INTERACTION) {
-                // Placeholder
-            }
+            // ...
             
             task_manager.complete_active_task();
         } else {
@@ -531,9 +526,9 @@ void Brain::automata_loop() {
         // Decay
         {
              std::lock_guard<std::recursive_mutex> lock(brain_mutex);
-             emotions.boredom = std::min(1.0, emotions.boredom + 0.05);
+             emotion_unit->state.boredom = std::min(1.0, emotion_unit->state.boredom + 0.05);
              if (on_emotion_update) {
-                on_emotion_update("Energy: " + std::to_string(emotions.energy) + " | Boredom: " + std::to_string(emotions.boredom) + " | Happiness: " + std::to_string(emotions.happiness));
+                on_emotion_update("Energy: " + std::to_string(emotion_unit->state.energy) + " | Boredom: " + std::to_string(emotion_unit->state.boredom) + " | Happiness: " + std::to_string(emotion_unit->state.happiness));
              }
         }
     }
@@ -542,9 +537,9 @@ void Brain::automata_loop() {
 std::string Brain::get_status() {
     std::stringstream ss;
     ss << "--- Brain Status ---\n";
-    ss << "Energy: " << (emotions.energy * 100) << "%\n";
-    ss << "Happiness: " << (emotions.happiness * 100) << "%\n";
-    ss << "Boredom: " << (emotions.boredom * 100) << "%\n";
+    ss << "Energy: " << (emotion_unit->state.energy * 100) << "%\n";
+    ss << "Happiness: " << (emotion_unit->state.happiness * 100) << "%\n";
+    ss << "Boredom: " << (emotion_unit->state.boredom * 100) << "%\n";
     ss << "Current Thought: " << current_thought << "\n";
     ss << "--------------------";
     return ss.str();
@@ -562,12 +557,12 @@ std::string Brain::get_json_state() {
     ss << "\"positivity\": " << personality.positivity;
     ss << "},";
     ss << "\"emotions\": {";
-    ss << "\"happiness\": " << emotions.happiness << ",";
-    ss << "\"sadness\": " << emotions.sadness << ",";
-    ss << "\"anger\": " << emotions.anger << ",";
-    ss << "\"fear\": " << emotions.fear << ",";
-    ss << "\"energy\": " << emotions.energy << ",";
-    ss << "\"boredom\": " << emotions.boredom;
+    ss << "\"happiness\": " << emotion_unit->state.happiness << ",";
+    ss << "\"sadness\": " << emotion_unit->state.sadness << ",";
+    ss << "\"anger\": " << emotion_unit->state.anger << ",";
+    ss << "\"fear\": " << emotion_unit->state.fear << ",";
+    ss << "\"energy\": " << emotion_unit->state.energy << ",";
+    ss << "\"boredom\": " << emotion_unit->state.boredom;
     ss << "}";
     ss << "}";
     return ss.str();
@@ -593,12 +588,12 @@ void Brain::update_from_json(const std::string& json) {
     if ((val = parse_val("positivity")) >= 0) personality.positivity = val;
     
     // Emotions
-    if ((val = parse_val("happiness")) >= 0) emotions.happiness = val;
-    if ((val = parse_val("sadness")) >= 0) emotions.sadness = val;
-    if ((val = parse_val("anger")) >= 0) emotions.anger = val;
-    if ((val = parse_val("fear")) >= 0) emotions.fear = val;
-    if ((val = parse_val("energy")) >= 0) emotions.energy = val;
-    if ((val = parse_val("boredom")) >= 0) emotions.boredom = val;
+    if ((val = parse_val("happiness")) >= 0) emotion_unit->state.happiness = val;
+    if ((val = parse_val("sadness")) >= 0) emotion_unit->state.sadness = val;
+    if ((val = parse_val("anger")) >= 0) emotion_unit->state.anger = val;
+    if ((val = parse_val("fear")) >= 0) emotion_unit->state.fear = val;
+    if ((val = parse_val("energy")) >= 0) emotion_unit->state.energy = val;
+    if ((val = parse_val("boredom")) >= 0) emotion_unit->state.boredom = val;
     
     emit_log("[Brain]: State Updated via API");
 }
@@ -612,7 +607,7 @@ void Brain::save(const std::string& filename) {
     if (!os) return;
 
     os.write(reinterpret_cast<char*>(&personality), sizeof(Personality));
-    os.write(reinterpret_cast<char*>(&emotions), sizeof(Emotions));
+    os.write(reinterpret_cast<char*>(&emotion_unit->state), sizeof(EmotionalState));
     
     // Save Vocab
     size_t vocab_count = vocab_decode.size();
@@ -643,7 +638,7 @@ void Brain::load(const std::string& filename) {
     safe_print("[Brain]: Loading memory state from " + filename + "...");
 
     is.read(reinterpret_cast<char*>(&personality), sizeof(Personality));
-    is.read(reinterpret_cast<char*>(&emotions), sizeof(Emotions));
+    is.read(reinterpret_cast<char*>(&emotion_unit->state), sizeof(EmotionalState));
     
     // Load Vocab
     size_t vocab_count = 0;

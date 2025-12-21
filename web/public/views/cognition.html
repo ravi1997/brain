@@ -1,0 +1,109 @@
+<div class="header">
+    <h2 class="title" data-text="COGNITIVE STATE">COGNITIVE STATE</h2>
+</div>
+
+<div class="content-grid" style="display: grid; grid-template-columns: 300px 1fr; grid-template-rows: 300px 1fr; gap: 20px; height: calc(100vh - 100px);">
+    
+    <!-- Emotion Radar -->
+    <div class="card">
+        <h3>EMOTIONAL SPECTRUM</h3>
+        <div style="width: 100%; height: 220px; position: relative;">
+            <canvas id="emotion-radar" width="260" height="220"></canvas>
+        </div>
+        <div id="emotion-values" style="font-size: 0.7rem; color: #888; display: flex; justify-content: space-between; margin-top: 10px;">
+            <span>HAP: <b id="val-hap">0.0</b></span>
+            <span>ENG: <b id="val-eng">0.0</b></span>
+            <span>BOR: <b id="val-bor">0.0</b></span>
+        </div>
+    </div>
+
+    <!-- Cognitive Architecture Diagram -->
+    <div class="card" style="position: relative; overflow: hidden;">
+        <h3>COGNITIVE ARCHITECTURE FLOW</h3>
+        <div id="flow-diagram" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: space-around; position: relative; z-index: 2;">
+            
+            <!-- Nodes -->
+            <div class="flow-node" id="node-input">
+                <div class="node-icon">👂</div>
+                <div class="node-label">INPUT</div>
+            </div>
+
+            <div class="arrow">→</div>
+
+            <div class="flow-node" id="node-decision">
+                <div class="node-icon">⚖️</div>
+                <div class="node-label">DECISION</div>
+            </div>
+
+            <div class="arrow">→</div>
+
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="flow-node" id="node-reasoning">
+                    <div class="node-icon">🧠</div>
+                    <div class="node-label">REASONING</div>
+                </div>
+                <div class="flow-node" id="node-planning">
+                    <div class="node-icon">📅</div>
+                    <div class="node-label">PLANNING</div>
+                </div>
+            </div>
+
+            <div class="arrow">→</div>
+
+            <div class="flow-node" id="node-output">
+                <div class="node-icon">💬</div>
+                <div class="node-label">OUTPUT</div>
+            </div>
+
+        </div>
+        
+        <!-- Background Grid -->
+        <div class="scanlines"></div>
+    </div>
+
+    <!-- Decision Log -->
+    <div class="card" style="grid-column: 1 / -1;">
+        <h3>DECISION LOG & TASK QUEUE</h3>
+        <div style="display: flex; gap: 20px; height: 100%;">
+            <div style="flex: 1; border-right: 1px solid #333; padding-right: 10px;">
+                <h4>LATEST DECISIONS</h4>
+                <div id="decision-log" style="font-family: 'Courier New', monospace; font-size: 0.8rem; height: 150px; overflow-y: auto;">
+                    <div class="log-entry"><span class="time">[--:--:--]</span> System Initialized.</div>
+                </div>
+            </div>
+            <div style="flex: 1;">
+                <h4>ACTIVE TASKS</h4>
+                <div id="task-queue" style="font-family: 'Courier New', monospace; font-size: 0.8rem; height: 150px; overflow-y: auto;">
+                    <div class="task-entry">No active tasks.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .flow-node {
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid #00f3ff;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+        width: 100px;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+    }
+    .flow-node.active {
+        background: rgba(0, 243, 255, 0.2);
+        box-shadow: 0 0 20px rgba(0, 243, 255, 0.6);
+        border-color: #fff;
+    }
+    .node-icon { font-size: 2rem; margin-bottom: 5px; }
+    .node-label { font-size: 0.7rem; font-weight: bold; color: #00f3ff; }
+    .arrow { font-size: 1.5rem; color: #555; }
+    
+    .log-entry { margin-bottom: 5px; color: #aaa; border-bottom: 1px solid #222; padding-bottom: 2px; }
+    .log-entry .time { color: #555; margin-right: 5px; }
+    
+    .task-entry { margin-bottom: 5px; color: #0f0; }
+</style>
