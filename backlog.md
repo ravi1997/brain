@@ -1,36 +1,36 @@
 # Project Backlog
 
 ## 🚨 High Priority
-- [x] [NLU] Improve entity extraction accuracy - Optimization #1
-- [x] [Infrastructure] Dockerize build environment for consistent CI (Phase 1) #2
-- [x] [Infrastructure] Add health check endpoint for monitoring - Testing #3
-- [x] [NLU] Add support for multi-turn conversation context (Phase 1) #4
-- [x] [Infrastructure] Set up GitHub Actions for automated testing - Investigation #5
-- [x] [Frontend] Refactor dashboard to use React components - Refactor #6
-- [x] [Cognition] Refactor memory retrieval for O(1) access - Testing #7
-- [x] [Infrastructure] Implement redis caching for frequent queries - Testing #8
-- [x] [NLU] Improve entity extraction accuracy (Phase 1) #9
-- [x] [Frontend] Refactor dashboard to use React components - Refactor #10
-- [x] [Infrastructure] Set up GitHub Actions for automated testing - Testing #11
-- [x] [Frontend] Visualize real-time neuron activity with WebGL - Testing #12
-- [x] [NLU] Add support for multi-turn conversation context (Phase 2) #13
-- [x] [Frontend] Refactor dashboard to use React components (Phase 1) #14
-- [x] [Frontend] Refactor dashboard to use React components - Testing #15
-- [x] [Infrastructure] Implement redis caching for frequent queries - Implementation #16
-- [x] [Cognition] Optimize decision tree traversal in PlanningUnit - Investigation #17
-- [x] [Infrastructure] Optimize C++ compile times with precompiled headers (Phase 2) #18
-- [x] [NLU] Implement fallback responses for unknown inputs - Implementation #19
-- [x] [Frontend] Add robust error handling for websocket disconnections - Refactor #20
-- [x] [Cognition] Tune hyperparameters for curiosity drive - Refactor #21
-- [x] [Cognition] Implement short-term memory buffer cleanup - Optimization #22
-- [x] [Frontend] Implement user authentication flow - Implementation #23
-- [x] [Infrastructure] Set up GitHub Actions for automated testing - Testing #24
-- [x] [NLU] Add sentiment analysis to input processing (Phase 2) #25
-- [x] [NLU] Add sentiment analysis to input processing - Optimization #26
-- [x] [NLU] Improve entity extraction accuracy (Phase 1) #27
-- [x] [Cognition] Add unit tests for EmotionUnit edge cases - Investigation #28
+- [/] [NLU] Improve entity extraction accuracy - Optimization #1
+- [ ] [Infrastructure] Dockerize build environment for consistent CI (Phase 1) #2
+- [ ] [Infrastructure] Add health check endpoint for monitoring - Testing #3
+- [ ] [NLU] Add support for multi-turn conversation context (Phase 1) #4
+- [ ] [Infrastructure] Set up GitHub Actions for automated testing - Investigation #5
+- [ ] [Frontend] Refactor dashboard to use React components - Refactor #6
+- [ ] [Cognition] Refactor memory retrieval for O(1) access - Testing #7
+- [ ] [Infrastructure] Implement redis caching for frequent queries - Testing #8
+- [ ] [NLU] Improve entity extraction accuracy (Phase 1) #9
+- [ ] [Frontend] Refactor dashboard to use React components - Refactor #10
+- [ ] [Infrastructure] Set up GitHub Actions for automated testing - Testing #11
+- [ ] [Frontend] Visualize real-time neuron activity with WebGL - Testing #12
+- [ ] [NLU] Add support for multi-turn conversation context (Phase 2) #13
+- [ ] [Frontend] Refactor dashboard to use React components (Phase 1) #14
+- [ ] [Frontend] Refactor dashboard to use React components - Testing #15
+- [ ] [Infrastructure] Implement redis caching for frequent queries - Implementation #16
+- [ ] [Cognition] Optimize decision tree traversal in PlanningUnit - Investigation #17
+- [ ] [Infrastructure] Optimize C++ compile times with precompiled headers (Phase 2) #18
+- [ ] [NLU] Implement fallback responses for unknown inputs - Implementation #19
+- [ ] [Frontend] Add robust error handling for websocket disconnections - Refactor #20
+- [ ] [Cognition] Tune hyperparameters for curiosity drive - Refactor #21
+- [ ] [Cognition] Implement short-term memory buffer cleanup - Optimization #22
+- [ ] [Frontend] Implement user authentication flow - Implementation #23
+- [ ] [Infrastructure] Set up GitHub Actions for automated testing - Testing #24
+- [ ] [NLU] Add sentiment analysis to input processing (Phase 2) #25
+- [ ] [NLU] Add sentiment analysis to input processing - Optimization #26
+- [ ] [NLU] Improve entity extraction accuracy (Phase 1) #27
+- [ ] [Cognition] Add unit tests for EmotionUnit edge cases - Investigation #28
 - [/] [NLU] Implement fallback responses for unknown inputs - Optimization #29
-- [/] [NLU] Improve entity extraction accuracy (Phase 2) #30
+- [ ] [NLU] Improve entity extraction accuracy (Phase 2) #30
 - [ ] [Infrastructure] Implement crash reporting service - Implementation #31
 - [ ] [Infrastructure] Add log rotation for server logs - Investigation #32
 - [ ] [Cognition] Add unit tests for EmotionUnit edge cases - Optimization #33
@@ -1006,12 +1006,12 @@
 
 
 ## 🧊 Low Priority / Future Ideas
-- [x] migration to a graph database for knowledge storage?
-- [x] Multi-user support
+- [ ] migration to a graph database for knowledge storage?
+- [ ] Multi-user support
 
 ## ✅ Completed
-- [x] **Manual System Verification (Build & Test Pass)**
-- [x] (No items yet)
+- [ ] **Manual System Verification (Build & Test Pass)**
+- [ ] (No items yet)
 
 
 ## 🔮 Future Roadmap (Realistic Generated)
