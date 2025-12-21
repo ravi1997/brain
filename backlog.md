@@ -30,7 +30,7 @@
 - [x] [NLU] Improve entity extraction accuracy (Phase 1) #27
 - [x] [Cognition] Add unit tests for EmotionUnit edge cases - Investigation #28
 - [/] [NLU] Implement fallback responses for unknown inputs - Optimization #29
-- [ ] [NLU] Improve entity extraction accuracy (Phase 2) #30
+- [/] [NLU] Improve entity extraction accuracy (Phase 2) #30
 - [ ] [Infrastructure] Implement crash reporting service - Implementation #31
 - [ ] [Infrastructure] Add log rotation for server logs - Investigation #32
 - [ ] [Cognition] Add unit tests for EmotionUnit edge cases - Optimization #33
