@@ -1,6 +1,7 @@
 # Brain Replica
 
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
+![CI](https://github.com/ravi1997/brain/workflows/CI/badge.svg)
 ![C++ Standard](https://img.shields.io/badge/standard-C%2B%2B20-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Docker](https://img.shields.io/badge/deployment-docker-blue)
