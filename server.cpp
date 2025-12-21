@@ -110,6 +110,23 @@ void TcpServer::client_handler(int socket_fd) {
         }
         
         // Process input
+        std::string input_str(buffer, valread);
+        
+        // Simple HTTP Health Check Handling
+        if (input_str.find("GET /health") == 0) {
+            std::string response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\nOK";
+            send(socket_fd, response.c_str(), response.length(), MSG_NOSIGNAL);
+            
+            // Close connection immediately for HTTP logic
+            std::lock_guard<std::mutex> lock(clients_mutex_);
+            auto it = std::find(client_sockets_.begin(), client_sockets_.end(), socket_fd);
+            if (it != client_sockets_.end()) {
+                client_sockets_.erase(it);
+                close(socket_fd);
+            }
+            break;
+        }
+
         if (input_callback_) {
             std::string msg(buffer);
             // Trim newline
