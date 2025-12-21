@@ -3,7 +3,7 @@
 ## 🚨 High Priority
 - [x] Expand e2e test coverage for dashboard
 - [x] Voice interface integration
-- [/] Optimize main loop performance
+- [x] Optimize main loop performance
 - [x] Add persistence for cognitive states
 - [x] Improve natural language understanding (NLU) accuracy
 - [x] Refactor `Brain` class to use `PlanningUnit` (In progress)
