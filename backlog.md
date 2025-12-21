@@ -21,9 +21,9 @@
 - [x] [Infrastructure] Optimize C++ compile times with precompiled headers (Phase 2) #18
 - [x] [NLU] Implement fallback responses for unknown inputs - Implementation #19
 - [x] [Frontend] Add robust error handling for websocket disconnections - Refactor #20
-- [/] [Cognition] Tune hyperparameters for curiosity drive - Refactor #21
+- [x] [Cognition] Tune hyperparameters for curiosity drive - Refactor #21
 - [/] [Cognition] Implement short-term memory buffer cleanup - Optimization #22
-- [ ] [Frontend] Implement user authentication flow - Implementation #23
+- [/] [Frontend] Implement user authentication flow - Implementation #23
 - [ ] [Infrastructure] Set up GitHub Actions for automated testing - Testing #24
 - [ ] [NLU] Add sentiment analysis to input processing (Phase 2) #25
 - [ ] [NLU] Add sentiment analysis to input processing - Optimization #26
