@@ -1,12 +1,12 @@
 # Project Backlog
 
 ## 🚨 High Priority
-- [x] [NLU] Improve entity extraction accuracy - Optimization #1
-- [x] [Infrastructure] Dockerize build environment for consistent CI (Phase 1) #2
-- [x] [Infrastructure] Add health check endpoint for monitoring - Testing #3
-- [x] [NLU] Add support for multi-turn conversation context (Phase 1) #4
-- [x] [Infrastructure] Set up GitHub Actions for automated testing - Investigation #5
-- [/] [Frontend] Refactor dashboard to use React components - Refactor #6
+- [ ] [NLU] Improve entity extraction accuracy - Optimization #1
+- [ ] [Infrastructure] Dockerize build environment for consistent CI (Phase 1) #2
+- [ ] [Infrastructure] Add health check endpoint for monitoring - Testing #3
+- [ ] [NLU] Add support for multi-turn conversation context (Phase 1) #4
+- [ ] [Infrastructure] Set up GitHub Actions for automated testing - Investigation #5
+- [ ] [Frontend] Refactor dashboard to use React components - Refactor #6
 - [ ] [Cognition] Refactor memory retrieval for O(1) access - Testing #7
 - [ ] [Infrastructure] Implement redis caching for frequent queries - Testing #8
 - [ ] [NLU] Improve entity extraction accuracy (Phase 1) #9
@@ -29,7 +29,7 @@
 - [ ] [NLU] Add sentiment analysis to input processing - Optimization #26
 - [ ] [NLU] Improve entity extraction accuracy (Phase 1) #27
 - [ ] [Cognition] Add unit tests for EmotionUnit edge cases - Investigation #28
-- [/] [NLU] Implement fallback responses for unknown inputs - Optimization #29
+- [ ] [NLU] Implement fallback responses for unknown inputs - Optimization #29
 - [ ] [NLU] Improve entity extraction accuracy (Phase 2) #30
 - [ ] [Infrastructure] Implement crash reporting service - Implementation #31
 - [ ] [Infrastructure] Add log rotation for server logs - Investigation #32
