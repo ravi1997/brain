@@ -5,7 +5,7 @@
 - [x] [Infrastructure] Dockerize build environment for consistent CI (Phase 1) #2
 - [x] [Frontend] Modernize UI and add Cognition view (User Request)
 - [x] [Infrastructure] Add health check endpoint for monitoring - Testing #3
-- [ ] [NLU] Add support for multi-turn conversation context (Phase 1) #4
+- [x] [NLU] Add support for multi-turn conversation context (Phase 1) #4
 - [ ] [Infrastructure] Set up GitHub Actions for automated testing - Investigation #5
 - [ ] [Frontend] Refactor dashboard to use React components - Refactor #6
 - [ ] [Cognition] Refactor memory retrieval for O(1) access - Testing #7

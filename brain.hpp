@@ -111,6 +111,10 @@ public:
     std::unique_ptr<MemoryStore> memory_store;
     std::string db_path = "brain_memories.db";
 
+    // Context Window (Short-term Conversation History)
+    std::deque<std::string> conversation_context;
+    static constexpr size_t MAX_CONTEXT_TURNS = 6; // Stores User + Brain pairs (3 turns)
+
     // Word-based hashing (10000 buckets)
     static constexpr size_t VOCAB_SIZE = 10000; 
     static constexpr size_t VECTOR_DIM = 256;  // Increased dimension for better capacity

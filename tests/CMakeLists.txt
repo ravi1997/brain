@@ -1,3 +1,5 @@
+project(BrainTests)
+
 include(FetchContent)
 FetchContent_Declare(
   googletest
@@ -10,23 +12,21 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 add_executable(brain_tests
-    test_main.cpp
-    test_dnn.cpp
+    ../brain.cpp
+    ../dnn.cpp
+    ../memory_store.cpp
+    ../task_manager.cpp
+    ../reflex.cpp
     test_memory.cpp
     test_nlu.cpp
-    ../dnn.cpp
-    ../brain.cpp
-    ../memory_store.cpp
-    ../reflex.cpp
-    ../task_manager.cpp
+    test_context.cpp
 )
 
-target_include_directories(brain_tests PRIVATE ..)
-target_link_libraries(brain_tests PRIVATE gtest_main Threads::Threads sqlite3)
+target_link_libraries(brain_tests
+    gtest_main
+    sqlite3
+    tbb
+)
 
-find_package(TBB)
-if(TBB_FOUND)
-    target_link_libraries(brain_tests PRIVATE TBB::tbb)
-endif()
-
-add_test(NAME BrainTests COMMAND brain_tests)
+include(GoogleTest)
+gtest_discover_tests(brain_tests)

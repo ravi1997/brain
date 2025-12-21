@@ -114,9 +114,17 @@ Brain::~Brain() {
 std::string Brain::interact(const std::string& input_text) {
     std::lock_guard<std::recursive_mutex> lock(brain_mutex);
     
+    // Update Context (User Input) - Always capture what user said
+    conversation_context.push_back("User: " + input_text);
+    while (conversation_context.size() > MAX_CONTEXT_TURNS) conversation_context.pop_front();
+    
+    // Persona Check
     // Persona Check
     if (emotions.energy < 0.2) {
-        return "*Yawns* I'm too tired... I need sleep...";
+        std::string resp = "*Yawns* I'm too tired... I need sleep...";
+        conversation_context.push_back("Brain: " + resp);
+        while (conversation_context.size() > MAX_CONTEXT_TURNS) conversation_context.pop_front();
+        return resp;
     }
 
     // Interaction boosts happiness (attention)
@@ -129,6 +137,8 @@ std::string Brain::interact(const std::string& input_text) {
         emit_log("[Reflex]: Activated for '" + input_text + "'");
         emotions.boredom = std::max(0.0, emotions.boredom - 0.1);
         emotions.happiness = std::min(1.0, emotions.happiness + 0.05);
+        conversation_context.push_back("Brain: " + instinct);
+        while (conversation_context.size() > MAX_CONTEXT_TURNS) conversation_context.pop_front();
         return instinct;
     }
 
@@ -145,15 +155,36 @@ std::string Brain::interact(const std::string& input_text) {
                 vocab_decode[h(t) % VOCAB_SIZE] = t;
             }
             
+            
+            conversation_context.push_back("Brain: " + memory_response);
+            while (conversation_context.size() > MAX_CONTEXT_TURNS) conversation_context.pop_front();
             return memory_response;
         }
     }
-
-    // 3. Sensual Perception (Encoding)
+    
+    // NOTE: User context was already added at top? No, I need to add it at the top!
+    // Let me add the User context update at the start of the function in a separate chunk.
+    
+    // 3. Sensual Perception (Encoding) with Context
     std::vector<double> input_vec(VOCAB_SIZE, 0.0);
     
+    // Update Context
+    // Moved to top of function (see below chunk) - wait, I need to strictly follow replace rules.
+    // I will delete it here and add it at the top.
+    // conversation_context.push_back("User: " + input_text);
+    // while (conversation_context.size() > MAX_CONTEXT_TURNS) conversation_context.pop_front();
+    
+    // Build Contextual Input
+    std::string contextual_input = "";
+    for (const auto& line : conversation_context) {
+        contextual_input += line + " | ";
+    }
+    // Remove the last " | " and add current input explicitly if not redundant (it's already in context)
+    // Actually, just using the full context string is key.
+    
     // Convert to words (Bag of Words Hashing) with N-GRAMS
-    auto tokens = tokenize(input_text);
+    // We heavily weight the *current* input, but include context
+    auto tokens = tokenize(contextual_input);
     
     // Pre-process tokens for synonyms
     for(auto& t : tokens) {
@@ -277,6 +308,10 @@ std::string Brain::interact(const std::string& input_text) {
          //           " ResLen=" + std::to_string(response_text.length()) + " Res=" + response_text);
     }
     
+    // Save Brain's response to context
+    conversation_context.push_back("Brain: " + response_text);
+    while (conversation_context.size() > MAX_CONTEXT_TURNS) conversation_context.pop_front();
+
     return response_text;
 }
 
