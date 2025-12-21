@@ -12,7 +12,8 @@ export const useBrain = () => {
 
     // Initial connection
     useEffect(() => {
-        const socket = new WebSocket('ws://' + window.location.host + '/ws');
+        // Connect to brain's chat server via WebSocket proxy
+        const socket = new WebSocket('ws://' + window.location.host + '/proxy/9005');
 
         socket.onopen = () => {
             console.log("Connected to Brain");
