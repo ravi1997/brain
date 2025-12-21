@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useBrain } from '../hooks/useBrain';
+import NeuronVisualizer from './NeuronVisualizer';
 
 const Dashboard = () => {
     const { status, messages, sendMessage } = useBrain();
@@ -44,6 +45,18 @@ const Dashboard = () => {
                             {m.text}
                         </div>
                     ))}
+                </div>
+
+                {/* Neuron Activity Visualization */}
+                <div style={{ 
+                    border: '1px solid rgba(0, 240, 255, 0.3)', 
+                    background: 'rgba(0, 10, 20, 0.8)',
+                    overflow: 'hidden'
+                }}>
+                    <div style={{ padding: '10px', borderBottom: '1px solid rgba(0, 240, 255, 0.3)' }}>
+                        <h3 style={{ margin: 0, color: '#00f0ff', fontSize: '14px' }}>NEURAL ACTIVITY</h3>
+                    </div>
+                    <NeuronVisualizer brainState={status} />
                 </div>
 
                 {/* Input */}
