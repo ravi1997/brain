@@ -1,21 +1,16 @@
 FROM debian:bookworm
 
-# Install build essentials
+# Install build essentials and dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
     cmake \
     g++ \
     libtbb-dev \
     libsqlite3-dev \
-    libgtest-dev \
     git \
     curl \
+    python3 \
     && rm -rf /var/lib/apt/lists/*
-
-COPY words.txt /usr/share/dict/words
-
-# Default GCC is fine (GCC 12 on Bookworm)
-# RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 --slave /usr/bin/g++ g++ /usr/bin/g++-13
 
 WORKDIR /app
 
@@ -23,6 +18,6 @@ WORKDIR /app
 COPY . .
 
 # Build
-RUN mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make
+RUN mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j$(nproc)
 
 CMD ["./build/brain_replica"]
