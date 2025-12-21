@@ -9,9 +9,9 @@
 - [x] [Frontend] Refactor dashboard to use React components - Refactor #6
 - [x] [Cognition] Refactor memory retrieval for O(1) access - Testing #7
 - [x] [Infrastructure] Implement redis caching for frequent queries - Testing #8
-- [/] [NLU] Improve entity extraction accuracy (Phase 1) #9
+- [x] [NLU] Improve entity extraction accuracy (Phase 1) #9
 - [/] [Frontend] Refactor dashboard to use React components - Refactor #10
-- [ ] [Infrastructure] Set up GitHub Actions for automated testing - Testing #11
+- [/] [Infrastructure] Set up GitHub Actions for automated testing - Testing #11
 - [ ] [Frontend] Visualize real-time neuron activity with WebGL - Testing #12
 - [ ] [NLU] Add support for multi-turn conversation context (Phase 2) #13
 - [ ] [Frontend] Refactor dashboard to use React components (Phase 1) #14
