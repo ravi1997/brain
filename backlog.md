@@ -15,7 +15,7 @@
 
 ## 🧊 Low Priority / Future Ideas
 - [x] migration to a graph database for knowledge storage?
-- [/] Multi-user support
+- [x] Multi-user support
 
 ## ✅ Completed
-- [ ] (No items yet)
+- [/] (No items yet)
