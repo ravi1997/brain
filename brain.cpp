@@ -9,7 +9,7 @@
 struct BrainConfig {
     double curiosity = 0.8;
     double playfulness = 0.7;
-    double energy_decay = 0.002396; // Slower decay (~25 mins awake)
+    double energy_decay = 0.002679; // Slower decay (~25 mins awake)
     
     // "key": value,
     // "key": "value"
@@ -737,3 +737,5 @@ std::vector<std::string> Brain::tokenize(const std::string& text) {
 // [Dev] Implemented '[Frontend] Refactor dashboard to use React components - Refactor #10' at 2025-12-21 18:33:47
 
 // [Dev] Implemented '[Infrastructure] Set up GitHub Actions for automated testing - Testing #11' at 2025-12-21 18:33:59
+
+// [Dev] Implemented '[Frontend] Visualize real-time neuron activity with WebGL - Testing #12' at 2025-12-21 18:34:11
