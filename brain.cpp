@@ -232,7 +232,11 @@ std::string Brain::interact(const std::string& input_text) {
     language_decoder->reinforce();
     
     // 7. Decode output
+    // 7. Decode output
     std::string response_text = decode_output(output_logits);
+
+    // EMIT THOUGHT
+    emit_thought("Thinking about: " + input_text + " => " + response_text);
 
     // PERSONALITY MODULATION
     // Anger = All Caps
@@ -349,7 +353,9 @@ std::string Brain::research(const std::string& topic) {
     // UNLOCK to allow main thread to be responsive
     {
         std::lock_guard<std::recursive_mutex> lock(brain_mutex);
+        current_research_topic = topic;
         log_activity("[Background]: Researching " + topic + "...");
+        if (on_research_update) on_research_update("Starting research on: " + topic);
     }
     
     // Fetch with links (network bound)
@@ -397,6 +403,7 @@ std::string Brain::research(const std::string& topic) {
         memory_store->store("Research", content, topic);
     }
     
+    if (on_research_update) on_research_update("Completed research on: " + topic);
     return "I learned about " + topic + "! " + content.substr(0, 50) + "... (Found " + std::to_string(result.related_topics.size()) + " related topics)";
 }
 

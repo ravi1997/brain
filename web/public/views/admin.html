@@ -1,0 +1,9 @@
+<div class="card">
+    <h3>ADMIN OPERATIONS (PORT 9009)</h3>
+    <div style="display: flex; gap: 20px; margin-top: 20px;">
+        <button class="inject-btn" onclick="sendAdmin('save')">SAVE STATE</button>
+        <button class="inject-btn" onclick="sendAdmin('compress')">COMPRESS WEIGHTS</button>
+        <button class="inject-btn warn" onclick="sendAdmin('reset')">FACTORY RESET</button>
+    </div>
+    <div id="admin-log" style="margin-top: 20px; color: #888; font-family: var(--font-mono);"></div>
+</div>

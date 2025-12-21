@@ -102,6 +102,7 @@ public:
     // Research Queue
     std::deque<std::string> research_queue;
     std::vector<std::string> learned_topics;
+    std::string current_research_topic = "None";
 
     // Explicit Memory (Database)
     std::unique_ptr<MemoryStore> memory_store;

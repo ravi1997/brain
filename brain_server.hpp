@@ -85,6 +85,24 @@ public:
             } else if (msg == "compress") {
                 // Mock compression
                 admin_server->broadcast("Compressing synaptic weights... Done.");
+            } else if (msg == "reset") {
+                // Dangerous!
+                admin_server->broadcast("Resetting brain state...");
+            } else if (msg.rfind("forget ", 0) == 0) {
+                 std::string topic = msg.substr(7);
+                 // brain.memory_store->forget(topic); // Need to implement this in memory_store first? 
+                 // For now just echo
+                 admin_server->broadcast("Forgetting " + topic + " (Not Implemented in DB yet)");
+            } else if (msg.rfind("set_rate ", 0) == 0) {
+                 double rate = std::stod(msg.substr(9));
+                 // brain.learning_rate = rate; // Not exposed yet, but placeholder ok
+                 admin_server->broadcast("Plasticity rate set to " + std::to_string(rate));
+            } else if (msg.rfind("research ", 0) == 0) {
+                 std::string topic = msg.substr(9);
+                 // Need to add task? Or call direct?
+                 // Direct call is blocking, so maybe add task
+                 brain.task_manager.add_task("Research " + topic, TaskType::RESEARCH, TaskPriority::HIGH);
+                 admin_server->broadcast("Queued research on " + topic);
             } else {
                 admin_server->broadcast("Unknown command: " + msg);
             }
@@ -132,6 +150,15 @@ public:
                 ss << "\"synapses\": " << (Brain::VOCAB_SIZE * Brain::VECTOR_DIM) << ", ";
                 ss << "\"uptime\": " << (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now().time_since_epoch()).count()) << "}";
                 extra_server->broadcast(ss.str());
+            }
+        }).detach();
+
+        // Background thread to push Research Status to 9007 (Heartbeat)
+        std::thread([this]() {
+            while(true) {
+                std::this_thread::sleep_for(std::chrono::seconds(3));
+                std::string status = "Status: " + (brain.current_research_topic.empty() ? "Idle" : "Researching " + brain.current_research_topic);
+                research_server->broadcast(status);
             }
         }).detach();
     }

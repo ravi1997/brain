@@ -1,0 +1,41 @@
+# Vocabulary
+The word apple is a fruit.
+The word banana is a yellow fruit.
+The word cat is a small animal.
+The word dog is a loyal animal.
+The word sun is a star.
+The word moon orbits the earth.
+The word computer is a machine.
+The word brain is an organ.
+The word code is instructions.
+The word happy means feeling good.
+The word sad means feeling bad.
+
+# Grammar rules
+A noun is a person place or thing.
+A verb is an action word.
+An adjective describes a noun.
+An adverb describes a verb.
+A sentence must have a subject and a verb.
+The past tense of go is went.
+The past tense of see is saw.
+The past tense of eat is ate.
+The plural of cat is cats.
+The plural of child is children.
+
+# Common Phrases
+Hello means greetings.
+Goodbye means farewell.
+Thank you means expressing gratitude.
+How are you asks about well being.
+I am fine means I am well.
+What is your name asks for identity.
+Nice to meet you is a polite greeting.
+
+# Complex Concepts
+Democracy is government by the people.
+Science is the study of the natural world.
+History is the study of the past.
+Mathematics is the science of numbers.
+Language is a method of communication.
+Artificial Intelligence is machine intelligence.
