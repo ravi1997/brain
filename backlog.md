@@ -15,9 +15,9 @@
 - [x] [Frontend] Visualize real-time neuron activity with WebGL - Testing #12
 - [x] [NLU] Add support for multi-turn conversation context (Phase 2) #13
 - [x] [Frontend] Refactor dashboard to use React components (Phase 1) #14
-- [/] [Frontend] Refactor dashboard to use React components - Testing #15
+- [x] [Frontend] Refactor dashboard to use React components - Testing #15
 - [/] [Infrastructure] Implement redis caching for frequent queries - Implementation #16
-- [ ] [Cognition] Optimize decision tree traversal in PlanningUnit - Investigation #17
+- [/] [Cognition] Optimize decision tree traversal in PlanningUnit - Investigation #17
 - [ ] [Infrastructure] Optimize C++ compile times with precompiled headers (Phase 2) #18
 - [ ] [NLU] Implement fallback responses for unknown inputs - Implementation #19
 - [ ] [Frontend] Add robust error handling for websocket disconnections - Refactor #20
