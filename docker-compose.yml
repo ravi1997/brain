@@ -10,6 +10,18 @@ services:
     # This allows for incremental builds when source files change
     command: >
       bash -c "mkdir -p build && cd build && cmake .. && make -j$(nproc) && ./brain_replica"
-    # standard options for interactive run
+    ports:
+      - "9001-9010:9001-9010"
+      - "9011:9011"
     stdin_open: true
     tty: true
+
+  web:
+    build: ./web
+    ports:
+      - "5000:5000"
+    depends_on:
+      - brain
+    links:
+      - brain:brain
+

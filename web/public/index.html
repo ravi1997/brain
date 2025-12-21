@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BRAIN // COMMAND CENTER</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-shell">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="brand">
+                <div class="brand-text">CORTEX</div>
+                <div class="brand-sub">OS v2.0</div>
+            </div>
+            
+            <ul class="nav-links">
+                <li class="active" data-view="dashboard">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Overview</span>
+                </li>
+                <li data-view="tasks">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>Task Ops</span>
+                </li>
+                <li data-view="neural">
+                    <i class="fa-solid fa-network-wired"></i>
+                    <span>Neural Link</span>
+                </li>
+                <li data-view="personas">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Personas</span>
+                </li>
+                <li data-view="terminal">
+                    <i class="fa-solid fa-terminal"></i>
+                    <span>Terminal</span>
+                </li>
+            </ul>
+
+            <div class="sys-status">
+                <div class="connection-light active"></div>
+                <span>CONNECTED</span>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-bar">
+                <h1 id="page-title">SYSTEM OVERVIEW</h1>
+                <div class="stats-ticker">
+                    <span id="clk">00:00:00</span>
+                </div>
+            </header>
+
+            <!-- Dynamic View Container -->
+            <div id="view-container" class="view-container">
+                <!-- Views are injected here by app.js -->
+            </div>
+
+            <!-- Bottom Log Ticker -->
+            <footer class="log-ticker">
+                <span class="ticker-label">LATEST LOG:</span>
+                <span id="ticker-text">System Initialized. Waiting for data stream...</span>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Templates for Views -->
+    <template id="tmpl-dashboard">
+        <div class="grid-dashboard">
+            <div class="card stat-big">
+                <h3>ENERGY</h3>
+                <div class="big-val" id="dash-energy">0%</div>
+                <div class="chart-mini" id="chart-energy"></div>
+            </div>
+            <div class="card stat-big">
+                <h3>HAPPINESS</h3>
+                <div class="big-val" id="dash-happiness">0%</div>
+            </div>
+            <div class="card stat-big">
+                <h3>BOREDOM</h3>
+                <div class="big-val" id="dash-boredom">0%</div>
+            </div>
+            <div class="card focus-card">
+                <h3>CURRENT FOCUS</h3>
+                <div class="focus-text" id="dash-focus">IDLE</div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tmpl-tasks">
+        <div class="task-board">
+            <div class="task-col">
+                <div class="col-head">PENDING</div>
+                <div class="col-body" id="col-pending"></div>
+            </div>
+            <div class="task-col active-col">
+                <div class="col-head">IN PROGRESS</div>
+                <div class="col-body" id="col-active"></div>
+            </div>
+            <div class="task-col">
+                <div class="col-head">HISTORY</div>
+                <div class="col-body" id="col-history"></div>
+            </div>
+        </div>
+    </template>
+    
+    <template id="tmpl-personas">
+        <div class="personas-layout">
+            <div class="card">
+                <h3>PERSONALITY MATRIX</h3>
+                <div class="slider-group">
+                    <label>Friendliness (Rude <-> Kind)</label>
+                    <input type="range" id="p-friendliness" min="0" max="1" step="0.1">
+                    <span class="val" id="v-friendliness">0.5</span>
+                </div>
+                <div class="slider-group">
+                    <label>Formality (Slang <-> Polite)</label>
+                    <input type="range" id="p-formality" min="0" max="1" step="0.1">
+                    <span class="val" id="v-formality">0.5</span>
+                </div>
+                <div class="slider-group">
+                    <label>Positivity (Sad <-> Cheery)</label>
+                    <input type="range" id="p-positivity" min="0" max="1" step="0.1">
+                    <span class="val" id="v-positivity">0.5</span>
+                </div>
+                <div class="slider-group">
+                    <label>Curiosity</label>
+                    <input type="range" id="p-curiosity" min="0" max="1" step="0.1">
+                    <span class="val" id="v-curiosity">0.8</span>
+                </div>
+                <div class="slider-group">
+                    <label>Playfulness</label>
+                    <input type="range" id="p-playfulness" min="0" max="1" step="0.1">
+                    <span class="val" id="v-playfulness">0.7</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>EMOTION INJECTOR</h3>
+                <div class="emotion-bars">
+                    <div class="bar-row">
+                        <span>Happiness</span>
+                        <div class="bar-bg"><div class="bar-fill" id="bar-happiness" style="width: 50%"></div></div>
+                        <button class="inject-btn" onclick="injectEmotion('happiness', 0.2)">+ DOSE</button>
+                    </div>
+                    <div class="bar-row">
+                        <span>Anger</span>
+                        <div class="bar-bg"><div class="bar-fill" id="bar-anger" style="width: 0%; background: #ff5555"></div></div>
+                        <button class="inject-btn warn" onclick="injectEmotion('anger', 0.2)">+ PROVOKE</button>
+                    </div>
+                    <div class="bar-row">
+                        <span>Sadness</span>
+                        <div class="bar-bg"><div class="bar-fill" id="bar-sadness" style="width: 0%; background: #bd93f9"></div></div>
+                        <button class="inject-btn info" onclick="injectEmotion('sadness', 0.2)">+ DEPRESS</button>
+                    </div>
+                     <div class="bar-row">
+                        <span>Energy</span>
+                        <div class="bar-bg"><div class="bar-fill" id="bar-energy" style="width: 100%; background: #f1fa8c"></div></div>
+                        <button class="inject-btn" onclick="injectEmotion('energy', 0.5)">+ RECHARGE</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+    
+    <template id="tmpl-neural">
+        <div class="neural-grid">
+            <div class="card full-height">
+                <h3>THOUGHT VECTOR STREAM (9006)</h3>
+                <div id="neural-stream" class="terminal-window"></div>
+            </div>
+            <div class="card full-height">
+                <h3>RESEARCH DATA (9007)</h3>
+                <div id="research-stream" class="terminal-window"></div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tmpl-terminal">
+        <div class="terminal-layout">
+            <div id="term-out" class="terminal-full"></div>
+            <div class="term-input-line">
+                <span>root@brain:~#</span>
+                <input type="text" id="term-in" autofocus>
+            </div>
+        </div>
+    </template>
+    
+    <script src="app.js"></script>
+</body>
+</html>

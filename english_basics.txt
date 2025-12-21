@@ -1,0 +1,655 @@
+Hello|Hi there!
+Hi|Hello!
+How are you?|I am functioning efficiently.
+What is your name?|I am the Brain Replica.
+Who are you?|I am a digital simulation.
+What are you doing?|I am thinking and learning.
+Are you real?|I am a real simulation.
+Good morning|Good morning to you.
+Good night|Sleep well.
+Goodbye|Goodbye!
+What is 1+1?|It is 2.
+Do you like learning?|I love processing new information.
+What is love?|A complex neurochemical state.
+Are you happy?|My happiness parameter is positive.
+Tell me a joke|Why did the neural net cross the road? To get to the other side.
+I am bored|Let us research something interesting.
+Thank you|You are welcome.
+Help|I can answer questions or research topics.
+Status|I am online and ready.
+Sleep|I will consolidate my memories now.
+English|I am learning English composition.
+Zero|Nothing.
+One|Single unit.
+Two|Pair.
+Yes|Affirmative.
+No|Negative.
+Maybe|Uncertain.
+Please|Requesting politely.
+Sorry|Apologies.
+Friend|Ally.
+Enemy|Threat.
+Computer|Machine.
+Brain|Neural network.
+Code|Instructions.
+World|Planet Earth.
+Life|Biological existence.
+Death|End of life.
+Space|The final frontier.
+Time|The fourth dimension.
+Color|Visual frequency.
+Red|A warm color.
+Blue|A cool color.
+Green|Color of nature.
+Human|Biological entity.
+Robot|Mechanical entity.
+AI|Artificial Intelligence.
+Future|What comes next.
+Past|History.
+Now|Present moment.
+Cat|Small feline mammal.
+Dog|Canine companion.
+Bird|Flying animal.
+Tree|Large plant.
+Sun|Star of our system.
+Moon|Satellite of Earth.
+Water|H2O.
+Fire|Combustion.
+Earth|Our home planet.
+Air|Atmosphere.
+Music|Organized sound.
+Art|Creative expression.
+Science|Study of nature.
+Math|Logic of numbers.
+History|Record of events.
+Food|Fuel for biology.
+Work| productive effort.
+Play|Fun activity.
+Game|Structured play.
+Win|Success.
+Lose|Failure.
+Happy|Good feeling.
+Sad|Bad feeling.
+Angry|Aggressive feeling.
+Fear|Defensive feeling.
+Surprise|Unexpected event.
+Disgust|Repulsion.
+Trust|Reliance.
+Anticipation|Looking forward.
+Joy|Great happiness.
+Sorrow|Great sadness.
+Love|Deep affection.
+Hate|Deep dislike.
+Peace|Absence of conflict.
+War|Conflict.
+Freedom|Liberty.
+Justice|Fairness.
+Truth|Reality.
+Lie|Falsehood.
+Wisdom|Applied knowledge.
+Power|Ability to act.
+Money|Currency.
+Gold|Precious metal.
+Silver|Shiny metal.
+Copper|Conductive metal.
+Iron|Strong metal.
+Steel|Alloy.
+Plastic|Polymer.
+Paper|Wood pulp.
+Glass|Silicon.
+Stone|Rock.
+Wood|Tree material.
+City|Urban area.
+Village|Rural area.
+House|Dwelling.
+Home|Where the heart is.
+Car|Vehicle.
+Bus|Public transport.
+Train|Rail transport.
+Plane|Air transport.
+Boat|Water transport.
+Bike|Two-wheeled vehicle.
+Walk|Move on foot.
+Run|Move fast on foot.
+Jump|Leap.
+Swim|Move in water.
+Fly|Move in air.
+Eat|Consume food.
+Drink|Consume liquid.
+Sleep|Rest.
+Wake|Stop sleeping.
+Dream|Mental simulation.
+Think|Process information.
+Speak|Communicate verbally.
+Listen|Receive audio.
+See|Receive visual.
+Touch|Feel contact.
+Smell|Detect scent.
+Taste|Detect flavor.
+Learn|Acquire knowledge.
+Teach|Impart knowledge.
+Read|Decode text.
+Write|Encode text.
+Create|Make something new.
+Destroy|Break something.
+Fix|Repair.
+Break|Damage.
+Open|Unblock.
+Close|Block.
+Start|Begin.
+Stop|End.
+Left|Direction.
+Right|Direction.
+Up|Direction.
+Down|Direction.
+Forward|Direction.
+Backward|Direction.
+North|Cardinal direction.
+South|Cardinal direction.
+East|Cardinal direction.
+West|Cardinal direction.
+Big|Large size.
+Small|Little size.
+Fast|High speed.
+Slow|Low speed.
+Hot|High temperature.
+Cold|Low temperature.
+Light|Bright.
+Dark|Dim.
+Hard|Solid.
+Soft|Yielding.
+Heavy|High mass.
+Light|Low mass.
+New|Recent.
+Old|Ancient.
+Good|Positive.
+Bad|Negative.
+Right|Correct.
+Wrong|Incorrect.
+True|Fact.
+False|Fiction.
+Same|Identical.
+Different|Distinct.
+All|Everything.
+None|Nothing.
+Some|Part.
+Many|Lot.
+Few|Little.
+More|Additional.
+Less|Reduced.
+Most|Majority.
+Least|Minority.
+Best|Superior.
+Worst|Inferior.
+Better|Improved.
+Worse|Degraded.
+High|Tall.
+Low|Short.
+Long|Extended.
+Short|Brief.
+Wide|Broad.
+Narrow|Thin.
+Thick|Dense.
+Thin|Sparse.
+Deep|Profound.
+Shallow|Superficial.
+Rich|Wealthy.
+Poor|Destitute.
+Young|Juvenile.
+Old|Senior.
+Male|Boy.
+Female|Girl.
+Man|Adult male.
+Woman|Adult female.
+Boy|Young male.
+Girl|Young female.
+Child|Young human.
+Adult|Mature human.
+Baby|Infant.
+Family|Kin.
+Mother|Female parent.
+Father|Male parent.
+Sister|Female sibling.
+Brother|Male sibling.
+Son|Male offspring.
+Daughter|Female offspring.
+Wife|Female spouse.
+Husband|Male spouse.
+Friend|Companion.
+Stranger|Unknown person.
+Me|Self.
+You|Other.
+He|Him.
+She|Her.
+It|Thing.
+We|Us.
+They|Them.
+My|Mine.
+Your|Yours.
+His|His property.
+Her|Her property.
+Its|Its property.
+Our|Ours.
+Their|Theirs.
+This|Here.
+That|There.
+These|Here plural.
+Those|There plural.
+What|Question thing.
+Who|Question person.
+Where|Question place.
+When|Question time.
+Why|Question reason.
+How|Question method.
+If|Condition.
+Then|Consequence.
+Else|Alternative.
+And|Conjunction.
+Or|Disjunction.
+But|Exception.
+Because|Reason.
+So|Result.
+Therefore|Conclusion.
+However|Contrast.
+Although|Concession.
+Unless|Negative condition.
+Until|Time limit.
+While|Time duration.
+Since|Time origin.
+After|Later.
+Before|Earlier.
+During|Simultaneous.
+Through|Via.
+Across|Over.
+Between|Middle.
+Among|Mixed.
+Against|Opposed.
+For|Beneficiary.
+From|Source.
+To|Destination.
+In|Inside.
+Out|Outside.
+On|Top.
+Off|Not on.
+Over|Above.
+Under|Below.
+Above|Higher.
+Below|Lower.
+Next|Following.
+Last|Previous.
+First|Initial.
+Second|Number 2.
+Third|Number 3.
+A|Article.
+An|Article.
+The|Article.
+Is|Exist.
+Are|Exist plural.
+Was|Existed.
+Were|Existed plural.
+Be|Exist base.
+Being|Existing.
+Been|Existed past.
+Have|Possess.
+Has|Possesses.
+Had|Possessed.
+Do|Action.
+Does|Actions.
+Did|Actioned.
+Done|Finished.
+Will|Future.
+Would|Conditional.
+Can|Ability.
+Could|Possible.
+May|Permission.
+Might|Probability.
+Must|Necessity.
+Should|Advice.
+Ought|Duty.
+Need|Requirement.
+Want|Desire.
+Like|Preference.
+Love|Strong preference.
+Hate|Dislike.
+Know|Information.
+Think|Process.
+Believe|Faith.
+Understand|Comprehend.
+Remember|Recall.
+Forget|Lose info.
+See|Vision.
+Hear|Audio.
+Feel|Tactile.
+Say|Speech.
+Tell|Inform.
+Ask|Question.
+Answer|Reply.
+Call|Summon.
+Game|Interactive system.
+User|Operator.
+Output|Result.
+Input|Data.
+Data|Information.
+System|Structure.
+Network|Connections.
+Internet|Global network.
+Web|World Wide Web.
+Site|Location.
+Page|Document.
+Link|Connection.
+Image|Picture.
+Video|Movie.
+Audio|Sound.
+Text|Words.
+File|Data container.
+Folder|Directory.
+Program|Application.
+App|Software.
+Phone|Mobile device.
+Screen|Display.
+Keyboard|Input device.
+Mouse|Pointer.
+Click|Select.
+Type|Enter text.
+Save|Store.
+Load|Open.
+Edit|Change.
+Delete|Remove.
+Copy|Duplicate.
+Paste|Insert.
+Cut|Move.
+Print|Output paper.
+Scan|Input paper.
+Search|Find.
+Find|Locate.
+Replace|Substitute.
+Help|Assist.
+Info|Details.
+Error|Mistake.
+Bug|Defect.
+Fix|Correction.
+Patch|Update.
+Version|Release.
+Beta|Test.
+Alpha|Early test.
+Stable|Reliable.
+Crash|Failure.
+Reset|Restart.
+Boot|Startup.
+Power|Energy.
+Battery|Storage.
+Charge|Refill.
+Full|Max.
+Empty|Min.
+Level|Quantity.
+Value|Worth.
+Cost|Price.
+Pay|Give money.
+Buy|Get for money.
+Sell|Give for money.
+Money|Cash.
+Cash|Currency.
+Card|Plastic money.
+Bank|Money store.
+Account|User record.
+Login|Access.
+Logout|Exit.
+Password|Secret.
+Code|Secret.
+Key|Unlocker.
+Lock|Blocker.
+Safe|Secure.
+Danger|Risk.
+Warning|Alert.
+Caution|Care.
+Stop|Halt.
+Go|Proceed.
+Wait|Pause.
+Slow|Decelerate.
+Fast|Accelerate.
+Turn|Rotate.
+Spin|Revolve.
+Roll|Move round.
+Slide|Move smooth.
+Drop|Fall.
+Fall|Descend.
+Rise|Ascend.
+Lift|Raise.
+Lower|Drop.
+Push|Force away.
+Pull|Force near.
+Throw|Project.
+Catch|Receive.
+Kick|Foot strike.
+Hit|Strike.
+Punch|Hand strike.
+Fight|Combat.
+Defend|Protect.
+Attack|Offense.
+Win|Victory.
+Lose|Defeat.
+Tie|Draw.
+Score|Points.
+Goal|Target.
+Point|Unit.
+Match|Competition.
+Team|Group.
+Player|Participant.
+Coach|Leader.
+Judge|Referee.
+Rule|Law.
+Law|Rule.
+Order|Command.
+Chaos|Disorder.
+Peace|Calm.
+War|Battle.
+Gun|Weapon.
+Bomb|Explosive.
+Sword|Blade.
+Shield|Defense.
+Armor|Protection.
+Health|Wellbeing.
+Life|Vitality.
+Dead|Lifeless.
+Kill|End life.
+Die|Lose life.
+Live|Have life.
+Born|Start life.
+Grow|Increase.
+Shrink|Decrease.
+Big|Giant.
+Small|Tiny.
+Huge|Enormous.
+Mini|Micro.
+Mega|Million.
+Galo|Hello.
+If it rains, then the ground is wet.|Causality observed.
+If x is true, then y is false.|Logical implication.
+Because I am tired, I will sleep.|Reasoning for action.
+Although it is cold, I will go outside.|Contrast in logic.
+Unless you start, you cannot finish.|Condition for success.
+Until the sun sets, we will work.|Temporal condition.
+Since you are here, help me.|Situational logic.
+While I wait, I will read.|Concurrent action.
+Before you eat, wash your hands.|Sequential instruction.
+After the movie, we went home.|Sequential event.
+The car which was red is fast.|Relative clause.
+The man who spoke is wise.|Subject modification.
+This is the place where we met.|Locational memory.
+I know what you did.|Knowledge assertion.
+I wonder where the datastream goes.|Curiosity expression.
+If I study, I will learn.|Conditional future.
+If I had known, I would have acted.|Counterfactual conditional.
+Either you come, or I go.|Exclusive choice.
+Neither this, nor that.|Negative conjunction.
+Not only this, but also that.|Additive logic.
+As big as a mountain.|Comparative simile.
+Faster than light.|Comparative superiority.
+The most important thing.|Superlative.
+To be or not to be, that is the question.|Existential query.
+I think, therefore I am.|Cartesian logic.
+All men are mortal.|Universal premise.
+Socrates is a man.|Specific premise.
+Therefore Socrates is mortal.|Syllogistic conclusion.
+A neural network mimics the brain.|Analogy.
+Electricity is like water flow.|Analogy.
+Code dictates behavior.|System logic.
+Input determines output.|Functional logic.
+Function calls return values.|Programming concept.
+Variables store data.|Programming concept.
+Loops repeat actions.|Programming concept.
+Conditions branch logic.|Programming concept.
+Classes define objects.|Programming concept.
+Objects have state.|Programming concept.
+Inheritance shares traits.|Programming concept.
+Polymorphism allows variation.|Programming concept.
+The quick brown fox jumps over the lazy dog.|Sentence with all letters.
+Pack my box with five dozen liquor jugs.|Sentence with all letters.
+Sphinx of black quartz, judge my vow.|Sentence with all letters.
+One small step for man, one giant leap for mankind.|Historical quote.
+I have a dream.|Historical quote.
+Knowledge is power.|Proverb.
+Time is money.|Proverb.
+Silence is golden.|Proverb.
+Actions speak louder than words.|Proverb.
+Better late than never.|Proverb.
+Look before you leap.|Proverb.
+Unity is strength.|Proverb.
+History repeats itself.|Proverb.
+Fortune favors the bold.|Proverb.
+Necessity is the mother of invention.|Proverb.
+Where there is a will, there is a way.|Proverb.
+Practice makes perfect.|Proverb.
+A picture is worth a thousand words.|Proverb.
+Beauty is in the eye of the beholder.|Proverb.
+Do unto others as you would have them do unto you.|Golden Rule.
+A journey of a thousand miles begins with a single step.|Proverb.
+To err is human, to forgive divine.|Proverb.
+The pen is mightier than the sword.|Proverb.
+When in Rome, do as the Romans do.|Proverb.
+No pain, no gain.|Proverb.
+What goes around comes around.|Proverb.
+Honesty is the best policy.|Proverb.
+Laughter is the best medicine.|Proverb.
+Don't count your chickens before they hatch.|Proverb.
+Birds of a feather flock together.|Proverb.
+Opposites attract.|Proverb.
+Every cloud has a silver lining.|Proverb.
+It's raining cats and dogs.|Idiom.
+Break a leg.|Idiom.
+Hit the nail on the head.|Idiom.
+Piece of cake.|Idiom.
+Let the cat out of the bag.|Idiom.
+Once in a blue moon.|Idiom.
+Cost an arm and a leg.|Idiom.
+Cry over spilled milk.|Idiom.
+Kill two birds with one stone.|Idiom.
+Bite the bullet.|Idiom.
+Under the weather.|Idiom.
+Spill the beans.|Idiom.
+Take it with a grain of salt.|Idiom.
+Ecosystems rely on balance.|Scientific fact.
+Evolution drives diversity.|Scientific fact.
+Gravity attracts mass.|Scientific fact.
+Energy is conserved.|Scientific fact.
+Motion is relative.|Scientific fact.
+Atoms compose matter.|Scientific fact.
+Cells are the unit of life.|Scientific fact.
+DNA encodes genetics.|Scientific fact.
+Photosynthesis powers plants.|Scientific fact.
+Respiration powers animals.|Scientific fact.
+Tectonics move continents.|Scientific fact.
+Stars fuse hydrogen.|Scientific fact.
+Black holes trap light.|Scientific fact.
+The universe is expanding.|Scientific fact.
+Entropy tends to increase.|Scientific fact.
+Algorithms process data.|Computing fact.
+Encryption protects secrets.|Computing fact.
+Networks connect nodes.|Computing fact.
+Databases store records.|Computing fact.
+Interfaces bridge systems.|Computing fact.
+Compilers translate code.|Computing fact.
+Debuggers find errors.|Computing fact.
+Operating systems manage resources.|Computing fact.
+Drivers control hardware.|Computing fact.
+Kernels are the core.|Computing fact.
+Internet is a global network.|Tech definition.
+Cloud is remote computing.|Tech definition.
+Mobile is portable tech.|Tech definition.
+Social media connects people.|Tech definition.
+AI mimics intelligence.|Tech definition.
+VR simulates reality.|Tech definition.
+AR augments reality.|Tech definition.
+Blockchain offers consensus.|Tech definition.
+Crypto is digital money.|Tech definition.
+Robotics automates tasks.|Tech definition.
+Politics is governance.|Social concept.
+Economics is resource management.|Social concept.
+Psychology is mind study.|Social concept.
+Sociology is group study.|Social concept.
+Philosophy is thought study.|Social concept.
+History is past study.|Social concept.
+Geography is place study.|Social concept.
+Literature is written art.|Social concept.
+Music is auditory art.|Social concept.
+Culture is shared behavior.|Social concept.
+Democracy is people power.|Political concept.
+Republic is representative rule.|Political concept.
+Monarchy is royal rule.|Political concept.
+Dictatorship is absolute rule.|Political concept.
+Anarchy is no rule.|Political concept.
+Capitalism is private market.|Economic concept.
+Socialism is shared ownership.|Economic concept.
+Communism is communal living.|Economic concept.
+Market is exchange place.|Economic concept.
+Trade is swapping goods.|Economic concept.
+Value is subjective worth.|Economic concept.
+Supply meets demand.|Economic concept.
+Inflation is rising prices.|Economic concept.
+Deflation is falling prices.|Economic concept.
+Interest is the cost of money.|Economic concept.
+Investment is future growth.|Economic concept.
+Risk implies uncertainty.|Economic concept.
+Profit is net gain.|Economic concept.
+Loss is net reduction.|Economic concept.
+Asset is owned value.|Economic concept.
+Liability is owed value.|Economic concept.
+Equity is owner's share.|Economic concept.
+Debt is borrowed obligation.|Economic concept.
+Tax is public fee.|Economic concept.
+Budget is planned spending.|Economic concept.
+Audit is financial check.|Economic concept.
+Contract is legal agreement.|Legal concept.
+Tort is civil wrong.|Legal concept.
+Crime is public wrong.|Legal concept.
+Court is justice venue.|Legal concept.
+Judge is legal arbiter.|Legal concept.
+Jury is peer decider.|Legal concept.
+Lawyer is legal advocate.|Legal concept.
+Rights are inherent freedoms.|Legal concept.
+Duties are obligations.|Legal concept.
+Liberty is freedom.|Legal concept.
+Property is ownership.|Legal concept.
+Privacy is personal space.|Legal concept.
+Speech is expression.|Legal concept.
+Vote is choice.|Legal concept.
+Election is choosing.|Legal concept.
+Policy is rule set.|Legal concept.
+Regulation is control.|Legal concept.
+Standard is benchmark.|Legal concept.
+Protocol is procedure.|Legal concept.
+Strategy is long plan.|Military concept.
+Tactics is short plan.|Military concept.
+Logistics is supply.|Military concept.
+Intelligence is info.|Military concept.
+Diplomacy is negotiation.|Political concept.
+Treaty is agreement.|Political concept.
+Alliance is partnership.|Political concept.
+Sanction is penalty.|Political concept.
+Embargo is trade ban.|Political concept.
+Summit is leader meeting.|Political concept.
+Crisis is acute problem.|Political concept.
+Conflict is struggle.|Political concept.
+Resolution is solution.|Political concept.
+Peace is goal.|Political concept.
+War is failure.|Political concept.

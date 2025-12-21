@@ -19,7 +19,7 @@ include_directories(include)
 find_package(Threads REQUIRED)
 
 # The main executable
-add_executable(brain_replica main.cpp dnn.cpp brain.cpp memory_store.cpp)
+add_executable(brain_replica main.cpp dnn.cpp brain.cpp memory_store.cpp server.cpp reflex.cpp task_manager.cpp)
 
 # Link threads (for std::execution::par_unseq in dnn.hpp)
 target_link_libraries(brain_replica PRIVATE Threads::Threads sqlite3)

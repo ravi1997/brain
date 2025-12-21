@@ -23,6 +23,6 @@ WORKDIR /app
 COPY . .
 
 # Build
-RUN mkdir -p build && cd build && cmake .. && make
+RUN mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make
 
 CMD ["./build/brain_replica"]

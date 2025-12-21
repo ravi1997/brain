@@ -3,6 +3,8 @@
 #include "dnn.hpp"
 #include "memory_store.hpp"
 #include "research_utils.hpp"
+#include "reflex.hpp"
+#include "task_manager.hpp"
 #include <string>
 #include <vector>
 #include <memory>
@@ -27,11 +29,17 @@ inline void safe_print(const std::string& msg) {
 struct Personality {
     double curiosity = 0.8;    // 0-1
     double playfulness = 0.7;  // 0-1
+    double friendliness = 0.5; // 0=Rude, 1=Kind
+    double formality = 0.5;    // 0=Slang, 1=Polite
+    double positivity = 0.5;   // 0=Sad/Depressed, 1=Happy/Cheery
     double energy_decay = 0.05; 
 };
 
 struct Emotions {
     double happiness = 0.5; // 0-1
+    double sadness = 0.0;   // 0-1
+    double anger = 0.0;     // 0-1
+    double fear = 0.0;      // 0-1
     double energy = 1.0;    // 0-1
     double boredom = 0.0;   // 0-1 (High = bored)
 };
@@ -82,6 +90,8 @@ public:
 
     Personality personality;
     Emotions emotions;
+    Reflex reflex;
+    TaskManager task_manager;
     
     std::atomic<bool> running{true};
     mutable std::recursive_mutex brain_mutex; // Protects shared state (recursive to allow internal calls)
@@ -97,18 +107,23 @@ public:
     std::unique_ptr<MemoryStore> memory_store;
     std::string db_path = "brain_memories.db";
 
-    // Word-based hashing (1000 buckets)
-    static constexpr size_t VOCAB_SIZE = 1000; 
-    static constexpr size_t VECTOR_DIM = 64;  
+    // Word-based hashing (10000 buckets)
+    static constexpr size_t VOCAB_SIZE = 10000; 
+    static constexpr size_t VECTOR_DIM = 256;  // Increased dimension for better capacity
     
     // Reverse mapping for decoding
+    // Reverse mapping for decoding
     std::map<size_t, std::string> vocab_decode;
+    
+    // Synonym Mapping (Word -> Root Meaning)
+    std::map<std::string, std::string> synonyms;
 
     Brain();
     ~Brain();
 
     std::string interact(const std::string& input_text);
     std::string decode_output(const std::vector<double>& logits);
+    std::string get_associative_memory(const std::string& input);
     bool CheckPrintable(char c);
     
     // Helpers
@@ -128,7 +143,27 @@ public:
     void automata_loop();
 
     std::string get_status();
+    std::string get_json_state();
+    void update_from_json(const std::string& json);
 
     void save(const std::string& filename);
     void load(const std::string& filename);
+    
+    // Supervised Learning
+    void teach(const std::string& input, const std::string& target);
+    
+    // Event Callbacks
+    std::function<void(const std::string&)> on_log;
+    std::function<void(const std::string&)> on_error;
+    std::function<void(const std::string&)> on_thought;
+    std::function<void(const std::string&)> on_emotion_update;
+    std::function<void(const std::string&)> on_research_update;
+    
+    void set_log_callback(std::function<void(const std::string&)> cb) { on_log = cb; }
+    void set_error_callback(std::function<void(const std::string&)> cb) { on_error = cb; }
+    void set_thought_callback(std::function<void(const std::string&)> cb) { on_thought = cb; }
+
+private:
+    void emit_log(const std::string& msg) { if(on_log) on_log(msg); else std::cout << msg << std::endl; }
+    void emit_thought(const std::string& msg) { if(on_thought) on_thought(msg); }
 };

@@ -8,6 +8,8 @@ add_executable(brain_tests
     ../dnn.cpp
     ../brain.cpp
     ../memory_store.cpp
+    ../reflex.cpp
+    ../task_manager.cpp
 )
 
 target_include_directories(brain_tests PRIVATE ..)

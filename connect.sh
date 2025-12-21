@@ -9,5 +9,6 @@ if [ -z "$CONTAINER_ID" ]; then
     exit 1
 fi
 
-echo "Connecting to Brain... (Press Ctrl+P, Ctrl+Q to detach without stopping)"
-docker attach $CONTAINER_ID
+echo "Connecting to Brain Chat (Port 9005)... (Press Ctrl+C to exit)"
+nc localhost 9005
+
