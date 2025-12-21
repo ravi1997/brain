@@ -27,9 +27,9 @@
 - [x] [Infrastructure] Set up GitHub Actions for automated testing - Testing #24
 - [x] [NLU] Add sentiment analysis to input processing (Phase 2) #25
 - [x] [NLU] Add sentiment analysis to input processing - Optimization #26
-- [/] [NLU] Improve entity extraction accuracy (Phase 1) #27
+- [x] [NLU] Improve entity extraction accuracy (Phase 1) #27
 - [/] [Cognition] Add unit tests for EmotionUnit edge cases - Investigation #28
-- [ ] [NLU] Implement fallback responses for unknown inputs - Optimization #29
+- [/] [NLU] Implement fallback responses for unknown inputs - Optimization #29
 - [ ] [NLU] Improve entity extraction accuracy (Phase 2) #30
 - [ ] [Infrastructure] Implement crash reporting service - Implementation #31
 - [ ] [Infrastructure] Add log rotation for server logs - Investigation #32
