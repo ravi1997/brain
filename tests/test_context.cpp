@@ -48,3 +48,20 @@ TEST_F(ContextTest, TruncatesContext) {
     // Max turns = 6 (defined in header)
     ASSERT_LE(brain.conversation_context.size(), 6);
 }
+
+TEST_F(ContextTest, ContextualRecall) {
+    Brain brain;
+    
+    // Seed some memory
+    brain.memory_store->store("Personal", "Sylvia is a biological scientist.", "Sylvia");
+    
+    // Turn 1: Mention entity
+    brain.interact("I know a person named Sylvia.");
+    
+    // Turn 2: Ask about entity without mentioning it explicitly
+    // This should trigger associative memory retrieval using the context "Sylvia"
+    std::string response = brain.interact("What does she do?");
+    
+    // We expect the log to have mentioned memory recall, and the response to contain knowledge about Sylvia
+    EXPECT_TRUE(response.find("scientist") != std::string::npos || response.find("recall") != std::string::npos);
+}

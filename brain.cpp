@@ -144,19 +144,25 @@ std::string Brain::interact(const std::string& input_text) {
         return instinct;
     }
 
-    // 2. Associative Memory Retrieval (RAG-lite)
+    // 2. Associative Memory Retrieval (RAG-lite) with full context
     if (memory_store) {
-        std::string memory_response = get_associative_memory(input_text);
+        // Build contextual query string (latest 2 turns + current)
+        std::string contextual_query = "";
+        size_t start_idx = (conversation_context.size() > 3) ? conversation_context.size() - 3 : 0;
+        for (size_t i = start_idx; i < conversation_context.size(); ++i) {
+            contextual_query += conversation_context[i] + " ";
+        }
+
+        std::string memory_response = get_associative_memory(contextual_query);
         if (!memory_response.empty()) {
-            emit_log("[Memory]: Recalled fact about '" + input_text + "'");
+            emit_log("[Memory]: Recalled fact using context: '" + contextual_query + "'");
             
-            // "Prime" the brain with this knowledge for context (optional, but good for plasticity)
+            // "Prime" the brain with this knowledge for context
             auto tokens = tokenize(memory_response);
             for(const auto& t : tokens) {
                 std::hash<std::string> h;
                 vocab_decode[h(t) % VOCAB_SIZE] = t;
             }
-            
             
             conversation_context.push_back("Brain: " + memory_response);
             while (conversation_context.size() > MAX_CONTEXT_TURNS) conversation_context.pop_front();
@@ -181,38 +187,44 @@ std::string Brain::interact(const std::string& input_text) {
     for (const auto& line : conversation_context) {
         contextual_input += line + " | ";
     }
-    // Remove the last " | " and add current input explicitly if not redundant (it's already in context)
-    // Actually, just using the full context string is key.
     
     // Convert to words (Bag of Words Hashing) with N-GRAMS
     // We heavily weight the *current* input, but include context
-    auto tokens = tokenize(contextual_input);
-    
-    // Pre-process tokens for synonyms
-    for(auto& t : tokens) {
-        if(synonyms.count(t)) t = synonyms[t];
-    }
+    auto history_tokens = tokenize(contextual_input);
+    auto current_tokens = tokenize(input_text);
 
-    std::vector<std::string> ngrams = tokens;
-    // Add Bigrams (e.g., "not happy")
-    for(size_t i=0; i < tokens.size()-1; ++i) {
-        ngrams.push_back(tokens[i] + "_" + tokens[i+1]);
-    }
-
-    for (const auto& word : ngrams) {
-        // Hash string to 0..999
-        std::hash<std::string> hasher;
-        size_t idx = hasher(word) % VOCAB_SIZE;
-        input_vec[idx] += 1.0;
-        
-        // Learn the word mapping
-        if (vocab_decode.find(idx) == vocab_decode.end()) {
-             // Store human readable form (replace _ with space for decoding)
-             std::string clean = word;
-             std::replace(clean.begin(), clean.end(), '_', ' ');
-             vocab_decode[idx] = clean;
+    // Pre-process for synonyms (simplified here, in reality would do all)
+    auto process_tokens = [&](std::vector<std::string>& ts) {
+        for(auto& t : ts) {
+            if(synonyms.count(t)) t = synonyms[t];
         }
-    }
+    };
+    process_tokens(history_tokens);
+    process_tokens(current_tokens);
+
+    auto add_to_vec = [&](const std::vector<std::string>& tokens, double weight) {
+        std::vector<std::string> ngrams = tokens;
+        // Add Bigrams
+        for(size_t i=0; i < tokens.size()-1; ++i) {
+            ngrams.push_back(tokens[i] + "_" + tokens[i+1]);
+        }
+
+        for (const auto& word : ngrams) {
+            std::hash<std::string> hasher;
+            size_t idx = hasher(word) % VOCAB_SIZE;
+            input_vec[idx] += weight;
+            
+            if (vocab_decode.find(idx) == vocab_decode.end()) {
+                 std::string clean = word;
+                 std::replace(clean.begin(), clean.end(), '_', ' ');
+                 vocab_decode[idx] = clean;
+            }
+        }
+    };
+
+    // Weight current input 3x more than history
+    add_to_vec(history_tokens, 1.0);
+    add_to_vec(current_tokens, 3.0);
 
     // Normalize
     double max_val = 1.0; 
@@ -230,8 +242,8 @@ std::string Brain::interact(const std::string& input_text) {
     // If we found a fact in step 2 (get_associative_memory), we should "feel" it too.
     // We re-query here to get the content, tokenize it, and add to memory_context
     if (memory_store) {
-        // Iterate tokens again to find triggers
-        for(const auto& t : tokens) {
+        // Iterate current tokens to find triggers for direct neural injection
+        for(const auto& t : current_tokens) {
              if (t.length() <= 3) continue;
              auto results = memory_store->query(t);
              if (!results.empty()) {
