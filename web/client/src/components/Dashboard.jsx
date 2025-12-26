@@ -1,88 +1,81 @@
 import React, { useState } from 'react';
 import { useBrain } from '../hooks/useBrain';
-import NeuronVisualizer from './NeuronVisualizer';
+import { Zap, Activity, Target, Cpu } from 'lucide-react';
 
 const Dashboard = () => {
-    const { status, messages, sendMessage } = useBrain();
-    const [input, setInput] = useState("");
+    const { status, brainData } = useBrain();
     
-    console.log("%c[Dashboard] Current status: " + status, "color: yellow; font-weight: bold; font-size: 16px;");
-
-    const handleSend = (e) => {
-        if (e.key === 'Enter' && input.trim()) {
-            sendMessage(input);
-            setInput("");
-        }
-    };
+    const StatCard = ({ title, value, icon: Icon, id, color = 'var(--accent-color)' }) => (
+        <div id={id} className="glass-panel" style={{ padding: '25px', position: 'relative', overflow: 'hidden' }}>
+            <div className="scan-line" />
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: 'bold' }}>{title}</span>
+                <Icon size={16} style={{ color }} />
+            </div>
+            <div style={{ fontSize: '32px', fontFamily: 'var(--font-mono)', color }}>{value}</div>
+            <div style={{ height: '4px', background: 'rgba(255,255,255,0.1)', marginTop: '15px', borderRadius: '2px' }}>
+                <div style={{ 
+                    height: '100%', 
+                    width: typeof value === 'string' && value.includes('%') ? value : '100%', 
+                    background: color, 
+                    boxShadow: `0 0 10px ${color}` 
+                }} />
+            </div>
+        </div>
+    );
 
     return (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '20px', height: '100%' }}>
-            {/* Main Panel */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                {/* Status Bar */}
-                <div style={{ 
-                    padding: '15px', border: '1px solid rgba(0, 240, 255, 0.3)', 
-                    background: 'rgba(0, 20, 40, 0.6)', backdropFilter: 'blur(5px)',
-                    display: 'flex', justifyContent: 'space-between'
-                }}>
-                    <span style={{ color: status === 'connected' ? '#0f0' : '#f00' }}>
-                        ● SYSTEM STATUS: {status.toUpperCase()}
-                    </span>
-                    <span>UPTIME: 00:00:00</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                    <h2 id="page-title" className="text-glow" style={{ margin: 0, fontSize: '28px', color: '#fff' }}>SYSTEM OVERVIEW</h2>
+                    <p style={{ margin: '5px 0 0 0', opacity: 0.5, fontSize: '12px', letterSpacing: '1px' }}>REAL-TIME COGNITIVE TELEMETRY</p>
                 </div>
-
-                {/* Logs / Chat */}
-                <div style={{ 
-                    flex: 1, border: '1px solid rgba(0, 240, 255, 0.3)', 
-                    background: 'rgba(0, 10, 20, 0.8)', padding: '20px',
-                    overflowY: 'auto', fontFamily: 'monospace'
-                }}>
-                    {messages.map((m, i) => (
-                        <div key={i} style={{ 
-                            marginBottom: '8px', 
-                            color: m.type === 'user' ? '#fff' : m.type === 'thought' ? '#a0c0e0' : '#00f0ff' 
-                        }}>
-                            <span style={{ opacity: 0.5 }}>[{new Date().toLocaleTimeString()}]</span> 
-                            {m.type === 'user' ? ' > ' : ' # '}
-                            {m.text}
-                        </div>
-                    ))}
+                <div className="glass-panel" style={{ padding: '10px 20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div className="pulse" style={{ width: '8px', height: '8px', borderRadius: '50%', background: status === 'connected' ? 'var(--success-color)' : 'var(--danger-color)' }} />
+                    <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)' }}>LINK STATUS: {status.toUpperCase()}</span>
                 </div>
+            </div>
 
-                {/* Neuron Activity Visualization */}
-                <div style={{ 
-                    border: '1px solid rgba(0, 240, 255, 0.3)', 
-                    background: 'rgba(0, 10, 20, 0.8)',
-                    overflow: 'hidden'
-                }}>
-                    <div style={{ padding: '10px', borderBottom: '1px solid rgba(0, 240, 255, 0.3)' }}>
-                        <h3 style={{ margin: 0, color: '#00f0ff', fontSize: '14px' }}>NEURAL ACTIVITY</h3>
-                    </div>
-                    <NeuronVisualizer brainState={status} />
-                </div>
-
-                {/* Input */}
-                <input 
-                    type="text" 
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={handleSend}
-                    placeholder="Enter command..."
-                    style={{
-                        background: 'rgba(0, 20, 40, 0.8)', border: '1px solid #00f0ff',
-                        color: '#fff', padding: '15px', fontSize: '16px', fontFamily: 'monospace',
-                        outline: 'none'
-                    }}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
+                <StatCard 
+                    id="dash-energy" 
+                    title="ENERGY RESERVES" 
+                    value={`${brainData.needs?.energy || 0}%`} 
+                    icon={Zap} 
+                    color="var(--accent-color)" 
+                />
+                <StatCard 
+                    id="dash-happiness" 
+                    title="COGNITIVE SYNC" 
+                    value={`${brainData.needs?.happiness || 0}%`} 
+                    icon={Activity} 
+                    color="var(--success-color)" 
+                />
+                <StatCard 
+                    id="dash-boredom" 
+                    title="NEURAL LOAD" 
+                    value={`${brainData.needs?.boredom || 0}%`} 
+                    icon={Cpu} 
+                    color="var(--warning-color)" 
                 />
             </div>
 
-            {/* Right Panel (Stats) */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div style={{ padding: '20px', border: '1px solid rgba(0, 240, 255, 0.3)', background: 'rgba(0, 20, 40, 0.6)' }}>
-                    <h3 style={{ margin: '0 0 15px 0', borderBottom: '1px solid #00f0ff', paddingBottom: '5px' }}>VITALS</h3>
-                    <div>ENERGY: 100%</div>
-                    <div>HAPPINESS: 50%</div>
-                    <div>MEMORY: 1024 KB</div>
+            <div className="glass-panel" style={{ padding: '30px', flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
+                    <Target size={20} style={{ color: 'var(--accent-color)' }} />
+                    <h3 style={{ margin: 0 }}>CURRENT FOCUS</h3>
+                </div>
+                <div style={{ 
+                    background: 'rgba(0,0,0,0.2)', 
+                    padding: '25px', 
+                    borderRadius: '4px', 
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '18px',
+                    lineHeight: '1.6',
+                    borderLeft: '4px solid var(--accent-color)'
+                }}>
+                    {brainData.thought || "AWAITING NEURAL SIGNALS..."}
                 </div>
             </div>
         </div>

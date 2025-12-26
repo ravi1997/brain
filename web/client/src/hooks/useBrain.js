@@ -47,9 +47,9 @@ export const useBrain = () => {
     }, []);
 
     const sendMessage = useCallback((text) => {
+        setMessages(prev => [...prev.slice(-49), { type: 'user', text: text }]);
         if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ type: 'input', payload: text }));
-            setMessages(prev => [...prev.slice(-49), { type: 'user', text: text }]);
         }
     }, [ws]);
 

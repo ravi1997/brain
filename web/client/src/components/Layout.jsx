@@ -1,47 +1,62 @@
 import React from 'react';
-import { Activity, Terminal, Brain, Settings } from 'lucide-react';
+import { Activity, Terminal, Brain, Settings, HardDrive } from 'lucide-react';
 
 const Layout = ({ children, activeView, setActiveView }) => {
     const NavItem = ({ name, icon: Icon, id }) => (
-        <div 
+        <li 
+            data-view={id}
             onClick={() => setActiveView(id)}
+            className={activeView === id ? 'active' : ''}
             style={{
-                display: 'flex', alignItems: 'center', padding: '15px',
+                display: 'flex', alignItems: 'center', padding: '15px 25px',
                 cursor: 'pointer',
-                color: activeView === id ? '#00f0ff' : '#a0c0e0',
-                borderLeft: activeView === id ? '4px solid #00f0ff' : '4px solid transparent',
-                background: activeView === id ? 'rgba(0, 240, 255, 0.1)' : 'transparent'
+                listStyle: 'none',
+                color: activeView === id ? 'var(--accent-color)' : 'var(--text-color)',
+                borderLeft: activeView === id ? '4px solid var(--accent-color)' : '4px solid transparent',
+                background: activeView === id ? 'rgba(0, 240, 255, 0.1)' : 'transparent',
+                transition: 'all 0.3s ease',
+                opacity: activeView === id ? 1 : 0.7
             }}
         >
-            <Icon size={20} style={{ marginRight: '10px' }} />
-            <span style={{ fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>{name}</span>
-        </div>
+            <Icon size={20} style={{ marginRight: '15px', color: activeView === id ? 'var(--accent-color)' : 'inherit' }} />
+            <span style={{ fontSize: '13px', fontWeight: '500', letterSpacing: '2px' }}>{name}</span>
+        </li>
     );
 
     return (
-        <div style={{ display: 'flex', height: '100vh', background: 'radial-gradient(circle at center, #0a1428 0%, #050a14 100%)' }}>
+        <div className="scanlines" style={{ display: 'flex', height: '100vh', width: '100vw', background: 'var(--bg-color)', position: 'relative', overflow: 'hidden' }}>
             {/* Sidebar */}
-            <div style={{ width: '250px', borderRight: '1px solid rgba(0, 240, 255, 0.2)', background: 'rgba(5, 10, 20, 0.9)' }}>
-                <div style={{ padding: '20px', borderBottom: '1px solid rgba(0, 240, 255, 0.2)' }}>
-                    <h1 style={{ margin: 0, fontSize: '18px', color: '#00f0ff', textShadow: '0 0 10px #00f0ff' }}>BRAINTOWER OS</h1>
-                    <div style={{ fontSize: '10px', color: '#666', marginTop: '5px' }}>V2.0.0 REACT CORE</div>
+            <div style={{ 
+                width: '280px', 
+                borderRight: '1px solid var(--glass-border)', 
+                background: 'rgba(5, 10, 20, 0.95)',
+                zIndex: 10,
+                display: 'flex',
+                flexDirection: 'column'
+            }}>
+                <div style={{ padding: '30px 25px', borderBottom: '1px solid var(--glass-border)' }}>
+                    <h1 className="text-glow" style={{ margin: 0, fontSize: '20px', color: 'var(--accent-color)' }}>CORTEK OS</h1>
+                    <div style={{ fontSize: '10px', color: 'rgba(0, 240, 255, 0.5)', marginTop: '5px', letterSpacing: '1px' }}>VERSION 2.1.0-REACT</div>
                 </div>
-                <div style={{ marginTop: '20px' }}>
-                    <NavItem name="Dashboard" icon={Activity} id="dashboard" />
-                    <NavItem name="Cognition" icon={Brain} id="cognition" />
-                    <NavItem name="Terminal" icon={Terminal} id="terminal" />
-                    <NavItem name="Settings" icon={Settings} id="settings" />
+                
+                <nav style={{ flex: 1, paddingTop: '20px' }}>
+                    <ul style={{ margin: 0, padding: 0 }}>
+                        <NavItem name="Overview" icon={Activity} id="dashboard" />
+                        <NavItem name="Neural Link" icon={Brain} id="neural" />
+                        <NavItem name="Storage" icon={HardDrive} id="storage" />
+                        <NavItem name="System" icon={HardDrive} id="system" />
+                        <NavItem name="Terminal" icon={Terminal} id="terminal" />
+                        <NavItem name="Settings" icon={Settings} id="settings" />
+                    </ul>
+                </nav>
+
+                <div style={{ padding: '20px', fontSize: '10px', opacity: 0.3, borderTop: '1px solid var(--glass-border)' }}>
+                    SECURE CONNECTION VERIFIED
                 </div>
             </div>
 
             {/* Main Content */}
-            <div style={{ flex: 1, overflow: 'hidden', padding: '20px', position: 'relative' }}>
-                {/* Scanlines Effect */}
-                <div style={{
-                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%)',
-                    backgroundSize: '100% 4px', pointerEvents: 'none', zIndex: 9999
-                }}></div>
+            <div style={{ flex: 1, position: 'relative', overflowY: 'auto', padding: '30px' }}>
                 {children}
             </div>
         </div>
