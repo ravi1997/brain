@@ -5,6 +5,8 @@ import NeuronVisualizer from './NeuronVisualizer';
 const Dashboard = () => {
     const { status, messages, sendMessage } = useBrain();
     const [input, setInput] = useState("");
+    
+    console.log("%c[Dashboard] Current status: " + status, "color: yellow; font-weight: bold; font-size: 16px;");
 
     const handleSend = (e) => {
         if (e.key === 'Enter' && input.trim()) {

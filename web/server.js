@@ -1,3 +1,4 @@
+console.log("SERVER STARTING...");
 const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
@@ -14,9 +15,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 // WebSocket Proxy Logic
 // Client connects to ws://host:5000/proxy/9005 -> Node connects to brain:9005
 wss.on('connection', (ws, req) => {
+    console.log(`[Proxy] Incoming connection on ${req.url}`);
+
     // Parse port from URL: /proxy/9005
     const match = req.url.match(/\/proxy\/(\d+)/);
     if (!match) {
+        console.log(`[Proxy] No port match for ${req.url}, closing connection.`);
         ws.close();
         return;
     }
@@ -32,10 +36,15 @@ wss.on('connection', (ws, req) => {
         console.log(`[Proxy] Connected to ${targetHost}:${targetPort}`);
     });
 
-    // TCP -> WS
+    // TCP -> WS: Wrap raw text in JSON
     tcpClient.on('data', (data) => {
         if (ws.readyState === WebSocket.OPEN) {
-            ws.send(data.toString());
+            const lines = data.toString().split('\n');
+            lines.forEach(line => {
+                if (line.trim()) {
+                    ws.send(JSON.stringify({ type: 'log', payload: line.trim() }));
+                }
+            });
         }
     });
 
@@ -49,9 +58,18 @@ wss.on('connection', (ws, req) => {
         ws.close();
     });
 
-    // WS -> TCP
-    ws.on('message', (message) => {
-        tcpClient.write(message + '\n');
+    // WS -> TCP: Parse JSON and send raw text
+    ws.on('message', (data) => {
+        try {
+            const msg = JSON.parse(data);
+            if (msg.type === 'input') {
+                console.log(`[Proxy] Forwarding input to brain: ${msg.payload}`);
+                tcpClient.write(msg.payload + '\n');
+            }
+        } catch (e) {
+            console.log(`[Proxy] Forwarding raw input to brain: ${data}`);
+            tcpClient.write(data + '\n');
+        }
     });
 
     ws.on('close', () => {
