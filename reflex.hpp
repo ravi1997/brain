@@ -7,8 +7,13 @@ class Reflex {
 public:
     Reflex();
     std::string get_reaction(const std::string& input);
+    void reinforce(const std::string& keyword, const std::string& response, double reward);
 
 private:
-    std::map<std::string, std::string> keyword_responses;
+    struct WeightedResponse {
+        std::string text;
+        double weight;
+    };
+    std::map<std::string, std::vector<WeightedResponse>> keyword_responses;
     bool contains(const std::string& input, const std::string& key);
 };

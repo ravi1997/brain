@@ -19,7 +19,7 @@ include_directories(include)
 find_package(Threads REQUIRED)
 
 # The main executable
-add_executable(brain_replica main.cpp dnn.cpp brain.cpp memory_store.cpp server.cpp reflex.cpp task_manager.cpp)
+add_executable(brain_replica main.cpp dnn.cpp brain.cpp memory_store.cpp server.cpp reflex.cpp task_manager.cpp planning_unit.cpp)
 
 # Enable Precompiled Headers (PCH) for faster builds
 target_precompile_headers(brain_replica PRIVATE stable.hpp)

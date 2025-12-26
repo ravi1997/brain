@@ -6,6 +6,7 @@
 #include "reflex.hpp"
 #include "task_manager.hpp"
 #include "redis_client.hpp"
+#include "planning_unit.hpp"
 #include <string>
 #include <vector>
 #include <memory>
@@ -97,6 +98,7 @@ public:
     Emotions emotions;
     Reflex reflex;
     TaskManager task_manager;
+    std::unique_ptr<PlanningUnit> planning_unit;
     
     std::atomic<bool> running{true};
     mutable std::recursive_mutex brain_mutex; // Protects shared state (recursive to allow internal calls)
@@ -142,6 +144,7 @@ public:
     std::unordered_set<std::string> stopwords_;
     void load_stopwords();
     bool is_stop_word(const std::string& word);
+    std::chrono::system_clock::time_point last_interaction_time;
 
     Brain();
     ~Brain();

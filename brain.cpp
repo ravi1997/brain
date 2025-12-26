@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <sstream>
 #include <regex>
+#include "planning_unit.hpp"
 
 // Simple Config Loader
 struct BrainConfig {
@@ -110,6 +111,9 @@ Brain::Brain() {
     positive_words = {"happy", "good", "great", "excellent", "kind", "smart", "fun", "love", "joy", "awesome", "perfect"};
     negative_words = {"sad", "bad", "terrible", "awful", "mean", "stupid", "boring", "hate", "sorrow", "horrible", "waste"};
 
+    planning_unit = std::make_unique<PlanningUnit>();
+    last_interaction_time = std::chrono::system_clock::now();
+
     // Initialize Redis Cache
     redis_cache = std::make_unique<RedisClient>("redis", 6379);
     if (redis_cache->connect()) {
@@ -127,7 +131,16 @@ std::string Brain::interact(const std::string& input_text) {
     
     // Update Context (User Input) - Always capture what user said
     conversation_context.push_back("User: " + input_text);
-    while (conversation_context.size() > MAX_CONTEXT_TURNS) conversation_context.pop_front();
+    last_interaction_time = std::chrono::system_clock::now();
+    
+    // MEGA-BATCH 2: Intelligent STM Cleanup
+    // Prune if too long OR if too much time has passed (simulated 1 hour gap)
+    auto now = std::chrono::system_clock::now();
+    bool long_gap = std::chrono::duration_cast<std::chrono::hours>(now - last_interaction_time).count() > 1;
+    
+    while (conversation_context.size() > MAX_CONTEXT_TURNS || (long_gap && conversation_context.size() > 0)) {
+        conversation_context.pop_front();
+    }
     
     // Persona Check
     // Persona Check
@@ -429,47 +442,65 @@ std::vector<std::string> Brain::extract_entities(const std::string& text) {
     
     // Dates / Times (Simple)
     // Matches: 5pm, 10:30am, today, tomorrow, yesterday
-    std::regex time_pattern(R"(\b(\d{1,2}(:\d{2})?(am|pm|AM|PM)|today|tomorrow|yesterday)\b)");
-    std::sregex_iterator next(text.begin(), text.end(), time_pattern);
-    std::sregex_iterator end;
-    while (next != end) {
-        std::smatch match = *next;
-        entities.push_back(match.str());
-        next++;
-    }
-
-    // 2. Capitalized Phrases (Named Entities)
     std::stringstream ss(text);
     std::string word;
-    std::string current_entity;
-    
-    while (ss >> word) {
-        // Strip punctuation from ends
-        while (!word.empty() && !std::isalnum(word.back())) word.pop_back();
-        while (!word.empty() && !std::isalnum(word.front())) word.erase(0, 1);
-        
-        if (word.empty()) continue;
+    std::string current_candidate;
+    bool candidate_started_at_sentence_start = false;
+    bool is_sentence_start = true;
+    int words_in_candidate = 0;
 
-        if (std::isupper(word[0])) {
-            if (!current_entity.empty()) current_entity += " ";
-            current_entity += word;
-        } else {
-            // End of entity sequence
-            if (!current_entity.empty()) {
-                // Filter
-                if (!is_stop_word(current_entity) && current_entity.length() > 1) {
-                    entities.push_back(current_entity);
-                }
-                current_entity.clear();
-            }
+    auto finalize_candidate = [&](std::string& candidate, bool started_at_start, int word_count) {
+        if (candidate.empty()) return;
+        
+        bool keep = true;
+        if (word_count == 1) {
+            // Single word filtering
+            if (started_at_start && is_stop_word(candidate)) keep = false;
+            else if (candidate.length() <= 1) keep = false;
         }
+        
+        if (keep) {
+            entities.push_back(candidate);
+        }
+        candidate.clear();
+    };
+
+    while (ss >> word) {
+        bool ends_with_punct = !word.empty() && (word.back() == '.' || word.back() == '!' || word.back() == '?');
+        
+        std::string clean_word = word;
+        while (!clean_word.empty() && !std::isalnum(clean_word.back())) clean_word.pop_back();
+        while (!clean_word.empty() && !std::isalnum(clean_word.front())) clean_word.erase(0, 1);
+        
+        if (clean_word.empty()) {
+            if (ends_with_punct) is_sentence_start = true;
+            continue;
+        }
+
+        bool is_capitalized = std::isupper(clean_word[0]);
+        bool is_all_caps = true;
+        for (char c : clean_word) if (std::isalnum(c) && !std::isupper(c)) { is_all_caps = false; break; }
+
+        if (is_capitalized || is_all_caps) {
+            if (current_candidate.empty()) {
+                candidate_started_at_sentence_start = is_sentence_start;
+                words_in_candidate = 0;
+            }
+            if (!current_candidate.empty()) current_candidate += " ";
+            current_candidate += clean_word;
+            words_in_candidate++;
+        } else {
+            finalize_candidate(current_candidate, candidate_started_at_sentence_start, words_in_candidate);
+        }
+        
+        is_sentence_start = ends_with_punct;
     }
-    // Catch last one
-    if (!current_entity.empty()) {
-         if (!is_stop_word(current_entity) && current_entity.length() > 1) {
-            entities.push_back(current_entity);
-         }
-    }
+    
+    finalize_candidate(current_candidate, candidate_started_at_sentence_start, words_in_candidate);
+    
+    // Final deduplication
+    std::sort(entities.begin(), entities.end());
+    entities.erase(std::unique(entities.begin(), entities.end()), entities.end());
     
     return entities;
 }
@@ -695,12 +726,16 @@ void Brain::automata_loop() {
         {
             std::lock_guard<std::recursive_mutex> lock(brain_mutex);
             
-            // Goal: Learn (Boredom)
+            // Natural decay towards baseline
             if (emotions.boredom > 0.8) {
-                 std::vector<std::string> ideas = {"Physics", "History", "AI", "Space", "Oceans"};
-                 std::string topic = ideas[static_cast<size_t>(rand()) % ideas.size()];
-                 task_manager.add_task("Research " + topic, TaskType::RESEARCH, TaskPriority::LOW);
-                 emotions.boredom = 0.5; // Reduced just by planning it
+                 // Use PlanningUnit to decide if curiosity should flare up
+                 std::string best_move = planning_unit->decide_best_action(focus_topic);
+                 if (best_move == "RESEARCH") {
+                     std::vector<std::string> ideas = {"Physics", "History", "AI", "Space", "Oceans", "Philosophy", "Cybernetics"};
+                     std::string topic = ideas[static_cast<size_t>(rand()) % ideas.size()];
+                     task_manager.add_task("Research " + topic, TaskType::RESEARCH, TaskPriority::LOW);
+                     emotions.boredom = 0.4; // Success!
+                 }
             }
             
             // Goal: Rest (Energy)

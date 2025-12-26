@@ -4,8 +4,26 @@
 #include <string>
 #include <chrono>
 #include <thread>
+#include <signal.h>
+#include <execinfo.h> // For stack trace
+
+void crash_handler(int sig) {
+    void *array[10];
+    size_t size = backtrace(array, 10);
+    fprintf(stderr, "Error: signal %d:\n", sig);
+    backtrace_symbols_fd(array, size, STDERR_FILENO);
+    
+    std::ofstream crash_log("crash.log", std::ios::app);
+    crash_log << "CRASH DETECTED. Signal: " << sig << "\n";
+    crash_log.close();
+    
+    exit(1);
+}
 
 int main() {
+    signal(SIGSEGV, crash_handler);
+    signal(SIGABRT, crash_handler);
+    
     std::cout << "Initializing Brain Replica..." << std::endl;
     
     try {

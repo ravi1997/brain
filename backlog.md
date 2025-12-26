@@ -28,7 +28,7 @@
 - [ ] [Infrastructure] Set up GitHub Actions for automated testing - Testing #24
 - [x] [NLU] Add sentiment analysis to input processing (Phase 2) #25
 - [x] [NLU] Add sentiment analysis to input processing - Optimization #26
-- [ ] [NLU] Improve entity extraction accuracy (Phase 1) #27
+- [x] [NLU] Improve entity extraction accuracy (Phase 1) #27
 - [ ] [Cognition] Add unit tests for EmotionUnit edge cases - Investigation #28
 - [x] [NLU] Implement fallback responses for unknown inputs - Optimization #29
 - [ ] [NLU] Improve entity extraction accuracy (Phase 2) #30
@@ -74,7 +74,7 @@
 - [ ] [Frontend] Implement user authentication flow - Refactor #70
 - [ ] [NLU] Implement context-aware intent classification (Phase 2) #71
 - [x] [Frontend] Add robust error handling for websocket disconnections (Phase 1) #72
-- [ ] [NLU] Improve entity extraction accuracy (Phase 1) #73
+- [x] [NLU] Improve entity extraction accuracy (Phase 1) #73
 - [x] [NLU] Add support for multi-turn conversation context - Investigation #74
 - [x] [NLU] Implement fallback responses for unknown inputs - Refactor #75
 - [ ] [Cognition] Create associative memory graph visualization data - Testing #76

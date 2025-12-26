@@ -4,16 +4,10 @@
 
 Reflex::Reflex() {
     // Instincts (Hardcoded survival responses)
-    keyword_responses["hello"] = "Greetings.";
-    keyword_responses["hi"] = "Hello there.";
-    keyword_responses["who are you"] = "I am a Neural Entity designed for learning.";
-    keyword_responses["what are you"] = "I am a digital brain simulation.";
-    keyword_responses["status"] = "SYSTEM ONLINE. Neural pathways active.";
-    keyword_responses["help"] = "I learn from interaction. Teach me by saying 'Question | Answer'.";
-    keyword_responses["time"] = "Time is a variable I am currently processing.";
-    keyword_responses["what is"] = "I am not yet fully trained on that topic.";
-    keyword_responses["why"] = "Causality is complex. I am still learning logic.";
-    keyword_responses["exit"] = "Goodbye.";
+    keyword_responses["hello"] = {{"Greetings.", 1.0}, {"Hello there.", 1.0}};
+    keyword_responses["status"] = {{"SYSTEM ONLINE.", 1.0}, {"Neural pathways active.", 1.0}};
+    keyword_responses["help"] = {{"I learn from interaction.", 1.0}, {"Say 'Question | Answer' to teach me.", 1.0}};
+    keyword_responses["exit"] = {{"Goodbye.", 1.0}};
 }
 
 std::string Reflex::get_reaction(const std::string& input) {
@@ -21,12 +15,34 @@ std::string Reflex::get_reaction(const std::string& input) {
     std::transform(lower_input.begin(), lower_input.end(), lower_input.begin(), 
                    [](unsigned char c){ return std::tolower(c); });
 
-    for (const auto& pair : keyword_responses) {
+    for (auto& pair : keyword_responses) {
         if (contains(lower_input, pair.first)) {
-            return pair.second;
+            // Pick based on weights
+            auto& choices = pair.second;
+            double total_weight = 0;
+            for (auto& c : choices) total_weight += c.weight;
+            
+            double r = static_cast<double>(rand()) / RAND_MAX * total_weight;
+            double cumulative = 0;
+            for (auto& c : choices) {
+                cumulative += c.weight;
+                if (r <= cumulative) return c.text;
+            }
+            return choices[0].text;
         }
     }
     return ""; // No reflex found
+}
+
+void Reflex::reinforce(const std::string& keyword, const std::string& response, double reward) {
+    if (keyword_responses.count(keyword)) {
+        for (auto& choice : keyword_responses[keyword]) {
+            if (choice.text == response) {
+                choice.weight = std::max(0.1, choice.weight + reward);
+                return;
+            }
+        }
+    }
 }
 
 bool Reflex::contains(const std::string& input, const std::string& key) {

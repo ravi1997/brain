@@ -17,12 +17,14 @@ add_executable(brain_tests
     ../memory_store.cpp
     ../task_manager.cpp
     ../reflex.cpp
+    ../planning_unit.cpp
     test_memory.cpp
     test_nlu.cpp
     test_context.cpp
     test_memory_optimization.cpp
     test_redis.cpp
     test_nlu_improved.cpp
+    test_emotion_unit.cpp
 )
 
 target_link_libraries(brain_tests

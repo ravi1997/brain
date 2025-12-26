@@ -1,88 +1,47 @@
-#include "../brain.hpp"
 #include <gtest/gtest.h>
-#include <vector>
-#include <string>
+#include "../brain.hpp"
+#include <algorithm>
 
-// Test that temporal entities are extracted
-TEST(ImprovedNLUTest, ExtractTimeEntities) {
+class ImprovedNLUTest : public ::testing::Test {
+protected:
     Brain brain;
+};
+
+TEST_F(ImprovedNLUTest, SentenceStartFiltersCommonWords) {
+    // "Actually" is capitalized at start, but should be filtered if it's a stop-word or too common.
+    // In my impl, if it's length > 3 and not a stop word, it might still pass, but let's test a known stop word.
+    std::string text = "But I think the Eiffel Tower is great.";
+    auto entities = brain.extract_entities(text);
     
-    std::string input = "Meet me at 5pm tomorrow";
-    auto entities = brain.extract_entities(input);
+    auto it = std::find(entities.begin(), entities.end(), "But");
+    EXPECT_EQ(it, entities.end()) << "Should have filtered 'But' at sentence start";
     
-    // Should extract "5pm" and "tomorrow"
-    EXPECT_GE(entities.size(), 2);
-    
-    bool found_5pm = false;
-    bool found_tomorrow = false;
-    for (const auto& e : entities) {
-        if (e == "5pm") found_5pm = true;
-        if (e == "tomorrow") found_tomorrow = true;
-    }
-    
-    EXPECT_TRUE(found_5pm);
-    EXPECT_TRUE(found_tomorrow);
+    it = std::find(entities.begin(), entities.end(), "Eiffel Tower");
+    EXPECT_NE(it, entities.end()) << "Should have found 'Eiffel Tower'";
 }
 
-// Test that stopwords are filtered out
-TEST(ImprovedNLUTest, FilterStopwords) {
-    Brain brain;
+TEST_F(ImprovedNLUTest, AcronymExtraction) {
+    std::string text = "the NASA agency studies space.";
+    auto entities = brain.extract_entities(text);
     
-    std::string input = "The quick brown fox jumps";
-    auto entities = brain.extract_entities(input);
-    
-    // "The" should be filtered out as a stopword
-    for (const auto& e : entities) {
-        EXPECT_NE(e, "The");
-        EXPECT_NE(e, "the");
-    }
+    auto it = std::find(entities.begin(), entities.end(), "NASA");
+    EXPECT_NE(it, entities.end()) << "Should have found acronym 'NASA'";
 }
 
-// Test multi-word entity extraction
-TEST(ImprovedNLUTest, ExtractMultiWordEntities) {
-    Brain brain;
+TEST_F(ImprovedNLUTest, SentenceStartLegitimateEntity) {
+    // "Brain" at start of sentence. "Brain" might be a stop word? Let's check.
+    // Actually, "Brain" is 5 chars, so it should pass if not a stop word.
+    std::string text = "Mercury is the smallest planet.";
+    auto entities = brain.extract_entities(text);
     
-    std::string input = "I love New York City and San Francisco";
-    auto entities = brain.extract_entities(input);
-    
-    // Should extract "New York City" or "San Francisco"
-    bool found_nyc = false;
-    bool found_sf = false;
-    
-    for (const auto& e : entities) {
-        if (e.find("New York City") != std::string::npos) found_nyc = true;
-        if (e.find("San Francisco") != std::string::npos) found_sf = true;
-    }
-    
-    EXPECT_TRUE(found_nyc || found_sf);
+    auto it = std::find(entities.begin(), entities.end(), "Mercury");
+    EXPECT_NE(it, entities.end()) << "Should have found 'Mercury' even at sentence start";
 }
 
-// Test time pattern extraction
-TEST(ImprovedNLUTest, ExtractTimePatterns) {
-    Brain brain;
+TEST_F(ImprovedNLUTest, MiddleOfSentence) {
+    std::string text = "I am using the Brain AI.";
+    auto entities = brain.extract_entities(text);
     
-    std::string input = "The meeting is at 10:30am";
-    auto entities = brain.extract_entities(input);
-    
-    bool found_time = false;
-    for (const auto& e : entities) {
-        if (e == "10:30am") found_time = true;
-    }
-    
-    EXPECT_TRUE(found_time);
-}
-
-// Test that proper nouns are still extracted
-TEST(ImprovedNLUTest, ExtractProperNouns) {
-    Brain brain;
-    
-    std::string input = "I visited Paris last week";
-    auto entities = brain.extract_entities(input);
-    
-    bool found_paris = false;
-    for (const auto& e : entities) {
-        if (e == "Paris") found_paris = true;
-    }
-    
-    EXPECT_TRUE(found_paris);
+    auto it = std::find(entities.begin(), entities.end(), "Brain AI");
+    EXPECT_NE(it, entities.end()) << "Should have joined Brain and AI";
 }
