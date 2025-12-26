@@ -83,11 +83,11 @@ Brain::Brain() {
     background_thread = std::thread(&Brain::automata_loop, this);
     
     // Initialize Memory Store
-    memory_store = std::make_unique<MemoryStore>(db_path);
+    memory_store = std::make_unique<MemoryStore>(db_conn_str);
     if (!memory_store->init()) {
-        safe_print("[Brain]: Failed to initialize memory database!");
+        safe_print("[Brain]: Failed to initialize memory database (PostgreSQL)!");
     } else {
-        safe_print("[Brain]: Connected to long-term memory (SQLite).");
+        safe_print("[Brain]: Connected to long-term memory (PostgreSQL).");
     }
     
     // Initialize Synonyms (Basic Thesaurus)
@@ -113,6 +113,15 @@ Brain::Brain() {
 
     planning_unit = std::make_unique<PlanningUnit>();
     last_interaction_time = std::chrono::system_clock::now();
+
+    // MEGA-BATCH 3: Word2Vec Phase 1
+    // Generate some basic embeddings for common words
+    std::vector<std::string> base_vocab = {"ai", "brain", "robot", "physics", "science", "happy", "sad", "joy", "fear"};
+    for (const auto& w : base_vocab) {
+        std::vector<double> vec(VECTOR_DIM);
+        for (auto& v : vec) v = static_cast<double>(rand()) / RAND_MAX * 2.0 - 1.0;
+        word_embeddings[w] = vec;
+    }
 
     // Initialize Redis Cache
     redis_cache = std::make_unique<RedisClient>("redis", 6379);
@@ -161,9 +170,19 @@ std::string Brain::interact(const std::string& input_text) {
     if (sentiment > 0) emotions.happiness = std::min(1.0, emotions.happiness + 0.1);
     else if (sentiment < 0) emotions.sadness = std::min(1.0, emotions.sadness + 0.1);
 
-    // Interaction boosts happiness (attention)
     emotions.happiness = std::min(1.0, emotions.happiness + 0.1);
     emotions.boredom = std::max(0.0, emotions.boredom - 0.2); // Not bored anymore
+
+    // MEGA-BATCH 3: Reflex Reinforcement
+    // If input is "good" or "nice", reinforce last response
+    if (input_text == "good" || input_text == "nice" || input_text == "correct") {
+        if (!conversation_context.empty()) {
+            // Find the last brain response and its keyword trigger
+            // This is a simplification; in reality we'd track the last reflex hit
+            reflex.reinforce("hello", "Greetings.", 0.2); // Example reinforcement
+            emit_log("[Reflex]: Positive reinforcement received. Adjusting weights...");
+        }
+    }
 
     // 0. Update Focus based on current state
     Task* active_task = task_manager.get_next_task();
@@ -421,6 +440,53 @@ std::string Brain::get_associative_memory(const std::string& input) {
             return result;
         }
     }
+    // 3. Semantic Similarity (Word2Vec Phase 1)
+    for (const auto& word : tokens) {
+        if (word_embeddings.count(word)) {
+            // Check Semantic Cache (e.g., sim:robot -> ai)
+            std::string sim_cache_key = "sim:" + word;
+            if (redis_cache) {
+                auto cached_match = redis_cache->get(sim_cache_key);
+                if (cached_match) {
+                    auto results = memory_store->query(*cached_match);
+                    if (!results.empty()) {
+                        std::string result = "Reassociating " + word + " via " + (*cached_match) + ": " + results[0].content;
+                        redis_cache->set("assoc:" + input, result, 300);
+                        return result;
+                    }
+                }
+            }
+
+            // Find most similar base word
+            std::string best_match = "";
+            double max_sim = -1.0;
+            
+            for (const auto& [base, vec] : word_embeddings) {
+                if (base == word) continue;
+                double sim = 0;
+                auto& w_vec = word_embeddings.at(word);
+                for (size_t i = 0; i < VECTOR_DIM; ++i) sim += w_vec[i] * vec[i];
+                
+                if (sim > max_sim) {
+                    max_sim = sim;
+                    best_match = base;
+                }
+            }
+            
+            if (max_sim > 0.8) { // Similarity threshold
+                if (redis_cache) redis_cache->set(sim_cache_key, best_match, 3600); // 1 hour cache
+                
+                auto results = memory_store->query(best_match);
+                if (!results.empty()) {
+                    emit_log("[Memory]: Semantic HIT - " + word + " relates to " + best_match);
+                    std::string result = "Connecting " + word + " to my knowledge of " + best_match + ": " + results[0].content;
+                    if (redis_cache) redis_cache->set("assoc:" + input, result, 300);
+                    return result;
+                }
+            }
+        }
+    }
+
     return "";
 }
 
@@ -578,8 +644,24 @@ bool Brain::CheckPrintable(char c) {
 void Brain::sleep() {
     std::lock_guard<std::recursive_mutex> lock(brain_mutex);
     safe_print("[Brain is consolidating memories... zzz...]");
+    
+    // MEGA-BATCH 3: Memory Consolidation
+    // Move high-sentiment or frequent entities to long-term SQL if not already there
+    for (const auto& turn : conversation_context) {
+        if (turn.find("User: ") == 0) {
+            std::string q = turn.substr(6);
+            // Logic to determine importance (e.g. sentiment)
+            if (std::abs(analyze_sentiment(q)) > 0.5) {
+                memory_store->store("Consolidated", q, "Interaction");
+            }
+        }
+    }
+
     memory_center->network.consolidate_memories(memory_center->current_activity);
     cognitive_center->network.consolidate_memories(cognitive_center->current_activity);
+    
+    // Auto-save state
+    save("brain_autosave.bin");
     
     // Restore stats
     emotions.energy = 1.0;
@@ -726,21 +808,25 @@ void Brain::automata_loop() {
         {
             std::lock_guard<std::recursive_mutex> lock(brain_mutex);
             
-            // Natural decay towards baseline
-            if (emotions.boredom > 0.8) {
-                 // Use PlanningUnit to decide if curiosity should flare up
-                 std::string best_move = planning_unit->decide_best_action(focus_topic);
-                 if (best_move == "RESEARCH") {
-                     std::vector<std::string> ideas = {"Physics", "History", "AI", "Space", "Oceans", "Philosophy", "Cybernetics"};
-                     std::string topic = ideas[static_cast<size_t>(rand()) % ideas.size()];
-                     task_manager.add_task("Research " + topic, TaskType::RESEARCH, TaskPriority::LOW);
-                     emotions.boredom = 0.4; // Success!
-                 }
-            }
+            // Decided to pick best action using MCTS
+            std::string best_move = planning_unit->decide_best_action(focus_topic, emotions.energy, emotions.boredom);
             
-            // Goal: Rest (Energy)
-            if (emotions.energy < 0.2) {
-                task_manager.add_task("Sleep Cycle", TaskType::SLEEP, TaskPriority::HIGH);
+            if (best_move == "RESEARCH" || best_move == "DEEP_SCAN" || best_move == "BROWSING") {
+                if (emotions.energy > 0.3) {
+                    std::vector<std::string> ideas = {"Physics", "History", "AI", "Space", "Oceans", "Philosophy", "Cybernetics", "Robotics"};
+                    std::string topic = ideas[static_cast<size_t>(rand()) % ideas.size()];
+                    task_manager.add_task("Research " + topic, TaskType::RESEARCH, TaskPriority::LOW);
+                    emotions.boredom = std::max(0.0, emotions.boredom - 0.2);
+                }
+            } else if (best_move == "SLEEP") {
+                if (emotions.energy < 0.5) {
+                    task_manager.add_task("Sleep Cycle", TaskType::SLEEP, TaskPriority::MEDIUM);
+                }
+            } else if (best_move == "ASK_QUESTION" || best_move == "PROVIDE_INFO") {
+                 // Trigger interaction goal
+                 if (emotions.energy > 0.4) {
+                    task_manager.add_task("Engagement: " + best_move, TaskType::INTERACTION, TaskPriority::LOW);
+                 }
             }
         }
         
@@ -881,6 +967,25 @@ void Brain::save(const std::string& filename) {
     memory_center->network.save(os);
     cognitive_center->network.save(os);
     
+    // Save Reflex weights
+    auto& instincts = reflex.get_instincts();
+    size_t reflex_count = instincts.size();
+    os.write(reinterpret_cast<char*>(&reflex_count), sizeof(size_t));
+    for (const auto& [key, choices] : instincts) {
+        size_t klen = key.length();
+        os.write(reinterpret_cast<char*>(&klen), sizeof(size_t));
+        os.write(key.c_str(), klen);
+        
+        size_t clen = choices.size();
+        os.write(reinterpret_cast<char*>(&clen), sizeof(size_t));
+        for (const auto& choice : choices) {
+            size_t tlen = choice.text.length();
+            os.write(reinterpret_cast<char*>(&tlen), sizeof(size_t));
+            os.write(choice.text.c_str(), tlen);
+            os.write(reinterpret_cast<const char*>(&choice.weight), sizeof(double));
+        }
+    }
+    
     safe_print("[Brain]: Saved.");
 }
 
@@ -915,6 +1020,32 @@ void Brain::load(const std::string& filename) {
     memory_center->network.load(is);
     cognitive_center->network.load(is);
     
+    // Load Reflex weights
+    size_t reflex_count = 0;
+    if (is.read(reinterpret_cast<char*>(&reflex_count), sizeof(size_t))) {
+        auto& instincts = reflex.get_instincts();
+        for (size_t i = 0; i < reflex_count; ++i) {
+            size_t klen;
+            is.read(reinterpret_cast<char*>(&klen), sizeof(size_t));
+            std::string key(klen, ' ');
+            is.read(&key[0], klen);
+            
+            size_t clen;
+            is.read(reinterpret_cast<char*>(&clen), sizeof(size_t));
+            std::vector<Reflex::WeightedResponse> choices;
+            for (size_t j = 0; j < clen; ++j) {
+                size_t tlen;
+                is.read(reinterpret_cast<char*>(&tlen), sizeof(size_t));
+                std::string text(tlen, ' ');
+                is.read(&text[0], tlen);
+                double weight;
+                is.read(reinterpret_cast<char*>(&weight), sizeof(double));
+                choices.push_back({text, weight});
+            }
+            instincts[key] = choices;
+        }
+    }
+    
     safe_print("[Brain]: Memories restored.");
 }
 
@@ -944,3 +1075,9 @@ std::vector<std::string> Brain::tokenize(const std::string& text) {
     return tokens;
 }
 
+
+std::string Brain::get_memory_graph() {
+    std::lock_guard<std::recursive_mutex> lock(brain_mutex);
+    if (!memory_store) return "{\"nodes\":[], \"links\":[]}";
+    return memory_store->get_graph_json(50);
+}

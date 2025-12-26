@@ -126,3 +126,78 @@ h1, h2, h3, h4, .mono {
   animation: scan 4s linear infinite;
   pointer-events: none;
 }
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: -280px;
+    height: 100%;
+    transition: left 0.3s ease;
+    z-index: 1000;
+  }
+
+  .sidebar.open {
+    left: 0;
+  }
+
+  .mobile-header {
+    display: flex !important;
+  }
+
+  .main-content {
+    padding: 15px !important;
+    padding-top: 70px !important;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.login-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  background: var(--bg-color);
+}
+
+.login-box {
+  text-align: center;
+  padding: 40px;
+  max-width: 400px;
+  width: 90%;
+}
+
+.glass-input {
+  background: rgba(0, 240, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--accent-color);
+  padding: 12px;
+  width: 100%;
+  margin: 20px 0;
+  border-radius: 4px;
+}
+
+.glass-button {
+  background: rgba(0, 240, 255, 0.1);
+  border: 1px solid var(--accent-color);
+  color: var(--accent-color);
+  padding: 10px 25px;
+  cursor: pointer;
+  letter-spacing: 2px;
+}
+
+.glass-button:hover {
+  background: rgba(0, 240, 255, 0.2);
+}

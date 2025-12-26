@@ -1,5 +1,4 @@
 #pragma once
-
 #include <string>
 #include <vector>
 #include <thread>
@@ -7,6 +6,9 @@
 #include <atomic>
 #include <functional>
 #include <netinet/in.h>
+#include <deque>
+#include <chrono>
+#include <map>
 
 class TcpServer {
 public:
@@ -31,6 +33,7 @@ private:
     void accept_loop();
     void client_handler(int socket_fd);
     void cleanup_stale_clients();
+    bool check_rate_limit(uint32_t ip);
 
     int port_;
     std::string name_;
@@ -44,5 +47,10 @@ private:
     std::vector<int> client_sockets_;
     std::mutex clients_mutex_;
     
+    // Rate Limiting
+    std::map<uint32_t, std::deque<std::chrono::steady_clock::time_point>> rate_limits_;
+    std::mutex rate_limit_mutex_;
+    static constexpr size_t MAX_REQS_PER_MIN = 30;
+
     MessageCallback input_callback_;
 };

@@ -82,6 +82,14 @@ void TcpServer::accept_loop() {
             continue;
         }
 
+        // Rate Limit Check
+        if (!check_rate_limit(address.sin_addr.s_addr)) {
+            std::string response = "HTTP/1.1 429 Too Many Requests\r\nConnection: close\r\n\r\nToo Many Requests";
+            send(new_socket, response.c_str(), response.length(), MSG_NOSIGNAL);
+            close(new_socket);
+            continue;
+        }
+
         std::lock_guard<std::mutex> lock(clients_mutex_);
         client_sockets_.push_back(new_socket);
         
@@ -135,4 +143,22 @@ void TcpServer::client_handler(int socket_fd) {
             if (!msg.empty()) input_callback_(msg);
         }
     }
+}
+
+bool TcpServer::check_rate_limit(uint32_t ip) {
+    std::lock_guard<std::mutex> lock(rate_limit_mutex_);
+    auto now = std::chrono::steady_clock::now();
+    auto& reqs = rate_limits_[ip];
+    
+    // Remove requests older than 1 minute
+    while (!reqs.empty() && std::chrono::duration_cast<std::chrono::minutes>(now - reqs.front()).count() >= 1) {
+        reqs.pop_front();
+    }
+    
+    if (reqs.size() >= MAX_REQS_PER_MIN) {
+        return false;
+    }
+    
+    reqs.push_back(now);
+    return true;
 }

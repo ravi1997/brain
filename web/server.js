@@ -36,13 +36,26 @@ wss.on('connection', (ws, req) => {
         console.log(`[Proxy] Connected to ${targetHost}:${targetPort}`);
     });
 
-    // TCP -> WS: Wrap raw text in JSON
+    // TCP -> WS: Intelligently handle JSON vs raw text
     tcpClient.on('data', (data) => {
         if (ws.readyState === WebSocket.OPEN) {
             const lines = data.toString().split('\n');
             lines.forEach(line => {
-                if (line.trim()) {
-                    ws.send(JSON.stringify({ type: 'log', payload: line.trim() }));
+                const trimmed = line.trim();
+                if (!trimmed) return;
+
+                try {
+                    const parsed = JSON.parse(trimmed);
+                    // If it's already JSON with a type, send as is
+                    if (parsed.type) {
+                        ws.send(JSON.stringify(parsed));
+                    } else {
+                        // JSON but no type, wrap it
+                        ws.send(JSON.stringify({ type: 'data', payload: parsed }));
+                    }
+                } catch (e) {
+                    // Not JSON, send as log
+                    ws.send(JSON.stringify({ type: 'log', payload: trimmed }));
                 }
             });
         }

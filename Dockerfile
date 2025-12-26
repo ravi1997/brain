@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     libtbb-dev \
     libsqlite3-dev \
     libhiredis-dev \
+    libpq-dev \
     git \
     curl \
     python3 \

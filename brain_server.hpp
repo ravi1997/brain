@@ -22,6 +22,7 @@ public:
     std::unique_ptr<TcpServer> admin_server;     // 9009 (Command)
     std::unique_ptr<TcpServer> task_server;      // 9010 (Task Monitor)
     std::unique_ptr<TcpServer> control_server;   // 9011 (Personality Control)
+    std::unique_ptr<TcpServer> graph_server;     // 9012 (Knowledge Graph)
 
     BrainServer(Brain& b) : brain(b) {
         dash_server = std::make_unique<TcpServer>(9001, "Dashboard");
@@ -35,6 +36,7 @@ public:
         admin_server = std::make_unique<TcpServer>(9009, "Admin");
         task_server = std::make_unique<TcpServer>(9010, "Tasks");
         control_server = std::make_unique<TcpServer>(9011, "Control");
+        graph_server = std::make_unique<TcpServer>(9012, "Graph");
 
         // Wire Brain Events
         brain.set_log_callback([this](const std::string& msg) {
@@ -121,6 +123,7 @@ public:
         admin_server->start();
         task_server->start();
         control_server->start();
+        graph_server->start();
         
         // Background thread to push Task Updates to 9010
         std::thread([this]() {
@@ -135,6 +138,14 @@ public:
             while(true) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 control_server->broadcast(brain.get_json_state());
+            }
+        }).detach();
+
+        // Background thread to push Knowledge Graph to 9012
+        std::thread([this]() {
+            while(true) {
+                std::this_thread::sleep_for(std::chrono::seconds(5));
+                graph_server->broadcast(brain.get_memory_graph());
             }
         }).detach();
 

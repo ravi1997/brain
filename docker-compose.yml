@@ -17,7 +17,7 @@ services:
     tty: true
     depends_on:
       - redis
-
+      - postgres
 
   web:
     build: ./web
@@ -30,5 +30,12 @@ services:
 
   redis:
     image: redis:alpine
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: brain_db
+      POSTGRES_USER: brain_user
+      POSTGRES_PASSWORD: brain_password
 
 

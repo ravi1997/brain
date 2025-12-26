@@ -123,7 +123,7 @@ public:
     // Explicit Memory (Database & Cache)
     std::unique_ptr<MemoryStore> memory_store;
     std::unique_ptr<RedisClient> redis_cache;
-    std::string db_path = "brain_memories.db";
+    std::string db_conn_str = "host=postgres dbname=brain_db user=brain_user password=brain_password";
 
     // Context Window (Short-term Conversation History)
     std::deque<std::string> conversation_context;
@@ -139,6 +139,7 @@ public:
     
     // Synonym Mapping (Word -> Root Meaning)
     std::map<std::string, std::string> synonyms;
+    std::map<std::string, std::vector<double>> word_embeddings;
     
     // NLU Helpers
     std::unordered_set<std::string> stopwords_;
@@ -164,6 +165,7 @@ public:
     // Active Research
     std::string research(const std::string& topic);
     std::string deep_research(const std::string& topic);
+    std::string get_memory_graph();
 
     long long get_knowledge_size();
 

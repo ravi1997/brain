@@ -18,6 +18,7 @@ add_executable(brain_tests
     ../task_manager.cpp
     ../reflex.cpp
     ../planning_unit.cpp
+    ../postgres_client.cpp
     test_memory.cpp
     test_nlu.cpp
     test_context.cpp
@@ -25,6 +26,7 @@ add_executable(brain_tests
     test_redis.cpp
     test_nlu_improved.cpp
     test_emotion_unit.cpp
+    test_reflex_rl.cpp
 )
 
 target_link_libraries(brain_tests
@@ -32,6 +34,7 @@ target_link_libraries(brain_tests
     sqlite3
     tbb
     hiredis
+    ${LIBPQ_LIBRARY}
 )
 
 include(GoogleTest)

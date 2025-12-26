@@ -5,6 +5,8 @@ import Cognition from './components/Cognition';
 import Terminal from './components/Terminal';
 import System from './components/System';
 import Settings from './components/Settings';
+import MemoryGraph from './components/MemoryGraph';
+
 
 import Login from './components/Login';
 
@@ -28,6 +30,7 @@ function App() {
     switch(activeView) {
       case 'dashboard': return <Dashboard />;
       case 'neural': return <Cognition />;
+      case 'memory': return <MemoryGraph />;
       case 'terminal': return <Terminal />;
       case 'system': return <System />;
       case 'settings': return <Settings theme={theme} toggleTheme={toggleTheme} />;

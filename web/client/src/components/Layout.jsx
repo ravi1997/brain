@@ -1,11 +1,13 @@
-import React from 'react';
-import { Activity, Terminal, Brain, Settings, HardDrive } from 'lucide-react';
+import { Activity, Terminal, Brain, Settings, HardDrive, Menu, X, Network } from 'lucide-react';
+import { useState } from 'react';
 
 const Layout = ({ children, activeView, setActiveView }) => {
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
     const NavItem = ({ name, icon: Icon, id }) => (
         <li 
             data-view={id}
-            onClick={() => setActiveView(id)}
+            onClick={() => { setActiveView(id); setIsMenuOpen(false); }}
             className={activeView === id ? 'active' : ''}
             style={{
                 display: 'flex', alignItems: 'center', padding: '15px 25px',
@@ -25,8 +27,31 @@ const Layout = ({ children, activeView, setActiveView }) => {
 
     return (
         <div className="scanlines" style={{ display: 'flex', height: '100vh', width: '100vw', background: 'var(--bg-color)', position: 'relative', overflow: 'hidden' }}>
+            {/* Mobile Header */}
+            <div className="mobile-header" style={{ 
+                display: 'none', 
+                position: 'fixed', 
+                top: 0, 
+                left: 0, 
+                width: '100%', 
+                padding: '15px', 
+                zIndex: 1001, 
+                background: 'rgba(5, 10, 20, 0.9)',
+                borderBottom: '1px solid var(--glass-border)',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+            }}>
+                <h1 className="text-glow" style={{ margin: 0, fontSize: '16px', color: 'var(--accent-color)' }}>CORTEK OS</h1>
+                <button 
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  style={{ background: 'none', border: 'none', color: 'var(--accent-color)', cursor: 'pointer' }}
+                >
+                  {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                </button>
+            </div>
+
             {/* Sidebar */}
-            <div style={{ 
+            <div className={`sidebar ${isMenuOpen ? 'open' : ''}`} style={{ 
                 width: '280px', 
                 borderRight: '1px solid var(--glass-border)', 
                 background: 'rgba(5, 10, 20, 0.95)',
@@ -43,7 +68,7 @@ const Layout = ({ children, activeView, setActiveView }) => {
                     <ul style={{ margin: 0, padding: 0 }}>
                         <NavItem name="Overview" icon={Activity} id="dashboard" />
                         <NavItem name="Neural Link" icon={Brain} id="neural" />
-                        <NavItem name="Storage" icon={HardDrive} id="storage" />
+                        <NavItem name="Memory Map" icon={Network} id="memory" />
                         <NavItem name="System" icon={HardDrive} id="system" />
                         <NavItem name="Terminal" icon={Terminal} id="terminal" />
                         <NavItem name="Settings" icon={Settings} id="settings" />
@@ -56,7 +81,7 @@ const Layout = ({ children, activeView, setActiveView }) => {
             </div>
 
             {/* Main Content */}
-            <div style={{ flex: 1, position: 'relative', overflowY: 'auto', padding: '30px' }}>
+            <div className="main-content" style={{ flex: 1, position: 'relative', overflowY: 'auto', padding: '30px' }}>
                 {children}
             </div>
         </div>

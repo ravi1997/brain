@@ -18,14 +18,24 @@ include_directories(include)
 # Threading support (needed for dnn.hpp parallel execution)
 find_package(Threads REQUIRED)
 
+# Find libpq
+find_path(LIBPQ_INCLUDE_DIR libpq-fe.h PATH_SUFFIXES postgresql)
+find_library(LIBPQ_LIBRARY pq)
+
+if(NOT LIBPQ_INCLUDE_DIR OR NOT LIBPQ_LIBRARY)
+    message(FATAL_ERROR "libpq not found")
+endif()
+
+include_directories(${LIBPQ_INCLUDE_DIR})
+
 # The main executable
-add_executable(brain_replica main.cpp dnn.cpp brain.cpp memory_store.cpp server.cpp reflex.cpp task_manager.cpp planning_unit.cpp)
+add_executable(brain_replica main.cpp dnn.cpp brain.cpp memory_store.cpp server.cpp reflex.cpp task_manager.cpp planning_unit.cpp postgres_client.cpp)
 
 # Enable Precompiled Headers (PCH) for faster builds
 target_precompile_headers(brain_replica PRIVATE stable.hpp)
 
-# Link threads (for std::execution::par_unseq in dnn.hpp)
-target_link_libraries(brain_replica PRIVATE Threads::Threads sqlite3 hiredis)
+# Link libraries
+target_link_libraries(brain_replica PRIVATE Threads::Threads sqlite3 hiredis ${LIBPQ_LIBRARY})
 
 # TBB is often required for parallel algorithms on GCC/Clang
 # We'll try to find it, but won't hard fail if not present (implementation might vary)
