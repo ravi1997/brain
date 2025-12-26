@@ -7,7 +7,9 @@ protected:
     std::string test_conn = "host=postgres dbname=brain_db user=brain_user password=brain_password";
     
     void SetUp() override {
-        // We'll trust the postgres service is up in docker-compose
+        MemoryStore store(test_conn);
+        store.init();
+        store.clear();
     }
 
     void TearDown() override {

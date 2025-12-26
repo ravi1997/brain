@@ -4,23 +4,18 @@
 
 class MemoryOptimizationTest : public ::testing::Test {
 protected:
-    std::string test_db = "test_memory_opt.db";
+    std::string test_conn = "host=postgres dbname=brain_db user=brain_user password=brain_password";
     
     void SetUp() override {
-        if (std::filesystem::exists(test_db)) {
-            std::filesystem::remove(test_db);
-        }
+        MemoryStore store(test_conn);
+        store.init();
+        store.clear();
     }
-
-    void TearDown() override {
-        if (std::filesystem::exists(test_db)) {
-             std::filesystem::remove(test_db);
-        }
-    }
+    void TearDown() override {}
 };
 
 TEST_F(MemoryOptimizationTest, ExactTokenMatch) {
-    MemoryStore store(test_db);
+    MemoryStore store(test_conn);
     store.init();
     store.store("Fact", "The sky is blue", "nature");
     
@@ -35,7 +30,7 @@ TEST_F(MemoryOptimizationTest, ExactTokenMatch) {
 }
 
 TEST_F(MemoryOptimizationTest, ShortWordExclusion) {
-    MemoryStore store(test_db);
+    MemoryStore store(test_conn);
     store.init();
     store.store("Fact", "It is an AI", "tech");
     
@@ -50,7 +45,7 @@ TEST_F(MemoryOptimizationTest, ShortWordExclusion) {
 }
 
 TEST_F(MemoryOptimizationTest, CaseInsensitivity) {
-    MemoryStore store(test_db);
+    MemoryStore store(test_conn);
     store.init();
     store.store("Fact", "Robots are COOL", "tech");
     

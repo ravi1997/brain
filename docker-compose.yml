@@ -11,8 +11,7 @@ services:
     command: >
       bash -c "mkdir -p build && cd build && cmake .. && make -j$(nproc) && ./brain_replica"
     ports:
-      - "9001-9010:9001-9010"
-      - "9011:9011"
+      - "9001-9012:9001-9012"
     stdin_open: true
     tty: true
     depends_on:

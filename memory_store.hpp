@@ -3,6 +3,7 @@
 #include <vector>
 #include <iostream>
 #include <mutex>
+#include <memory>
 #include <unordered_map>
 #include "postgres_client.hpp"
 
@@ -25,6 +26,7 @@ public:
     std::vector<Memory> get_recent(int limit = 10);
     long long get_memory_count();
     std::string get_graph_json(int max_nodes = 50);
+    void clear();
 
 private:
     std::unique_ptr<PostgresClient> pg_client;

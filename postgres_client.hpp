@@ -20,8 +20,8 @@ public:
     bool execute(const std::string& sql);
     std::vector<PostgresRow> query(const std::string& sql);
     
-    // Helper for parameterized inserts (prevent SQL injection)
-    bool store_memory(long long timestamp, const std::string& type, const std::string& content, const std::string& tags);
+    // Helper for parameterized inserts (returns ID or -1)
+    int store_memory(long long timestamp, const std::string& type, const std::string& content, const std::string& tags);
 
 private:
     std::string connection_string;

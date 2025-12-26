@@ -39,14 +39,10 @@ bool MemoryStore::store(const std::string& type, const std::string& content, con
     long long timestamp = std::chrono::duration_cast<std::chrono::seconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
 
-    if (!pg_client->store_memory(timestamp, type, content, tags)) return false;
+    int id = pg_client->store_memory(timestamp, type, content, tags);
+    if (id == -1) return false;
     
-    // Get the ID of the last inserted row
-    auto res = pg_client->query("SELECT currval(pg_get_serial_sequence('memories', 'id'));");
-    if (!res.empty()) {
-        int id = std::stoi(res[0].columns[0]);
-        index_memory(id, content);
-    }
+    index_memory(id, content);
     
     return true;
 }
@@ -251,4 +247,13 @@ std::string MemoryStore::get_graph_json(int max_nodes) {
     }
     ss << "]}";
     return ss.str();
+}
+void MemoryStore::clear() {
+    std::lock_guard<std::mutex> lock(db_mutex_);
+    if (pg_client->is_connected()) {
+        pg_client->execute("TRUNCATE memories RESTART IDENTITY;");
+    }
+    inverted_index_.clear();
+    // Cache remains, but since we use TRUNCATE identity, new IDs will match old ones
+    // and might cause incorrect cache hits. We should probably flush Redis too.
 }

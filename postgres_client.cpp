@@ -77,9 +77,9 @@ std::vector<PostgresRow> PostgresClient::query(const std::string& sql) {
     return results;
 }
 
-bool PostgresClient::store_memory(long long timestamp, const std::string& type, const std::string& content, const std::string& tags) {
+int PostgresClient::store_memory(long long timestamp, const std::string& type, const std::string& content, const std::string& tags) {
     std::lock_guard<std::mutex> lock(db_mutex);
-    if (!connected) return false;
+    if (!connected) return -1;
 
     const char* paramValues[4];
     std::string ts_str = std::to_string(timestamp);
@@ -89,7 +89,7 @@ bool PostgresClient::store_memory(long long timestamp, const std::string& type, 
     paramValues[3] = tags.c_str();
 
     PGresult* res = PQexecParams(conn,
-        "INSERT INTO memories (timestamp, type, content, tags) VALUES ($1, $2, $3, $4)",
+        "INSERT INTO memories (timestamp, type, content, tags) VALUES ($1, $2, $3, $4) RETURNING id",
         4,       /* four parameters */
         NULL,    /* let the backend deduce param types */
         paramValues,
@@ -97,12 +97,13 @@ bool PostgresClient::store_memory(long long timestamp, const std::string& type, 
         NULL,    /* text format */
         0);      /* text results */
 
-    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+    if (PQresultStatus(res) != PGRES_TUPLES_OK) {
         std::cerr << "PostgreSQL insert failed: " << PQerrorMessage(conn) << std::endl;
         PQclear(res);
-        return false;
+        return -1;
     }
 
+    int id = std::stoi(PQgetvalue(res, 0, 0));
     PQclear(res);
-    return true;
+    return id;
 }

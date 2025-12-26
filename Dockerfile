@@ -19,7 +19,4 @@ WORKDIR /app
 # Copy project files
 COPY . .
 
-# Build
-RUN mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j$(nproc)
-
-CMD ["./build/brain_replica"]
+# CMD ["./build/brain_replica"]
