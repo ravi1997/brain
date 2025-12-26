@@ -1,11 +1,31 @@
 import React from 'react';
 
-const Settings = () => {
+const Settings = ({ theme, toggleTheme }) => {
     return (
         <div style={{ padding: '20px' }}>
             <h2 style={{ color: 'var(--accent-color)', marginBottom: '30px' }}>SYSTEM SETTINGS</h2>
             
             <div className="glass-panel" style={{ padding: '30px', maxWidth: '600px' }}>
+                <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>INTERFACE THEME</span>
+                    <button 
+                        onClick={toggleTheme}
+                        style={{
+                            background: 'var(--accent-color)',
+                            color: '#000',
+                            border: 'none',
+                            padding: '5px 15px',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontWeight: 'bold',
+                            textTransform: 'uppercase',
+                            fontSize: '12px'
+                        }}
+                    >
+                        {theme === 'dark' ? 'LIGHT MODE' : 'DARK MODE'}
+                    </button>
+                </div>
+
                 <div style={{ marginBottom: '20px' }}>
                     <label style={{ display: 'block', marginBottom: '10px', opacity: 0.7 }}>CRITICALITY LEVEL</label>
                     <input type="range" style={{ width: '100%', accentColor: 'var(--accent-color)' }} />

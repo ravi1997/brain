@@ -21,6 +21,9 @@ find_package(Threads REQUIRED)
 # The main executable
 add_executable(brain_replica main.cpp dnn.cpp brain.cpp memory_store.cpp server.cpp reflex.cpp task_manager.cpp)
 
+# Enable Precompiled Headers (PCH) for faster builds
+target_precompile_headers(brain_replica PRIVATE stable.hpp)
+
 # Link threads (for std::execution::par_unseq in dnn.hpp)
 target_link_libraries(brain_replica PRIVATE Threads::Threads sqlite3 hiredis)
 

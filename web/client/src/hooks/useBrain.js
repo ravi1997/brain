@@ -10,40 +10,56 @@ export const useBrain = () => {
     });
     const [ws, setWs] = useState(null);
 
-    // Initial connection
+    // Connection management with auto-reconnect
     useEffect(() => {
-        // Connect to brain's chat server via WebSocket proxy
-        const socket = new WebSocket('ws://' + window.location.host + '/proxy/9005');
+        let socket;
+        let reconnectTimeout;
+        let reconnectDelay = 1000;
 
-        socket.onopen = () => {
-            console.log("Connected to Brain");
-            setStatus('connected');
-        };
+        const connect = () => {
+            setStatus('connecting');
+            socket = new WebSocket('ws://' + window.location.host + '/proxy/9005');
 
-        socket.onmessage = (event) => {
-            try {
-                const msg = JSON.parse(event.data);
-                if (msg.type === 'log') {
-                    setMessages(prev => [...prev.slice(-49), { type: 'log', text: msg.payload }]);
-                } else if (msg.type === 'thought') {
-                    setBrainData(prev => ({ ...prev, thought: msg.payload }));
-                    setMessages(prev => [...prev.slice(-49), { type: 'thought', text: msg.payload }]);
-                } else if (msg.type === 'state') {
-                    // Assuming payload is key:value or json
-                    // For now handled via logs mostly
-                } else if (msg.type === 'chat') {
-                    setMessages(prev => [...prev.slice(-49), { type: 'chat', text: msg.payload }]);
+            socket.onopen = () => {
+                console.log("Connected to Brain");
+                setStatus('connected');
+                reconnectDelay = 1000; // Reset delay on success
+            };
+
+            socket.onmessage = (event) => {
+                try {
+                    const msg = JSON.parse(event.data);
+                    if (msg.type === 'log') {
+                        setMessages(prev => [...prev.slice(-49), { type: 'log', text: msg.payload }]);
+                    } else if (msg.type === 'thought') {
+                        setBrainData(prev => ({ ...prev, thought: msg.payload }));
+                        setMessages(prev => [...prev.slice(-49), { type: 'thought', text: msg.payload }]);
+                    } else if (msg.type === 'chat') {
+                        setMessages(prev => [...prev.slice(-49), { type: 'chat', text: msg.payload }]);
+                    }
+                } catch (e) {
+                    console.error("Parse error", e);
                 }
-            } catch (e) {
-                console.error("Parse error", e);
-            }
+            };
+
+            socket.onclose = () => {
+                setStatus('disconnected');
+                console.log(`Socket closed. Reconnecting in ${reconnectDelay}ms...`);
+                reconnectTimeout = setTimeout(() => {
+                    reconnectDelay = Math.min(reconnectDelay * 2, 30000); // Max 30s
+                    connect();
+                }, reconnectDelay);
+            };
+
+            setWs(socket);
         };
 
-        socket.onclose = () => setStatus('disconnected');
+        connect();
 
-        setWs(socket);
-
-        return () => socket.close();
+        return () => {
+            if (socket) socket.close();
+            if (reconnectTimeout) clearTimeout(reconnectTimeout);
+        };
     }, []);
 
     const sendMessage = useCallback((text) => {

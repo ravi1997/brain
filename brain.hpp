@@ -5,6 +5,7 @@
 #include "research_utils.hpp"
 #include "reflex.hpp"
 #include "task_manager.hpp"
+#include "redis_client.hpp"
 #include <string>
 #include <vector>
 #include <memory>
@@ -108,8 +109,18 @@ public:
     std::vector<std::string> learned_topics;
     std::string current_research_topic = "None";
 
-    // Explicit Memory (Database)
+    // Sentiment Analysis
+    double analyze_sentiment(const std::string& text);
+    std::vector<std::string> positive_words;
+    std::vector<std::string> negative_words;
+
+    // Focus Mechanism
+    double focus_level = 0.0; // 0..1
+    std::string focus_topic = "None";
+
+    // Explicit Memory (Database & Cache)
     std::unique_ptr<MemoryStore> memory_store;
+    std::unique_ptr<RedisClient> redis_cache;
     std::string db_path = "brain_memories.db";
 
     // Context Window (Short-term Conversation History)

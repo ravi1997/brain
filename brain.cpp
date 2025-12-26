@@ -105,7 +105,16 @@ Brain::Brain() {
     synonyms["dull"] = "stupid";
     
     load_stopwords();
-    // ... load more from file if needed
+    
+    // Initialize sentiment lists
+    positive_words = {"happy", "good", "great", "excellent", "kind", "smart", "fun", "love", "joy", "awesome", "perfect"};
+    negative_words = {"sad", "bad", "terrible", "awful", "mean", "stupid", "boring", "hate", "sorrow", "horrible", "waste"};
+
+    // Initialize Redis Cache
+    redis_cache = std::make_unique<RedisClient>("redis", 6379);
+    if (redis_cache->connect()) {
+        safe_print("[Brain]: Connected to Redis cache layer.");
+    }
 }
 
 Brain::~Brain() {
@@ -123,15 +132,37 @@ std::string Brain::interact(const std::string& input_text) {
     // Persona Check
     // Persona Check
     if (emotions.energy < 0.2) {
-        std::string resp = "*Yawns* I'm too tired... I need sleep...";
+        std::vector<std::string> sleepy_responses = {
+            "*Yawns* I'm too tired... I need sleep...",
+            "My neural pathways are lagging. I need to consolidate my state (sleep).",
+            "Energy levels critical. Interaction deferred until recharge."
+        };
+        std::string resp = sleepy_responses[rand() % sleepy_responses.size()];
         conversation_context.push_back("Brain: " + resp);
         while (conversation_context.size() > MAX_CONTEXT_TURNS) conversation_context.pop_front();
         return resp;
     }
 
+    // Sentiment modulation
+    double sentiment = analyze_sentiment(input_text);
+    if (sentiment > 0) emotions.happiness = std::min(1.0, emotions.happiness + 0.1);
+    else if (sentiment < 0) emotions.sadness = std::min(1.0, emotions.sadness + 0.1);
+
     // Interaction boosts happiness (attention)
     emotions.happiness = std::min(1.0, emotions.happiness + 0.1);
     emotions.boredom = std::max(0.0, emotions.boredom - 0.2); // Not bored anymore
+
+    // 0. Update Focus based on current state
+    Task* active_task = task_manager.get_next_task();
+    if (active_task) {
+        focus_topic = active_task->description;
+        focus_level = 0.8;
+    } else if (current_research_topic != "None") {
+        focus_topic = current_research_topic;
+        focus_level = 0.5;
+    } else {
+        focus_level = std::max(0.0, focus_level - 0.1); // Decay focus
+    }
 
     // 1. Reflex / Instinct Logic
     std::string instinct = reflex.get_reaction(input_text);
@@ -225,6 +256,11 @@ std::string Brain::interact(const std::string& input_text) {
     // Weight current input 3x more than history
     add_to_vec(history_tokens, 1.0);
     add_to_vec(current_tokens, 3.0);
+
+    // Focus Boost: If input contains focus topic, boost signal
+    if (focus_level > 0.1 && input_text.find(focus_topic) != std::string::npos) {
+        add_to_vec(tokenize(focus_topic), focus_level * 2.0);
+    }
 
     // Normalize
     double max_val = 1.0; 
@@ -332,6 +368,15 @@ std::string Brain::interact(const std::string& input_text) {
 std::string Brain::get_associative_memory(const std::string& input) {
     if (!memory_store) return "";
     
+    // Redis Cache Check
+    if (redis_cache) {
+        auto cached = redis_cache->get("assoc:" + input);
+        if (cached) {
+            emit_log("[Memory]: Cache HIT for context match.");
+            return *cached;
+        }
+    }
+
     // 1. Try Entity Extraction first (High Precision)
     auto entities = extract_entities(input);
     for (const auto& entity : entities) {
@@ -340,7 +385,10 @@ std::string Brain::get_associative_memory(const std::string& input) {
              const auto& mem = results[0];
              std::string snippet = mem.content.substr(0, 300);
              if (mem.content.length() > 300) snippet += "...";
-             return "I recall knowledge about " + entity + ". " + snippet;
+             std::string result = "I recall knowledge about " + entity + ". " + snippet;
+             
+             if (redis_cache) redis_cache->set("assoc:" + input, result, 300); // Cache for 5 mins
+             return result;
         }
     }
 
@@ -354,10 +402,24 @@ std::string Brain::get_associative_memory(const std::string& input) {
             const auto& mem = results[0];
             std::string snippet = mem.content.substr(0, 300);
             if (mem.content.length() > 300) snippet += "...";
-            return "I recall learning about " + word + ". " + snippet;
+            std::string result = "I recall learning about " + word + ". " + snippet;
+
+            if (redis_cache) redis_cache->set("assoc:" + input, result, 300);
+            return result;
         }
     }
     return "";
+}
+
+double Brain::analyze_sentiment(const std::string& text) {
+    auto tokens = tokenize(text);
+    double score = 0.0;
+    for (auto& t : tokens) {
+        // Simple presence-based scoring
+        if (std::find(positive_words.begin(), positive_words.end(), t) != positive_words.end()) score += 1.0;
+        else if (std::find(negative_words.begin(), negative_words.end(), t) != negative_words.end()) score -= 1.0;
+    }
+    return score;
 }
 
 std::vector<std::string> Brain::extract_entities(const std::string& text) {
@@ -464,7 +526,17 @@ std::string Brain::decode_output(const std::vector<double>& logits) {
         }
     }
     
-    if (result.empty()) return "...";
+    if (result.empty()) {
+        std::vector<std::string> fallbacks = {
+            "Processing internal neural mappings...",
+            "Searching associative pathways...",
+            "Analyzing cognitive inputs...",
+            "Consulting long-term memory structures...",
+            "Deliberating on sensory data...",
+            "Synthesizing new synaptic connections..."
+        };
+        return fallbacks[static_cast<size_t>(rand()) % fallbacks.size()];
+    }
     return result;
 }
 
@@ -626,7 +698,7 @@ void Brain::automata_loop() {
             // Goal: Learn (Boredom)
             if (emotions.boredom > 0.8) {
                  std::vector<std::string> ideas = {"Physics", "History", "AI", "Space", "Oceans"};
-                 std::string topic = ideas[rand() % ideas.size()];
+                 std::string topic = ideas[static_cast<size_t>(rand()) % ideas.size()];
                  task_manager.add_task("Research " + topic, TaskType::RESEARCH, TaskPriority::LOW);
                  emotions.boredom = 0.5; // Reduced just by planning it
             }
@@ -663,10 +735,20 @@ void Brain::automata_loop() {
             // Idle
         }
         
-        // Decay
+        // Decay & Emotional Regulation
         {
              std::lock_guard<std::recursive_mutex> lock(brain_mutex);
+             
+             // Natural decay towards baseline
+             if (emotions.happiness > 0.5) emotions.happiness -= 0.01;
+             else if (emotions.happiness < 0.5) emotions.happiness += 0.01;
+             
+             if (emotions.sadness > 0.0) emotions.sadness -= 0.02;
+             if (emotions.anger > 0.0) emotions.anger -= 0.05;
+             if (emotions.fear > 0.0) emotions.fear -= 0.02;
+             
              emotions.boredom = std::min(1.0, emotions.boredom + 0.05);
+
              if (on_emotion_update) {
                 on_emotion_update("Energy: " + std::to_string(emotions.energy) + " | Boredom: " + std::to_string(emotions.boredom) + " | Happiness: " + std::to_string(emotions.happiness));
              }

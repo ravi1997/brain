@@ -15,6 +15,18 @@
   --glow-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
 }
 
+[data-theme='light'] {
+  --bg-color: #f0f4f8;
+  --text-color: #2d3748;
+  --accent-color: #3182ce;
+  --accent-color-rgb: 49, 130, 206;
+  --panel-bg: rgba(255, 255, 255, 0.8);
+  --border-color: rgba(49, 130, 206, 0.3);
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(49, 130, 206, 0.2);
+  --glow-shadow: 0 0 15px rgba(49, 130, 206, 0.1);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;

@@ -8,6 +8,13 @@ import Settings from './components/Settings';
 
 function App() {
   const [activeView, setActiveView] = useState('dashboard');
+  const [theme, setTheme] = useState('dark');
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+  };
 
   const renderView = () => {
     switch(activeView) {
@@ -15,7 +22,7 @@ function App() {
       case 'neural': return <Cognition />;
       case 'terminal': return <Terminal />;
       case 'system': return <System />;
-      case 'settings': return <Settings />;
+      case 'settings': return <Settings theme={theme} toggleTheme={toggleTheme} />;
       default: return <Dashboard />;
     }
   };
