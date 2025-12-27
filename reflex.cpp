@@ -1,6 +1,11 @@
 #include "reflex.hpp"
+#include "json.hpp"
 #include <algorithm>
 #include <cctype>
+#include <fstream>
+#include <iostream>
+
+using json = nlohmann::json;
 
 Reflex::Reflex() {
     // Instincts (Hardcoded survival responses)
@@ -47,4 +52,37 @@ void Reflex::reinforce(const std::string& keyword, const std::string& response, 
 
 bool Reflex::contains(const std::string& input, const std::string& key) {
     return input.find(key) != std::string::npos;
+}
+
+void Reflex::save(const std::string& filename) {
+    json j;
+    for (const auto& [keyword, responses] : keyword_responses) {
+        json j_responses = json::array();
+        for (const auto& r : responses) {
+            j_responses.push_back({{"text", r.text}, {"weight", r.weight}});
+        }
+        j[keyword] = j_responses;
+    }
+    std::ofstream o(filename);
+    o << j.dump(4);
+}
+
+void Reflex::load(const std::string& filename) {
+    std::ifstream i(filename);
+    if (!i.is_open()) return;
+    json j;
+    try {
+        i >> j;
+        for (auto& [keyword, j_responses] : j.items()) {
+            std::vector<WeightedResponse> responses;
+            for (const auto& item : j_responses) {
+                responses.push_back({item["text"], item["weight"]});
+            }
+            if (!responses.empty()) {
+                keyword_responses[keyword] = responses;
+            }
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Reflex load error: " << e.what() << std::endl;
+    }
 }

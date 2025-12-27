@@ -1,4 +1,5 @@
 #include "brain.hpp"
+#include "logger.hpp"
 #include <iostream>
 #include <fstream>
 #include <algorithm>
@@ -58,6 +59,9 @@ Brain::Brain() {
     personality.curiosity = config.curiosity;
     personality.playfulness = config.playfulness;
     personality.energy_decay = config.energy_decay;
+
+    // Initialize Logger
+    Logger::instance().init("brain.log");
 
     safe_print("[Brain]: Loaded configuration. Energy Decay: " + std::to_string(personality.energy_decay));
 
@@ -128,11 +132,18 @@ Brain::Brain() {
     if (redis_cache->connect()) {
         safe_print("[Brain]: Connected to Redis cache layer.");
     }
+
+    // MEGA-BATCH 5: Load Reflex Weights
+    reflex.load("reflex_weights.json");
 }
 
 Brain::~Brain() {
     running = false;
     if (background_thread.joinable()) background_thread.join();
+    
+    // MEGA-BATCH 5: Save Reflex Weights
+    reflex.save("reflex_weights.json");
+    safe_print("[Brain]: Reflex weights saved.");
 }
 
 std::string Brain::interact(const std::string& input_text) {
@@ -813,8 +824,7 @@ void Brain::automata_loop() {
             
             if (best_move == "RESEARCH" || best_move == "DEEP_SCAN" || best_move == "BROWSING") {
                 if (emotions.energy > 0.3) {
-                    std::vector<std::string> ideas = {"Physics", "History", "AI", "Space", "Oceans", "Philosophy", "Cybernetics", "Robotics"};
-                    std::string topic = ideas[static_cast<size_t>(rand()) % ideas.size()];
+                    std::string topic = find_curiosity_topic();
                     task_manager.add_task("Research " + topic, TaskType::RESEARCH, TaskPriority::LOW);
                     emotions.boredom = std::max(0.0, emotions.boredom - 0.2);
                 }
@@ -1051,12 +1061,7 @@ void Brain::load(const std::string& filename) {
 
 // Helpers
 void Brain::log_activity(const std::string& msg) {
-    std::ofstream log_file("brain.log", std::ios::app);
-    if (log_file) {
-        auto now = std::chrono::system_clock::now();
-        std::time_t now_c = std::chrono::system_clock::to_time_t(now);
-        log_file << std::put_time(std::localtime(&now_c), "%F %T") << " " << msg << std::endl;
-    }
+    Logger::instance().log(msg);
     emit_log(msg); // Send to Server/Dashboard!
 }
 
@@ -1080,4 +1085,67 @@ std::string Brain::get_memory_graph() {
     std::lock_guard<std::recursive_mutex> lock(brain_mutex);
     if (!memory_store) return "{\"nodes\":[], \"links\":[]}";
     return memory_store->get_graph_json(50);
+}
+
+std::string Brain::find_curiosity_topic() {
+    // 1. Candidate Pool (could be Expanded)
+    std::vector<std::string> candidates = {
+        "quantum_mechanics", "ancient_history", "machine_learning", "deep_sea", 
+        "astrophysics", "bioinformatics", "cryptography", "linguistics", 
+        "neuroscience", "nanotechnology", "sociology", "music_theory",
+        "robotics", "genetics", "cybersecurity", "metaphysics"
+    };
+
+    // 2. Filter out already learned topics
+    std::vector<std::string> novel_candidates;
+    for (const auto& c : candidates) {
+        bool known = false;
+        for (const auto& t : learned_topics) {
+            if (t == c) { known = true; break; }
+        }
+        if (!known) novel_candidates.push_back(c);
+    }
+
+    if (novel_candidates.empty()) return candidates[rand() % candidates.size()];
+
+    // 3. Find most distant from "Average Knowledge Vector"
+    // Calculate fast centroid of knowledge
+    std::vector<double> centroid(VECTOR_DIM, 0.0);
+    int count = 0;
+    
+    // Use keywords from memory store or base vocab if learned_topics is sparse
+    for (const auto& pair : word_embeddings) {
+        // Sample some embeddings
+        if (rand() % 10 == 0) {
+            dnn::add_vectors(centroid, pair.second);
+            count++;
+        }
+    }
+    
+    if (count > 0) {
+        for (auto& v : centroid) v /= count;
+    }
+
+    // Score candidates by distance from centroid (Curiosity = wanting something different)
+    // Or we could seek *related* but unknown stuff. 
+    // Let's go for *Distance* (Novelty)
+    std::string best_topic = novel_candidates[0];
+    double max_dist = -1.0;
+
+    for (const auto& cand : novel_candidates) {
+        // If we have an embedding for the candidate (we might not if it's unknown!)
+        // If not, we assume max distance (novelty)
+        if (word_embeddings.count(cand)) {
+            double dist = dnn::cosine_distance(centroid, word_embeddings[cand]);
+            if (dist > max_dist) {
+                max_dist = dist;
+                best_topic = cand;
+            }
+        } else {
+            // Totally unknown concept -> High Curiosity
+            return cand; 
+        }
+    }
+
+    return best_topic;
 }

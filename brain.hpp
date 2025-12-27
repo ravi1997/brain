@@ -166,6 +166,7 @@ public:
     std::string research(const std::string& topic);
     std::string deep_research(const std::string& topic);
     std::string get_memory_graph();
+    std::string find_curiosity_topic(); // [Mega-Batch 5]
 
     long long get_knowledge_size();
 

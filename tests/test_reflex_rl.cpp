@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "../reflex.hpp"
+#include <filesystem>
 
 class ReflexRLTest : public ::testing::Test {
 protected:
@@ -42,4 +43,26 @@ TEST_F(ReflexRLTest, NegativeReinforcement) {
     
     // Should be very rare now (clamped at 0.1 weight)
     EXPECT_LT(online_count, 20);
+}
+
+TEST_F(ReflexRLTest, Persistence) {
+    reflex.reinforce("hello", "Greetings.", 10.0);
+    reflex.save("test_reflex.json");
+    
+    Reflex new_reflex;
+    new_reflex.load("test_reflex.json");
+    
+    // Check if new_reflex has high weight for "Greetings."
+    auto& instincts = new_reflex.get_instincts();
+    bool found = false;
+    for (const auto& r : instincts["hello"]) {
+        if (r.text == "Greetings.") {
+            EXPECT_GT(r.weight, 5.0);
+            found = true;
+            break;
+        }
+    }
+    EXPECT_TRUE(found);
+    
+    std::filesystem::remove("test_reflex.json");
 }

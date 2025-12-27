@@ -8,6 +8,10 @@ public:
     Reflex();
     std::string get_reaction(const std::string& input);
     void reinforce(const std::string& keyword, const std::string& response, double reward);
+    
+    // Persistence
+    void save(const std::string& filename);
+    void load(const std::string& filename);
 
     struct WeightedResponse {
         std::string text;

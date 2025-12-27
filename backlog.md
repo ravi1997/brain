@@ -77,27 +77,27 @@
 - [x] [NLU] Improve entity extraction accuracy (Phase 1) #73
 - [x] [NLU] Add support for multi-turn conversation context - Investigation #74
 - [x] [NLU] Implement fallback responses for unknown inputs - Refactor #75
-- [ ] [Cognition] Create associative memory graph visualization data - Testing #76
+- [x] [Cognition] Create associative memory graph visualization data - Testing #76
 - [x] [Cognition] Refactor memory retrieval for O(1) access - Optimization #77
-- [ ] [Infrastructure] Add log rotation for server logs - Optimization #78
-- [ ] [Cognition] Implement reinforcement learning for reflex module - Optimization #79
-- [ ] [Infrastructure] Add log rotation for server logs (Phase 1) #80
+- [x] [Infrastructure] Add log rotation for server logs - Optimization #78
+- [x] [Cognition] Implement reinforcement learning for reflex module - Optimization #79
+- [x] [Infrastructure] Add log rotation for server logs (Phase 1) #80
 - [x] [Infrastructure] Dockerize build environment for consistent CI (Phase 2) #81
 - [ ] [NLU] Improve entity extraction accuracy - Implementation #82
 - [x] [Infrastructure] Dockerize build environment for consistent CI (Phase 2) #83
 - [ ] [NLU] Integrate word2vec for better semantic understanding - Implementation #84
 - [x] [Frontend] Add dark mode toggle to UI - Implementation #85
 - [x] [Frontend] Visualize real-time neuron activity with WebGL - Optimization #86
-- [ ] [Cognition] Create associative memory graph visualization data (Phase 2) #87
-- [ ] [Frontend] Improve mobile responsiveness of the dashboard - Investigation #88
+- [x] [Cognition] Create associative memory graph visualization data (Phase 2) #87
+- [x] [Frontend] Improve mobile responsiveness of the dashboard - Investigation #88
 - [x] [Infrastructure] Dockerize build environment for consistent CI (Phase 2) #89
 - [ ] [Infrastructure] Set up GitHub Actions for automated testing - Refactor #90
 - [x] [Cognition] Add 'Focus' mechanism to filter sensory input - Investigation #91
-- [ ] [Cognition] Tune hyperparameters for curiosity drive - Investigation #92
-- [ ] [Cognition] Create associative memory graph visualization data (Phase 1) #93
+- [x] [Cognition] Tune hyperparameters for curiosity drive - Investigation #92
+- [x] [Cognition] Create associative memory graph visualization data (Phase 1) #93
 - [x] [NLU] Add sentiment analysis to input processing (Phase 1) #94
-- [ ] [Cognition] Implement reinforcement learning for reflex module - Refactor #95
-- [ ] [Cognition] Implement reinforcement learning for reflex module - Refactor #96
+- [x] [Cognition] Implement reinforcement learning for reflex module - Refactor #95
+- [x] [Cognition] Implement reinforcement learning for reflex module - Refactor #96
 - [x] [Infrastructure] Secure API endpoints with rate limiting (Phase 1) #97
 - [x] [NLU] Implement context-aware intent classification - Refactor #98
 - [x] [Frontend] Refactor dashboard to use React components - Testing #99
@@ -111,7 +111,7 @@
 - [x] [Cognition] Refactor memory retrieval for O(1) access - Refactor #107
 - [ ] [NLU] Implement context-aware intent classification (Phase 1) #108
 - [x] [NLU] Add support for multi-turn conversation context (Phase 2) #109
-- [ ] [Infrastructure] Add log rotation for server logs (Phase 1) #110
+- [x] [Infrastructure] Add log rotation for server logs (Phase 1) #110
 - [ ] [Cognition] Optimize decision tree traversal in PlanningUnit - Refactor #111
 - [x] [Frontend] Create settings page for brain configuration - Investigation #112
 - [x] [Frontend] Refactor dashboard to use React components - Investigation #113
@@ -147,7 +147,7 @@
 - [x] [Frontend] Add dark mode toggle to UI - Investigation #143
 - [x] [NLU] Add support for multi-turn conversation context - Testing #144
 - [ ] [Cognition] Implement reinforcement learning for reflex module (Phase 1) #145
-- [ ] [Infrastructure] Implement crash reporting service - Investigation #146
+- [x] [Infrastructure] Implement crash reporting service - Investigation #146
 - [ ] [Cognition] Implement reinforcement learning for reflex module - Optimization #147
 - [x] [Frontend] Refactor dashboard to use React components (Phase 1) #148
 - [ ] [Cognition] Create associative memory graph visualization data - Implementation #149
@@ -159,7 +159,7 @@
 - [x] [Frontend] Add robust error handling for websocket disconnections (Phase 1) #155
 - [x] [NLU] Implement fallback responses for unknown inputs - Testing #156
 - [x] [Cognition] Implement 'Sleep' state memory consolidation - Optimization #157
-- [ ] [Infrastructure] Implement crash reporting service - Testing #158
+- [x] [Infrastructure] Implement crash reporting service - Testing #158
 - [ ] [Infrastructure] Set up GitHub Actions for automated testing (Phase 2) #159
 - [x] [NLU] Integrate word2vec for better semantic understanding - Implementation #160
 - [x] [Frontend] Improve mobile responsiveness of the dashboard - Testing #161
@@ -306,7 +306,7 @@
 - [x] [Infrastructure] Add health check endpoint for monitoring - Testing #302
 - [x] [Infrastructure] Implement redis caching for frequent queries - Investigation #303
 - [x] [NLU] Add sentiment analysis to input processing - Testing #304
-- [ ] [Cognition] Create associative memory graph visualization data (Phase 2) #305
+- [x] [Cognition] Create associative memory graph visualization data (Phase 2) #305
 - [ ] [Frontend] Improve mobile responsiveness of the dashboard - Refactor #306
 - [x] [Frontend] Create settings page for brain configuration - Investigation #307
 - [x] [Frontend] Visualize real-time neuron activity with WebGL - Investigation #308
@@ -314,9 +314,9 @@
 - [x] [Cognition] Refactor memory retrieval for O(1) access - Refactor #310
 - [ ] [NLU] Improve entity extraction accuracy - Investigation #311
 - [x] [Cognition] Add 'Focus' mechanism to filter sensory input - Investigation #312
-- [ ] [Cognition] Create associative memory graph visualization data - Investigation #313
+- [x] [Cognition] Create associative memory graph visualization data - Investigation #313
 - [x] [Frontend] Add dark mode toggle to UI (Phase 1) #314
-- [ ] [Infrastructure] Add log rotation for server logs - Refactor #315
+- [x] [Infrastructure] Add log rotation for server logs - Refactor #315
 - [ ] [Cognition] Optimize decision tree traversal in PlanningUnit - Optimization #316
 - [x] [Cognition] Add 'Focus' mechanism to filter sensory input - Implementation #317
 - [ ] [Frontend] Add tooltips to cognitive state visualization - Implementation #318

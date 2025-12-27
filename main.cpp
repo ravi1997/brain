@@ -6,16 +6,30 @@
 #include <thread>
 #include <signal.h>
 #include <execinfo.h> // For stack trace
+#include <unistd.h>
+#include <fcntl.h>
 
 void crash_handler(int sig) {
-    void *array[10];
-    size_t size = backtrace(array, 10);
+    void *array[20];
+    size_t size = backtrace(array, 20);
+    
+    // Write to stderr
     fprintf(stderr, "Error: signal %d:\n", sig);
     backtrace_symbols_fd(array, size, STDERR_FILENO);
     
-    std::ofstream crash_log("crash.log", std::ios::app);
-    crash_log << "CRASH DETECTED. Signal: " << sig << "\n";
-    crash_log.close();
+    // Write to crash.log (Signal-safe open)
+    int fd = open("crash.log", O_WRONLY | O_APPEND | O_CREAT, 0644);
+    if (fd != -1) {
+        const char* msg = "CRASH DETECTED. Signal: ";
+        write(fd, msg, 24);
+        // Rough int to string to allow no malloc
+        char buf[10];
+        int len = snprintf(buf, 10, "%d\n", sig);
+        write(fd, buf, len);
+        
+        backtrace_symbols_fd(array, size, fd);
+        close(fd);
+    }
     
     exit(1);
 }

@@ -6,6 +6,7 @@ const MemoryGraph = () => {
     const canvasRef = useRef(null);
     const requestRef = useRef();
     const dataRef = useRef({ nodes: [], links: [] });
+    const draggedNodeRef = useRef(null);
 
     useEffect(() => {
         const socket = new WebSocket('ws://' + window.location.host + '/proxy/9012');
@@ -89,7 +90,10 @@ const MemoryGraph = () => {
         });
 
         // 3. Gravity to center
+        // 3. Gravity to center (and integration)
         nodes.forEach(n => {
+            if (n === draggedNodeRef.current) return; // Skip physics for dragged node
+
             n.vx += (center.x - n.x) * 0.005;
             n.vy += (center.y - n.y) * 0.005;
             n.x += n.vx;
@@ -141,6 +145,48 @@ const MemoryGraph = () => {
         return () => cancelAnimationFrame(requestRef.current);
     }, []);
 
+    const getPointerPos = (e) => {
+        const canvas = canvasRef.current;
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        // Scale in case canvas is resized via CSS
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        return {
+            x: (clientX - rect.left) * scaleX,
+            y: (clientY - rect.top) * scaleY
+        };
+    };
+
+    const handleStart = (e) => {
+        const { x, y } = getPointerPos(e);
+        const { nodes } = dataRef.current;
+        // Find clicked node
+        for (let i = nodes.length - 1; i >= 0; i--) {
+            const n = nodes[i];
+            const dist = Math.sqrt((n.x - x) ** 2 + (n.y - y) ** 2);
+            if (dist < 10 + Math.sqrt(n.val)) { // Hit radius
+                draggedNodeRef.current = n;
+                n.vx = 0; // Stop momentum
+                n.vy = 0;
+                break;
+            }
+        }
+    };
+
+    const handleMove = (e) => {
+        if (!draggedNodeRef.current) return;
+        const { x, y } = getPointerPos(e);
+        draggedNodeRef.current.x = x;
+        draggedNodeRef.current.y = y;
+        e.preventDefault(); // Prevent scrolling on touch
+    };
+
+    const handleEnd = () => {
+        draggedNodeRef.current = null;
+    };
+
     return (
         <div className="bg-slate-900 p-4 rounded-xl border border-slate-700 h-[600px] overflow-hidden flex flex-col">
             <h3 className="text-slate-400 text-sm font-semibold mb-4 uppercase tracking-wider">Associative Knowledge Graph</h3>
@@ -148,7 +194,14 @@ const MemoryGraph = () => {
                 ref={canvasRef} 
                 width={800} 
                 height={600} 
-                className="w-full h-full cursor-move"
+                className="w-full h-full cursor-move touch-none"
+                onMouseDown={handleStart}
+                onMouseMove={handleMove}
+                onMouseUp={handleEnd}
+                onMouseLeave={handleEnd}
+                onTouchStart={handleStart}
+                onTouchMove={handleMove}
+                onTouchEnd={handleEnd}
             />
         </div>
     );
