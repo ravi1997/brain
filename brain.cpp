@@ -1187,3 +1187,46 @@ void Brain::evaluate_goals() {
          emit_thought("Goal Selected: Interaction (Score: " + std::to_string(winner.score) + ")");
     }
 }
+
+// Mega-Batch 7: Context & NLU features
+
+void Brain::update_context(const std::string& role, const std::string& text, const std::string& intent) {
+    if (conversation_history.size() >= 5) {
+        conversation_history.pop_front();
+    }
+    conversation_history.push_back({role, text, intent, std::time(nullptr)});
+}
+
+std::string Brain::resolve_intent(const std::string& text) {
+    std::string resolved = text;
+    
+    // Simple Pronoun Resolution (Heuristic)
+    if (!conversation_history.empty()) {
+        const auto& last = conversation_history.back();
+        
+        // If text is short question "Why?"
+        if (text.length() < 10 && (text.find("Why") != std::string::npos || text.find("why") != std::string::npos)) {
+            // Context: User asked "Why?"
+            // Append previous context if available
+             resolved += " (Context: " + last.text + ")";
+        }
+        
+        // "He" / "She" / "It" resolution
+        // Very basic: If input has "he" and last turn had an entity, substitute.
+        // Requires entity extraction from history, doing a simplified version here.
+        if (text.find(" he ") != std::string::npos || text.find("He ") == 0) {
+             // Find last entity
+             for (auto it = conversation_history.rbegin(); it != conversation_history.rend(); ++it) {
+                 std::vector<std::string> entities = extract_entities(it->text);
+                 if (!entities.empty()) {
+                     // Replace "he" with Entity
+                     // In a real system, we'd use regex replace. For now, just appending context.
+                     resolved += " [Refers to: " + entities[0] + "]";
+                     break;
+                 }
+             }
+        }
+    }
+    
+    return resolved;
+}

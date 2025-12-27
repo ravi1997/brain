@@ -93,6 +93,16 @@ public:
     
     // NLU Helpers
     std::vector<std::string> extract_entities(const std::string& text);
+    std::string resolve_intent(const std::string& text);
+    void update_context(const std::string& role, const std::string& text, const std::string& intent);
+    
+    struct ContextItem {
+        std::string role; // "User" or "Brain"
+        std::string text;
+        std::string intent;
+        std::time_t timestamp;
+    };
+    std::deque<ContextItem> conversation_history; // Stores last N turns
 
     Personality personality;
     Emotions emotions;

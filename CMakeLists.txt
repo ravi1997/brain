@@ -29,7 +29,8 @@ endif()
 include_directories(${LIBPQ_INCLUDE_DIR})
 
 # The main executable
-add_executable(brain_replica main.cpp dnn.cpp brain.cpp memory_store.cpp server.cpp reflex.cpp task_manager.cpp planning_unit.cpp postgres_client.cpp)
+# The main executable
+add_executable(brain_replica main.cpp dnn.cpp brain.cpp memory_store.cpp server.cpp reflex.cpp task_manager.cpp planning_unit.cpp postgres_client.cpp postgres_storage.cpp crash_reporter.cpp)
 
 # Enable Precompiled Headers (PCH) for faster builds
 target_precompile_headers(brain_replica PRIVATE stable.hpp)

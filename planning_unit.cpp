@@ -9,42 +9,34 @@ PlanningUnit::PlanningUnit() {
 
 void PlanningUnit::build_tree() {
     root = std::make_unique<PlanNode>("ROOT", 1.0);
-    
-    // Level 1
-    auto research = std::make_unique<PlanNode>("RESEARCH", 0.3, root.get());
-    auto interact = std::make_unique<PlanNode>("INTERACT", 0.3, root.get());
-    auto sleep = std::make_unique<PlanNode>("SLEEP", 0.2, root.get());
-    auto idle = std::make_unique<PlanNode>("IDLE", 0.2, root.get());
-    
-    root->children.push_back(std::move(research));
-    root->children.push_back(std::move(interact));
-    root->children.push_back(std::move(sleep));
-    root->children.push_back(std::move(idle));
-
-    // Level 2 for Research
-    auto& r_node = root->children[0];
-    r_node->children.push_back(std::make_unique<PlanNode>("DEEP_SCAN", 0.6, r_node.get()));
-    r_node->children.push_back(std::make_unique<PlanNode>("BROWSING", 0.4, r_node.get()));
-
-    // Level 2 for Interact
-    auto& i_node = root->children[1];
-    i_node->children.push_back(std::make_unique<PlanNode>("ASK_QUESTION", 0.5, i_node.get()));
-    i_node->children.push_back(std::make_unique<PlanNode>("PROVIDE_INFO", 0.5, i_node.get()));
+    // Tree is now built dynamically during MCTS expansion
 }
 
 std::string PlanningUnit::decide_best_action(const std::string& context, double energy, double boredom) {
-    // Run MCTS for 100 iterations
-    for (int i = 0; i < 100; ++i) {
+    // Run MCTS for 200 iterations (increased for detailed search)
+    for (int i = 0; i < 200; ++i) {
         PlanNode* selected = select(root.get());
-        if (selected->visits > 0 && !selected->action.empty() && selected->children.empty()) {
-            // Expansion might happen here if we had dynamic actions, 
-            // but for now we follow the static tree structure.
+        
+        // Dynamic Expansion
+        if (selected->visits > 3 && selected->children.empty()) { // Expand if visited enough
+            expand(selected);
+            if (!selected->children.empty()) {
+                selected = selected->children[0].get(); // Move to new child
+            }
         }
+        
         double reward = simulate(selected, energy, boredom);
         backpropagate(selected, reward);
     }
+    
+    // Pruning: Remove nodes with very low visits to save memory (long-running optim)
+    // For now, just picking best action
+    
+    if (root->children.empty()) {
+        // Fallback if no expansion happened (shouldn't happen with 200 iters)
+        expand(root.get()); 
+    }
 
-    // Pick child with highest visits (robust child)
     if (root->children.empty()) return "IDLE";
     
     PlanNode* best = root->children[0].get();
@@ -54,7 +46,7 @@ std::string PlanningUnit::decide_best_action(const std::string& context, double 
         }
     }
 
-    // If best has children, drill down
+    // Drill down
     while (!best->children.empty()) {
         PlanNode* next_best = best->children[0].get();
         for (const auto& child : best->children) {
@@ -66,6 +58,22 @@ std::string PlanningUnit::decide_best_action(const std::string& context, double 
     }
 
     return best->action;
+}
+
+void PlanningUnit::expand(PlanNode* node) {
+    // Logic to generate children based on node type
+    if (node->action == "ROOT") {
+        node->children.push_back(std::make_unique<PlanNode>("RESEARCH", 0.3, node));
+        node->children.push_back(std::make_unique<PlanNode>("INTERACT", 0.3, node));
+        node->children.push_back(std::make_unique<PlanNode>("SLEEP", 0.2, node));
+        node->children.push_back(std::make_unique<PlanNode>("IDLE", 0.2, node));
+    } else if (node->action == "RESEARCH") {
+        node->children.push_back(std::make_unique<PlanNode>("DEEP_SCAN", 0.6, node));
+        node->children.push_back(std::make_unique<PlanNode>("BROWSING", 0.4, node));
+    } else if (node->action == "INTERACT") {
+        node->children.push_back(std::make_unique<PlanNode>("ASK_QUESTION", 0.5, node));
+        node->children.push_back(std::make_unique<PlanNode>("PROVIDE_INFO", 0.5, node));
+    }
 }
 
 PlanNode* PlanningUnit::select(PlanNode* node) {

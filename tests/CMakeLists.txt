@@ -19,6 +19,8 @@ add_executable(brain_tests
     ../reflex.cpp
     ../planning_unit.cpp
     ../postgres_client.cpp
+    ../postgres_storage.cpp
+    ../crash_reporter.cpp
     test_memory.cpp
     test_nlu.cpp
     test_context.cpp
@@ -29,6 +31,9 @@ add_executable(brain_tests
     test_reflex_rl.cpp
     test_reflex_fuzzy.cpp
     test_emotion_logic.cpp
+    test_nlu_context.cpp
+    test_planning_dynamic.cpp
+    test_postgres.cpp
 )
 
 target_link_libraries(brain_tests
