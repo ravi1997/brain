@@ -7,30 +7,45 @@ on:
     branches: [ main ]
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
 
     services:
-      redis:
-        image: redis
+      postgres:
+        image: pgvector/pgvector:pg15
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: brain_db
         ports:
-          - 6379:6379
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
 
-    - name: Install dependencies
+    - name: Install Dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y cmake g++ libsqlite3-dev libhiredis-dev libtbb-dev
+        sudo apt-get install -y build-essential cmake libpq-dev
 
     - name: Configure CMake
-      run: cmake -B build
+      run: cmake -B build -S .
 
     - name: Build
       run: cmake --build build
 
     - name: Run Tests
+      env:
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_USER: user
+        DB_PASS: password
+        DB_NAME: brain_db
       run: |
         cd build
         ctest --output-on-failure

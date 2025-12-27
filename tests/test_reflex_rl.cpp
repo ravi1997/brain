@@ -58,6 +58,8 @@ TEST_F(ReflexRLTest, Persistence) {
     for (const auto& r : instincts["hello"]) {
         if (r.text == "Greetings.") {
             EXPECT_GT(r.weight, 5.0);
+            EXPECT_GT(r.usage_count, 0); // Verify usage count
+            EXPECT_GT(r.success_score, 0.0); // Verify cumulative score
             found = true;
             break;
         }

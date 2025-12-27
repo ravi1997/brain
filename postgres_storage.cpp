@@ -1,6 +1,8 @@
 #include "postgres_storage.hpp"
 #include <iostream>
 #include <stdexcept>
+#include <sstream>
+#include <vector>
 
 PostgresStorage::PostgresStorage(const std::string& conn_str) 
     : connection_string(conn_str), conn(nullptr) {}
@@ -24,12 +26,21 @@ bool PostgresStorage::connect() {
         return false;
     }
 
+    // Enable pgvector extension
+    execute_non_query("CREATE EXTENSION IF NOT EXISTS vector");
+
     // Ensure table exists
     execute_non_query(
         "CREATE TABLE IF NOT EXISTS brain_kv_store ("
         "key TEXT PRIMARY KEY, "
-        "value TEXT)" 
-    ); // Assuming pgvector extension is available, simplistic fallback if not
+        "value TEXT, "
+        "embedding vector(384))"
+    );
+
+    // Ensure embedding column exists (for migration)
+    execute_non_query(
+        "ALTER TABLE brain_kv_store ADD COLUMN IF NOT EXISTS embedding vector(384)"
+    );
 
     return true;
 }
@@ -76,13 +87,94 @@ std::string PostgresStorage::retrieve_memory(const std::string& key) {
 }
 
 // Placeholder for embedding storage (requires pgvector setup)
+// Helper to serialize vector to string for pgvector
+static std::string vector_to_string(const std::vector<double>& vec) {
+    std::string s = "[";
+    for (size_t i = 0; i < vec.size(); ++i) {
+        s += std::to_string(vec[i]);
+        if (i < vec.size() - 1) s += ",";
+    }
+    s += "]";
+    return s;
+}
+
+static std::vector<double> string_to_vector(const std::string& s) {
+    std::vector<double> vec;
+    if (s.empty() || s.front() != '[') return vec;
+    
+    std::string content = s.substr(1, s.length() - 2); // Remove []
+    std::stringstream ss(content);
+    std::string item;
+    
+    while (std::getline(ss, item, ',')) {
+        try {
+            vec.push_back(std::stod(item));
+        } catch (...) {}
+    }
+    return vec;
+}
+
 void PostgresStorage::store_embedding(const std::string& key, const std::vector<double>& embedding) {
-    // Implementation deferred until pgvector is confirmed
+    if (!check_status()) return;
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    std::string embed_str = vector_to_string(embedding);
+    const char* paramValues[2] = { key.c_str(), embed_str.c_str() };
+
+    // Upsert: Insert if new (with empty value), or update embedding if exists
+    PGresult* res = PQexecParams(conn,
+        "INSERT INTO brain_kv_store (key, value, embedding) VALUES ($1, '', $2) "
+        "ON CONFLICT (key) DO UPDATE SET embedding = $2",
+        2, nullptr, paramValues, nullptr, nullptr, 0);
+
+    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+        std::cerr << "[Postgres] Store Embedding failed: " << PQerrorMessage(conn) << std::endl;
+    }
+    PQclear(res);
+}
+
+std::vector<double> PostgresStorage::retrieve_embedding(const std::string& key) {
+    if (!check_status()) return {};
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    const char* paramValues[1] = { key.c_str() };
+    PGresult* res = PQexecParams(conn,
+        "SELECT embedding FROM brain_kv_store WHERE key = $1",
+        1, nullptr, paramValues, nullptr, nullptr, 0);
+
+    std::vector<double> vec;
+    if (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0) {
+        char* val = PQgetvalue(res, 0, 0);
+        if (val) vec = string_to_vector(val);
+    }
+    PQclear(res);
+    return vec;
 }
 
 std::vector<std::string> PostgresStorage::search_similar(const std::vector<double>& embedding, int limit) {
-    // Implementation deferred
-    return {};
+    if (!check_status()) return {};
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    std::string embed_str = vector_to_string(embedding);
+    std::string limit_str = std::to_string(limit);
+    const char* paramValues[2] = { embed_str.c_str(), limit_str.c_str() };
+
+    // Cosine distance sort
+    PGresult* res = PQexecParams(conn,
+        "SELECT key FROM brain_kv_store ORDER BY embedding <=> $1 LIMIT $2",
+        2, nullptr, paramValues, nullptr, nullptr, 0);
+
+    std::vector<std::string> results;
+    if (PQresultStatus(res) == PGRES_TUPLES_OK) {
+        int rows = PQntuples(res);
+        for (int i = 0; i < rows; ++i) {
+            results.push_back(PQgetvalue(res, i, 0));
+        }
+    } else {
+        std::cerr << "[Postgres] Search failed: " << PQerrorMessage(conn) << std::endl;
+    }
+    PQclear(res);
+    return results;
 }
 
 bool PostgresStorage::begin_transaction() {

@@ -6,9 +6,8 @@
 #include <atomic>
 #include <functional>
 #include <netinet/in.h>
-#include <deque>
-#include <chrono>
 #include <map>
+#include "rate_limiter.hpp"
 
 class TcpServer {
 public:
@@ -48,9 +47,11 @@ private:
     std::mutex clients_mutex_;
     
     // Rate Limiting
-    std::map<uint32_t, std::deque<std::chrono::steady_clock::time_point>> rate_limits_;
-    std::mutex rate_limit_mutex_;
-    static constexpr size_t MAX_REQS_PER_MIN = 30;
+    RateLimiter rate_limiter_;
+    // Remove old manual map
+    // std::map<uint32_t, std::deque<std::chrono::steady_clock::time_point>> rate_limits_;
+    // std::mutex rate_limit_mutex_;
+    // static constexpr size_t MAX_REQS_PER_MIN = 30;
 
     MessageCallback input_callback_;
 };

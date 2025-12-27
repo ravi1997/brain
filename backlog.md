@@ -4,10 +4,10 @@
 - [x] [NLU] Improve entity extraction accuracy - Optimization #1
 
 ## 🧠 Mega-Batch 8: Learning & Refinement
-- [ ] [NLU] Integrate `pgvector` for semantic memory (Embeddings)
-- [ ] [Cognition] Implement Reinforcement Learning for Reflexes (Emotion feedback)
-- [ ] [Cognition] Complete 'Sleep' cycle memory consolidation
-- [ ] [Infrastructure] Stabilize GitHub Actions for CI
+- [x] [NLU] Integrate `pgvector` for semantic memory (Embeddings)
+- [x] [Cognition] Implement Reinforcement Learning for Reflexes (Emotion feedback)
+- [x] [Cognition] Complete 'Sleep' cycle memory consolidation
+- [x] [Infrastructure] Stabilize GitHub Actions for CI
 
 - [x] [Infrastructure] Dockerize build environment for consistent CI (Phase 1) #2
 - [x] [NLU] Implement fuzzy matching for reflexes (Levenshtein) - Implementation #Completed

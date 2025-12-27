@@ -17,6 +17,8 @@ public:
     struct WeightedResponse {
         std::string text;
         double weight;
+        int usage_count = 0;
+        double success_score = 0.0;
     };
     std::map<std::string, std::vector<WeightedResponse>>& get_instincts() { return keyword_responses; }
 

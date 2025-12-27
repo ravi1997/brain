@@ -18,6 +18,7 @@ public:
     
     // For vector search support (future)
     virtual void store_embedding(const std::string& key, const std::vector<double>& embedding) = 0;
+    virtual std::vector<double> retrieve_embedding(const std::string& key) = 0;
     virtual std::vector<std::string> search_similar(const std::vector<double>& embedding, int limit) = 0;
 
     // Transaction support

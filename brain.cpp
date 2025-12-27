@@ -184,14 +184,20 @@ std::string Brain::interact(const std::string& input_text) {
     emotions.happiness = std::min(1.0, emotions.happiness + 0.1);
     emotions.boredom = std::max(0.0, emotions.boredom - 0.2); // Not bored anymore
 
-    // MEGA-BATCH 3: Reflex Reinforcement
-    // If input is "good" or "nice", reinforce last response
-    if (input_text == "good" || input_text == "nice" || input_text == "correct") {
-        if (!conversation_context.empty()) {
-            // Find the last brain response and its keyword trigger
-            // This is a simplification; in reality we'd track the last reflex hit
-            reflex.reinforce("hello", "Greetings.", 0.2); // Example reinforcement
-            emit_log("[Reflex]: Positive reinforcement received. Adjusting weights...");
+    // MEGA-BATCH 3 & 8: Reflex Reinforcement
+    if (!last_reflex_trigger.empty()) {
+        double reward = 0.0;
+        if (input_text == "good" || input_text == "nice" || input_text == "correct" || input_text == "thanks") {
+            reward = 0.2;
+            emit_log("[Reflex]: Positive feedback received.");
+        } else if (input_text == "bad" || input_text == "wrong" || input_text == "stupid") {
+            reward = -0.2;
+            emit_log("[Reflex]: Negative feedback received.");
+        }
+        
+        if (reward != 0.0) {
+            update_reflex_learning(last_reflex_trigger, reward);
+            last_reflex_trigger = ""; // Clear after reinforcement
         }
     }
 
@@ -213,6 +219,11 @@ std::string Brain::interact(const std::string& input_text) {
         emit_log("[Reflex]: Activated for '" + input_text + "'");
         emotions.boredom = std::max(0.0, emotions.boredom - 0.1);
         emotions.happiness = std::min(1.0, emotions.happiness + 0.05);
+        
+        // Track for learning
+        last_reflex_trigger = input_text; // Simple trigger mapping
+        last_reflex_response = instinct;
+
         conversation_context.push_back("Brain: " + instinct);
         while (conversation_context.size() > MAX_CONTEXT_TURNS) conversation_context.pop_front();
         return instinct;
@@ -517,8 +528,22 @@ std::vector<std::string> Brain::extract_entities(const std::string& text) {
     
     // 1. Regex Extraction for specific patterns
     
-    // Dates / Times (Simple)
-    // Matches: 5pm, 10:30am, today, tomorrow, yesterday
+    // Email
+    std::regex email_regex(R"([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})");
+    auto email_begin = std::sregex_iterator(text.begin(), text.end(), email_regex);
+    auto email_end = std::sregex_iterator();
+    for (std::sregex_iterator i = email_begin; i != email_end; ++i) {
+        entities.push_back(i->str());
+    }
+
+    // Dates (ISO: YYYY-MM-DD or US: MM/DD/YYYY)
+    std::regex date_regex(R"(\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}/\d{1,2}/\d{2,4}\b)");
+    auto date_begin = std::sregex_iterator(text.begin(), text.end(), date_regex);
+    for (std::sregex_iterator i = date_begin; i != email_end; ++i) {
+         entities.push_back(i->str());
+    }
+    
+    // Proper Noun Extraction (Fallback to Capitalization)
     std::stringstream ss(text);
     std::string word;
     std::string current_candidate;
@@ -534,6 +559,8 @@ std::vector<std::string> Brain::extract_entities(const std::string& text) {
             // Single word filtering
             if (started_at_start && is_stop_word(candidate)) keep = false;
             else if (candidate.length() <= 1) keep = false;
+            // Filter "I" or "I'm" if stuck
+            if (candidate == "I" || candidate == "I'm") keep = false; 
         }
         
         if (keep) {
@@ -656,18 +683,10 @@ void Brain::sleep() {
     std::lock_guard<std::recursive_mutex> lock(brain_mutex);
     safe_print("[Brain is consolidating memories... zzz...]");
     
-    // MEGA-BATCH 3: Memory Consolidation
-    // Move high-sentiment or frequent entities to long-term SQL if not already there
-    for (const auto& turn : conversation_context) {
-        if (turn.find("User: ") == 0) {
-            std::string q = turn.substr(6);
-            // Logic to determine importance (e.g. sentiment)
-            if (std::abs(analyze_sentiment(q)) > 0.5) {
-                memory_store->store("Consolidated", q, "Interaction");
-            }
-        }
-    }
-
+    // MEGA-BATCH 8: Enhanced Consolidation
+    consolidate_memories();
+    
+    // Original Network Consolidation
     memory_center->network.consolidate_memories(memory_center->current_activity);
     cognitive_center->network.consolidate_memories(cognitive_center->current_activity);
     
@@ -678,6 +697,64 @@ void Brain::sleep() {
     emotions.energy = 1.0;
     emotions.happiness = std::min(1.0, emotions.happiness + 0.2);
     emotions.boredom = 0.0;
+}
+
+void Brain::update_reflex_learning(const std::string& trigger, double reward) {
+    // Find key in reflex map that matches trigger (fuzzy or exact)
+    // For simplicity, we assume we tracked the key, but we tracked the full input.
+    // We'll rely on Reflex::reinforce checking containment/fuzzy again inside, 
+    // or we should have stored the key. For now, try to reinforce with the input as "keyword"
+    // CAUTION: Reflex::reinforce takes a keyword. We need to pass the keyword that triggered it.
+    // Implementation Gaps: Reflex::get_reaction doesn't return the key.
+    // Fix: We'll brute force reinforce for now or rely on an improved Reflex class later.
+    // Actually, Reflex::reinforce iterates.
+    // Let's iterate keys and find one that matches input.
+    auto& instincts = reflex.get_instincts();
+    std::string best_key;
+    for(const auto& [key, val] : instincts) {
+        if (trigger.find(key) != std::string::npos) {
+            reflex.reinforce(key, last_reflex_response, reward); // Heuristic
+            return;
+        }
+    }
+}
+
+void Brain::consolidate_memories() {
+    if (!memory_store) return;
+    
+    // Move high-importance short-term memories to long-term SQL
+    for (auto& item : conversation_history) {
+        if (item.consolidated) continue;
+
+        if (item.role == "User") {
+            // Calculate Importance (Sentiment magnitude)
+            double sentiment = std::abs(analyze_sentiment(item.text));
+            if (sentiment > 0.5 || item.text.length() > 20) {
+                 // Generate Embedding
+                 std::vector<double> embedding(VECTOR_DIM, 0.0);
+                 auto tokens = tokenize(item.text);
+                 int count = 0;
+                 for(const auto& t : tokens) {
+                     if (word_embeddings.count(t)) {
+                         dnn::add_vectors(embedding, word_embeddings[t]);
+                         count++;
+                     }
+                 }
+                 if (count > 0) {
+                     for(auto& v : embedding) v /= count;
+                 }
+                 
+                 // Store with embedding
+                 // Using item.intent as key/category? Or just "Consolidated_Timestamp"
+                 std::string key = "mem_" + std::to_string(item.timestamp) + "_" + std::to_string(rand() % 1000);
+                 memory_store->store("Consolidated", item.text, "Sleep"); // Standard KV
+                 memory_store->store_embedding(key, embedding); // Vector
+                 
+                 emit_log("[Memory]: Consolidated '" + item.text.substr(0, std::min((size_t)20, item.text.length())) + "...'");
+            }
+        }
+        item.consolidated = true;
+    }
 }
 
 std::string Brain::research(const std::string& topic) {
@@ -1194,39 +1271,60 @@ void Brain::update_context(const std::string& role, const std::string& text, con
     if (conversation_history.size() >= 5) {
         conversation_history.pop_front();
     }
-    conversation_history.push_back({role, text, intent, std::time(nullptr)});
+    conversation_history.push_back({role, text, intent, std::time(nullptr), false});
 }
 
 std::string Brain::resolve_intent(const std::string& text) {
     std::string resolved = text;
     
-    // Simple Pronoun Resolution (Heuristic)
-    if (!conversation_history.empty()) {
+    if (conversation_history.empty()) return resolved;
+
+    // 1. Short Follow-up Context Injection
+    // Matches "Why?", "And then?", "But why?"
+    // If text is short and starts with connector/question
+    bool is_short = text.length() < 20;
+    std::regex follow_up_pattern(R"(^(Why|why|How about|how about|And|and|But|but|What about|what about).*)");
+    if (is_short && std::regex_match(text, follow_up_pattern)) {
         const auto& last = conversation_history.back();
-        
-        // If text is short question "Why?"
-        if (text.length() < 10 && (text.find("Why") != std::string::npos || text.find("why") != std::string::npos)) {
-            // Context: User asked "Why?"
-            // Append previous context if available
-             resolved += " (Context: " + last.text + ")";
+        resolved += " (Context: " + last.text + ")";
+    }
+
+    // 2. Pronoun Resolution (He/She/It/This/That)
+    // We look for the most recent entity in conversation history.
+    std::regex pronoun_regex(R"(\b(he|He|she|She|it|It|this|This|that|That|they|They)\b)");
+    if (std::regex_search(text, pronoun_regex)) {
+        // Search backwards for an entity
+        std::string target_entity;
+        for (auto it = conversation_history.rbegin(); it != conversation_history.rend(); ++it) {
+            std::vector<std::string> entities = extract_entities(it->text);
+            if (!entities.empty()) {
+                // Pick the first entity as candidate
+                // Improvements: Distinction between persons/objects based on pronoun mapping
+                target_entity = entities[0];
+                break;
+            }
         }
         
-        // "He" / "She" / "It" resolution
-        // Very basic: If input has "he" and last turn had an entity, substitute.
-        // Requires entity extraction from history, doing a simplified version here.
-        if (text.find(" he ") != std::string::npos || text.find("He ") == 0) {
-             // Find last entity
-             for (auto it = conversation_history.rbegin(); it != conversation_history.rend(); ++it) {
-                 std::vector<std::string> entities = extract_entities(it->text);
-                 if (!entities.empty()) {
-                     // Replace "he" with Entity
-                     // In a real system, we'd use regex replace. For now, just appending context.
-                     resolved += " [Refers to: " + entities[0] + "]";
-                     break;
-                 }
-             }
+        if (!target_entity.empty()) {
+             // Instead of blind replace which might be wrong, we append context reference
+             // Blind replace: "He went..." -> "Bob went..." is risky if multiple pronouns.
+             // Safer: Append "[Refers to: Bob]"
+             resolved += " [Refers to: " + target_entity + "]";
         }
     }
     
     return resolved;
+}
+
+std::vector<std::string> Brain::find_similar_concepts(const std::string& term) {
+    if (!memory_store) return {};
+    auto vec = memory_store->retrieve_embedding(term); // Exact match first
+    if (vec.empty()) {
+        // Fallback: try lowercase
+        std::string lower = term;
+        std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+        vec = memory_store->retrieve_embedding(lower);
+    }
+    if (vec.empty()) return {}; 
+    return memory_store->search_similar(vec, 5);
 }

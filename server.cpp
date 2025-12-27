@@ -6,7 +6,8 @@
 #include <algorithm>
 #include <iostream>
 
-TcpServer::TcpServer(int port, std::string name) : port_(port), name_(std::move(name)) {}
+TcpServer::TcpServer(int port, std::string name) 
+    : port_(port), name_(std::move(name)), rate_limiter_(50, 1) {}
 
 TcpServer::~TcpServer() {
     stop();
@@ -146,19 +147,5 @@ void TcpServer::client_handler(int socket_fd) {
 }
 
 bool TcpServer::check_rate_limit(uint32_t ip) {
-    std::lock_guard<std::mutex> lock(rate_limit_mutex_);
-    auto now = std::chrono::steady_clock::now();
-    auto& reqs = rate_limits_[ip];
-    
-    // Remove requests older than 1 minute
-    while (!reqs.empty() && std::chrono::duration_cast<std::chrono::minutes>(now - reqs.front()).count() >= 1) {
-        reqs.pop_front();
-    }
-    
-    if (reqs.size() >= MAX_REQS_PER_MIN) {
-        return false;
-    }
-    
-    reqs.push_back(now);
-    return true;
+    return rate_limiter_.allow(std::to_string(ip));
 }

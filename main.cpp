@@ -9,34 +9,10 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-void crash_handler(int sig) {
-    void *array[20];
-    size_t size = backtrace(array, 20);
-    
-    // Write to stderr
-    fprintf(stderr, "Error: signal %d:\n", sig);
-    backtrace_symbols_fd(array, size, STDERR_FILENO);
-    
-    // Write to crash.log (Signal-safe open)
-    int fd = open("crash.log", O_WRONLY | O_APPEND | O_CREAT, 0644);
-    if (fd != -1) {
-        const char* msg = "CRASH DETECTED. Signal: ";
-        write(fd, msg, 24);
-        // Rough int to string to allow no malloc
-        char buf[10];
-        int len = snprintf(buf, 10, "%d\n", sig);
-        write(fd, buf, len);
-        
-        backtrace_symbols_fd(array, size, fd);
-        close(fd);
-    }
-    
-    exit(1);
-}
+#include "crash_reporter.hpp"
 
 int main() {
-    signal(SIGSEGV, crash_handler);
-    signal(SIGABRT, crash_handler);
+    CrashReporter::init("./logs");
     
     std::cout << "Initializing Brain Replica..." << std::endl;
     

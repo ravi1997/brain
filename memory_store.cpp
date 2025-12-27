@@ -8,6 +8,7 @@
 
 MemoryStore::MemoryStore(const std::string& conn_str) : conn_str_(conn_str) {
     pg_client = std::make_unique<PostgresClient>(conn_str);
+    kv_store = std::make_unique<PostgresStorage>(conn_str);
 }
 
 MemoryStore::~MemoryStore() {
@@ -17,6 +18,7 @@ MemoryStore::~MemoryStore() {
 bool MemoryStore::init() {
     std::lock_guard<std::mutex> lock(db_mutex_);
     if (!pg_client->connect()) return false;
+    if (kv_store && !kv_store->connect()) return false;
 
     // Create table if not exists (PostgreSQL syntax)
     const char* sql = "CREATE TABLE IF NOT EXISTS memories ("
@@ -256,4 +258,18 @@ void MemoryStore::clear() {
     inverted_index_.clear();
     // Cache remains, but since we use TRUNCATE identity, new IDs will match old ones
     // and might cause incorrect cache hits. We should probably flush Redis too.
+}
+
+void MemoryStore::store_embedding(const std::string& key, const std::vector<double>& embedding) {
+    if (kv_store) kv_store->store_embedding(key, embedding);
+}
+
+std::vector<double> MemoryStore::retrieve_embedding(const std::string& key) {
+    if (kv_store) return kv_store->retrieve_embedding(key);
+    return {};
+}
+
+std::vector<std::string> MemoryStore::search_similar(const std::vector<double>& embedding, int limit) {
+    if (kv_store) return kv_store->search_similar(embedding, limit);
+    return {};
 }

@@ -16,6 +16,7 @@ public:
     std::string retrieve_memory(const std::string& key) override;
 
     void store_embedding(const std::string& key, const std::vector<double>& embedding) override;
+    std::vector<double> retrieve_embedding(const std::string& key) override;
     std::vector<std::string> search_similar(const std::vector<double>& embedding, int limit) override;
     
     // Transaction support

@@ -18,6 +18,8 @@ void CrashReporter::init(const std::string& log_dir) {
     std::signal(SIGSEGV, signal_handler);
     std::signal(SIGABRT, signal_handler);
     std::signal(SIGFPE, signal_handler);
+    std::signal(SIGILL, signal_handler);
+    std::signal(SIGBUS, signal_handler);
 }
 
 void CrashReporter::signal_handler(int signal) {

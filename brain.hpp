@@ -101,12 +101,19 @@ public:
         std::string text;
         std::string intent;
         std::time_t timestamp;
+        bool consolidated = false;
     };
     std::deque<ContextItem> conversation_history; // Stores last N turns
 
     Personality personality;
     Emotions emotions;
     Reflex reflex;
+    std::string last_reflex_trigger;
+    std::string last_reflex_response;
+    void update_reflex_learning(const std::string& trigger, double reward);
+    void consolidate_memories(); // Sleep cycle task
+    std::vector<std::string> find_similar_concepts(const std::string& term);
+
     TaskManager task_manager;
     std::unique_ptr<PlanningUnit> planning_unit;
     
@@ -141,7 +148,7 @@ public:
 
     // Word-based hashing (10000 buckets)
     static constexpr size_t VOCAB_SIZE = 10000; 
-    static constexpr size_t VECTOR_DIM = 256;  // Increased dimension for better capacity
+    static constexpr size_t VECTOR_DIM = 384;  // Updated for pgvector compatibility (MiniLM standard)
     
     // Reverse mapping for decoding
     // Reverse mapping for decoding

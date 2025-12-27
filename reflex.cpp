@@ -115,6 +115,8 @@ void Reflex::reinforce(const std::string& keyword, const std::string& response, 
         for (auto& choice : keyword_responses[keyword]) {
             if (choice.text == response) {
                 choice.weight = std::max(0.1, choice.weight + reward);
+                choice.usage_count++;
+                choice.success_score += reward;
                 return;
             }
         }
@@ -130,7 +132,12 @@ void Reflex::save(const std::string& filename) {
     for (const auto& [keyword, responses] : keyword_responses) {
         json j_responses = json::array();
         for (const auto& r : responses) {
-            j_responses.push_back({{"text", r.text}, {"weight", r.weight}});
+            j_responses.push_back({
+                {"text", r.text}, 
+                {"weight", r.weight},
+                {"usage_count", r.usage_count},
+                {"success_score", r.success_score}
+            });
         }
         j[keyword] = j_responses;
     }
@@ -147,7 +154,12 @@ void Reflex::load(const std::string& filename) {
         for (auto& [keyword, j_responses] : j.items()) {
             std::vector<WeightedResponse> responses;
             for (const auto& item : j_responses) {
-                responses.push_back({item["text"], item["weight"]});
+                WeightedResponse wr;
+                wr.text = item["text"];
+                wr.weight = item["weight"];
+                wr.usage_count = item.value("usage_count", 0);
+                wr.success_score = item.value("success_score", 0.0);
+                responses.push_back(wr);
             }
             if (!responses.empty()) {
                 keyword_responses[keyword] = responses;
