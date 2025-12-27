@@ -106,4 +106,8 @@ namespace dnn {
         void load(std::istream &is);
     };
 
+    // Utilities [Mega-Batch 6]
+    void add_vectors(std::vector<double>& dest, const std::vector<double>& src);
+    double cosine_distance(const std::vector<double>& a, const std::vector<double>& b);
+
 } // namespace dnn

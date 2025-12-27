@@ -27,6 +27,8 @@ add_executable(brain_tests
     test_nlu_improved.cpp
     test_emotion_unit.cpp
     test_reflex_rl.cpp
+    test_reflex_fuzzy.cpp
+    test_emotion_logic.cpp
 )
 
 target_link_libraries(brain_tests

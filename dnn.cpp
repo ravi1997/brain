@@ -412,4 +412,26 @@ namespace dnn {
          for(auto& l : plastic_layers_) l.load(is);
     }
 
+    // Mega-Batch 6: Utilities
+    void add_vectors(std::vector<double>& dest, const std::vector<double>& src) {
+        if (dest.size() != src.size()) return;
+        for (size_t i = 0; i < dest.size(); ++i) {
+            dest[i] += src[i];
+        }
+    }
+
+    double cosine_distance(const std::vector<double>& a, const std::vector<double>& b) {
+        if (a.size() != b.size() || a.empty()) return 1.0;
+        
+        double dot = 0.0, norm_a = 0.0, norm_b = 0.0;
+        for (size_t i = 0; i < a.size(); ++i) {
+            dot += a[i] * b[i];
+            norm_a += a[i] * a[i];
+            norm_b += b[i] * b[i];
+        }
+        
+        if (norm_a == 0 || norm_b == 0) return 1.0;
+        return 1.0 - (dot / (std::sqrt(norm_a) * std::sqrt(norm_b)));
+    }
+
 } // namespace dnn

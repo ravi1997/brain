@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include "dnn.hpp"
 
 class Reflex {
 public:
@@ -22,4 +23,7 @@ public:
 private:
     std::map<std::string, std::vector<WeightedResponse>> keyword_responses;
     bool contains(const std::string& input, const std::string& key);
+    
+    // Mega-Batch 6
+    std::string fuzzy_match(const std::string& input);
 };

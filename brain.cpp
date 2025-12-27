@@ -816,29 +816,7 @@ void Brain::automata_loop() {
         std::this_thread::sleep_for(std::chrono::seconds(2)); // Tick every 2s
 
         // 1. Evaluate Needs & Generate Goals
-        {
-            std::lock_guard<std::recursive_mutex> lock(brain_mutex);
-            
-            // Decided to pick best action using MCTS
-            std::string best_move = planning_unit->decide_best_action(focus_topic, emotions.energy, emotions.boredom);
-            
-            if (best_move == "RESEARCH" || best_move == "DEEP_SCAN" || best_move == "BROWSING") {
-                if (emotions.energy > 0.3) {
-                    std::string topic = find_curiosity_topic();
-                    task_manager.add_task("Research " + topic, TaskType::RESEARCH, TaskPriority::LOW);
-                    emotions.boredom = std::max(0.0, emotions.boredom - 0.2);
-                }
-            } else if (best_move == "SLEEP") {
-                if (emotions.energy < 0.5) {
-                    task_manager.add_task("Sleep Cycle", TaskType::SLEEP, TaskPriority::MEDIUM);
-                }
-            } else if (best_move == "ASK_QUESTION" || best_move == "PROVIDE_INFO") {
-                 // Trigger interaction goal
-                 if (emotions.energy > 0.4) {
-                    task_manager.add_task("Engagement: " + best_move, TaskType::INTERACTION, TaskPriority::LOW);
-                 }
-            }
-        }
+        evaluate_goals();
         
         // 2. Execute Tasks
         Task* current = task_manager.get_next_task();
@@ -1148,4 +1126,64 @@ std::string Brain::find_curiosity_topic() {
     }
 
     return best_topic;
+}
+void Brain::evaluate_goals() {
+    std::lock_guard<std::recursive_mutex> lock(brain_mutex);
+    
+    // Prevent task flooding
+    if (task_manager.has_pending_tasks()) return;
+    
+    struct Goal { 
+        std::string name; 
+        double score; 
+        std::string param;
+    };
+    std::vector<Goal> goals;
+    
+    // 1. Score Candidates based on State
+    // RESEARCH: Driven by Boredom and Curiosity
+    double research_score = (emotions.boredom * 3.0) + (personality.curiosity * 1.5);
+    if (emotions.energy < 0.3) research_score *= 0.1; // Too tired to research
+    goals.push_back({"RESEARCH", research_score, ""});
+    
+    // SLEEP: Driven by low Energy
+    double sleep_score = (1.0 - emotions.energy) * 4.0; 
+    goals.push_back({"SLEEP", sleep_score, ""});
+    
+    // SOCIAL: Driven by Energy and Friendliness (idle chatter)
+    double social_score = (emotions.energy * 0.5) + (personality.friendliness * 0.5);
+    goals.push_back({"INTERACTION", social_score, "ASK_QUESTION"});
+    
+    // 2. MCTS Integration (Planning Unit)
+    // We treat MCTS as a "advisor" that boosts the score of its chosen path
+    std::string mcts_choice = planning_unit->decide_best_action(focus_topic, emotions.energy, emotions.boredom);
+    
+    for(auto& g : goals) {
+        if((g.name == "RESEARCH" && (mcts_choice == "RESEARCH" || mcts_choice == "DEEP_SCAN" || mcts_choice == "BROWSING")) || 
+           (g.name == "SLEEP" && mcts_choice == "SLEEP") ||
+           (g.name == "INTERACTION" && (mcts_choice == "ASK_QUESTION" || mcts_choice == "PROVIDE_INFO"))) {
+            g.score += 2.0; // Significant boost from long-term planning
+        }
+    }
+    
+    // 3. Selection
+    std::sort(goals.begin(), goals.end(), [](const Goal& a, const Goal& b){ return a.score > b.score; });
+    Goal winner = goals[0];
+    
+    // Threshold to do nothing
+    if (winner.score < 0.5) return;
+    
+    // 4. Action
+    if (winner.name == "RESEARCH") {
+         std::string topic = find_curiosity_topic();
+         task_manager.add_task("Research " + topic, TaskType::RESEARCH, TaskPriority::LOW);
+         // Immediate reward reduction? No, wait for completion.
+         emit_thought("Goal Selected: Research " + topic + " (Score: " + std::to_string(winner.score) + ")");
+    } else if (winner.name == "SLEEP") {
+         task_manager.add_task("Sleep Cycle", TaskType::SLEEP, TaskPriority::MEDIUM);
+         emit_thought("Goal Selected: Sleep (Score: " + std::to_string(winner.score) + ")");
+    } else if (winner.name == "INTERACTION") {
+         task_manager.add_task("Engagement: " + winner.param, TaskType::INTERACTION, TaskPriority::LOW);
+         emit_thought("Goal Selected: Interaction (Score: " + std::to_string(winner.score) + ")");
+    }
 }

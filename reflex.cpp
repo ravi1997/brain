@@ -21,7 +21,8 @@ std::string Reflex::get_reaction(const std::string& input) {
                    [](unsigned char c){ return std::tolower(c); });
 
     for (auto& pair : keyword_responses) {
-        if (contains(lower_input, pair.first)) {
+        // Check exact containment OR fuzzy match
+        if (contains(lower_input, pair.first) || fuzzy_match(lower_input) == pair.first) {
             // Pick based on weights
             auto& choices = pair.second;
             double total_weight = 0;
@@ -37,6 +38,76 @@ std::string Reflex::get_reaction(const std::string& input) {
         }
     }
     return ""; // No reflex found
+}
+
+// Helper: Levenshtein Distance
+size_t levenshtein_distance(const std::string& s1, const std::string& s2) {
+    const size_t m = s1.length();
+    const size_t n = s2.length();
+    if (m == 0) return n;
+    if (n == 0) return m;
+
+    std::vector<size_t> row(n + 1);
+    std::iota(row.begin(), row.end(), 0);
+
+    for (size_t i = 1; i <= m; ++i) {
+        row[0] = i;
+        size_t prev = i - 1;
+        for (size_t j = 1; j <= n; ++j) {
+            size_t temp = row[j];
+            if (s1[i - 1] == s2[j - 1]) {
+                row[j] = prev;
+            } else {
+                row[j] = std::min({ row[j - 1], row[j], prev }) + 1;
+            }
+            prev = temp;
+        }
+    }
+    return row[n];
+}
+
+std::string Reflex::fuzzy_match(const std::string& input) {
+    // Mega-Batch 6: Fuzzy Match Logic using Levenshtein Distance
+    
+    std::string best_match;
+    size_t min_dist = 1000;
+    
+    // Check whole input first (single word scenario)
+    for (const auto& [key, val] : keyword_responses) {
+        if (key.length() <= 3) continue; // Skip short keys to avoid false positives
+        size_t dist = levenshtein_distance(input, key);
+        if (dist <= 1 && dist < min_dist) {
+            min_dist = dist;
+            best_match = key;
+        }
+    }
+    if (!best_match.empty()) return best_match;
+
+    // Split input into words and check each
+    std::string word;
+    for (size_t i = 0; i < input.length(); ++i) {
+        if (std::isalpha(input[i])) {
+            word += input[i];
+        } else {
+            if (!word.empty() && word.length() > 3) {
+                for (const auto& [key, val] : keyword_responses) {
+                    if (key.length() <= 3) continue;
+                    size_t dist = levenshtein_distance(word, key);
+                    if (dist <= 1) return key; // Return immediate match for efficiency
+                }
+            }
+            word = "";
+        }
+    }
+    // Check last word
+    if (!word.empty() && word.length() > 3) {
+        for (const auto& [key, val] : keyword_responses) {
+             if (key.length() <= 3) continue;
+             size_t dist = levenshtein_distance(word, key);
+             if (dist <= 1) return key;
+        }
+    }
+    return "";
 }
 
 void Reflex::reinforce(const std::string& keyword, const std::string& response, double reward) {

@@ -83,3 +83,9 @@ std::string TaskManager::get_json_snapshot() {
     ss << "}";
     return ss.str();
 }
+
+// Mega-Batch 6
+bool TaskManager::has_pending_tasks() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return !pending_queue.empty();
+}

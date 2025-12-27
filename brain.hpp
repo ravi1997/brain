@@ -172,7 +172,9 @@ public:
 
     // Autonomy Loop
     void automata_loop();
-
+    // Mega-Batch 6: Enhanced Planning
+    void evaluate_goals();
+    
     std::string get_status();
     std::string get_json_state();
     void update_from_json(const std::string& json);

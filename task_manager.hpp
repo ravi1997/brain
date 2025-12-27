@@ -45,6 +45,7 @@ public:
     
     // For Monitoring
     std::string get_json_snapshot(); 
+    bool has_pending_tasks(); // Mega-Batch 6
 
 private:
     std::deque<Task> pending_queue;
