@@ -61,7 +61,10 @@ const Layout = ({ children, activeView, setActiveView }) => {
             }}>
                 <div style={{ padding: '30px 25px', borderBottom: '1px solid var(--glass-border)' }}>
                     <h1 className="text-glow" style={{ margin: 0, fontSize: '20px', color: 'var(--accent-color)' }}>CORTEK OS</h1>
-                    <div style={{ fontSize: '10px', color: 'rgba(0, 240, 255, 0.5)', marginTop: '5px', letterSpacing: '1px' }}>VERSION 2.1.0-REACT</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '5px' }}>
+                        <div style={{ fontSize: '10px', color: 'rgba(0, 240, 255, 0.5)', letterSpacing: '1px' }}>VERSION 2.1.0-REACT</div>
+                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'linear-gradient(to right, #00ff9d, #00f0ff)', boxShadow: '0 0 5px #00f0ff' }}></div>
+                    </div>
                 </div>
                 
                 <nav style={{ flex: 1, paddingTop: '20px' }}>

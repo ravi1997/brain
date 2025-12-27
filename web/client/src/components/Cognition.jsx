@@ -1,35 +1,7 @@
 import React from 'react';
 import { useBrain } from '../hooks/useBrain';
 import NeuronVisualizer from './NeuronVisualizer';
-
-const Tooltip = ({ children, text }) => {
-    const [visible, setVisible] = React.useState(false);
-    return (
-        <div style={{ position: 'relative', display: 'inline-block' }} onMouseEnter={() => setVisible(true)} onMouseLeave={() => setVisible(false)}>
-            {children}
-            {visible && (
-                <div style={{
-                    position: 'absolute',
-                    bottom: '100%',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    background: 'rgba(5, 10, 20, 0.95)',
-                    border: '1px solid var(--accent-color)',
-                    padding: '8px 12px',
-                    borderRadius: '4px',
-                    fontSize: '10px',
-                    color: 'var(--accent-color)',
-                    whiteSpace: 'nowrap',
-                    zIndex: 100,
-                    marginBottom: '10px',
-                    boxShadow: '0 0 10px rgba(0, 240, 255, 0.3)'
-                }}>
-                    {text}
-                </div>
-            )}
-        </div>
-    );
-};
+import Tooltip from './Tooltip';
 
 const Cognition = () => {
     const { status, messages, brainData } = useBrain();

@@ -1,27 +1,30 @@
 import React, { useState } from 'react';
 import { useBrain } from '../hooks/useBrain';
 import { Zap, Activity, Target, Cpu } from 'lucide-react';
+import Tooltip from './Tooltip';
 
 const Dashboard = () => {
     const { status, brainData } = useBrain();
     
-    const StatCard = ({ title, value, icon: Icon, id, color = 'var(--accent-color)' }) => (
-        <div id={id} className="glass-panel" style={{ padding: '25px', position: 'relative', overflow: 'hidden' }}>
-            <div className="scan-line" />
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: 'bold' }}>{title}</span>
-                <Icon size={16} style={{ color }} />
+    const StatCard = ({ title, value, icon: Icon, id, color = 'var(--accent-color)', tooltip }) => (
+        <Tooltip text={tooltip} position="bottom">
+            <div id={id} className="glass-panel" style={{ padding: '25px', position: 'relative', overflow: 'hidden', cursor: 'help' }}>
+                <div className="scan-line" />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: 'bold' }}>{title}</span>
+                    <Icon size={16} style={{ color }} />
+                </div>
+                <div style={{ fontSize: '32px', fontFamily: 'var(--font-mono)', color }}>{value}</div>
+                <div style={{ height: '4px', background: 'rgba(255,255,255,0.1)', marginTop: '15px', borderRadius: '2px' }}>
+                    <div style={{ 
+                        height: '100%', 
+                        width: typeof value === 'string' && value.includes('%') ? value : '100%', 
+                        background: color, 
+                        boxShadow: `0 0 10px ${color}` 
+                    }} />
+                </div>
             </div>
-            <div style={{ fontSize: '32px', fontFamily: 'var(--font-mono)', color }}>{value}</div>
-            <div style={{ height: '4px', background: 'rgba(255,255,255,0.1)', marginTop: '15px', borderRadius: '2px' }}>
-                <div style={{ 
-                    height: '100%', 
-                    width: typeof value === 'string' && value.includes('%') ? value : '100%', 
-                    background: color, 
-                    boxShadow: `0 0 10px ${color}` 
-                }} />
-            </div>
-        </div>
+        </Tooltip>
     );
 
     return (
@@ -44,6 +47,7 @@ const Dashboard = () => {
                     value={`${brainData.needs?.energy || 0}%`} 
                     icon={Zap} 
                     color="var(--accent-color)" 
+                    tooltip="CURRENT SYSTEM POWER LEVEL"
                 />
                 <StatCard 
                     id="dash-happiness" 
@@ -51,6 +55,7 @@ const Dashboard = () => {
                     value={`${brainData.needs?.happiness || 0}%`} 
                     icon={Activity} 
                     color="var(--success-color)" 
+                    tooltip="ALIGNMENT WITH USER OBJECTIVES"
                 />
                 <StatCard 
                     id="dash-boredom" 
@@ -58,6 +63,7 @@ const Dashboard = () => {
                     value={`${brainData.needs?.boredom || 0}%`} 
                     icon={Cpu} 
                     color="var(--warning-color)" 
+                    tooltip="ACTIVE PROCESSING SATURATION"
                 />
             </div>
 
