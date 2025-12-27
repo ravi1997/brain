@@ -13,6 +13,7 @@ public:
     void disconnect() override;
 
     void store_memory(const std::string& key, const std::string& value) override;
+    void store_memories_bulk(const std::map<std::string, std::string>& memories) override;
     std::string retrieve_memory(const std::string& key) override;
 
     void store_embedding(const std::string& key, const std::vector<double>& embedding) override;

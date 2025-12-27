@@ -49,3 +49,24 @@ jobs:
       run: |
         cd build
         ctest --output-on-failure
+
+  frontend-build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+    - name: Install Dependencies
+      run: |
+        cd web/client
+        npm install
+    - name: Run Tests
+      run: |
+        cd web/client
+        npm run test -- --run
+    - name: Build
+      run: |
+        cd web/client
+        npm run build

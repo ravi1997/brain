@@ -15,8 +15,12 @@ endif()
 # Include vendor libraries
 include_directories(include)
 
-# Threading support (needed for dnn.hpp parallel execution)
+# Threading/Parallelism support
 find_package(Threads REQUIRED)
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    message(STATUS "OpenMP found")
+endif()
 
 # Find libpq
 find_package(PkgConfig)
@@ -56,5 +60,16 @@ if(TBB_FOUND)
     target_link_libraries(brain_replica PRIVATE TBB::tbb)
 endif()
 
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(brain_replica PRIVATE OpenMP::OpenMP_CXX)
+endif()
+
 # Tests
 add_subdirectory(tests)
+
+# Benchmarks
+add_executable(benchmark_simd tests/benchmark_simd.cpp)
+target_include_directories(benchmark_simd PRIVATE .)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(benchmark_simd PRIVATE OpenMP::OpenMP_CXX)
+endif()

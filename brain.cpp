@@ -1209,6 +1209,15 @@ void Brain::evaluate_goals() {
     
     // Prevent task flooding
     if (task_manager.has_pending_tasks()) return;
+
+    // Emotional Decay (Stability)
+    emotions.happiness = std::max(0.5, emotions.happiness - 0.01);
+    emotions.sadness = std::max(0.0, emotions.sadness - 0.01);
+    emotions.anger = std::max(0.0, emotions.anger - 0.02);
+    emotions.fear = std::max(0.0, emotions.fear - 0.01);
+    emotions.boredom = std::min(1.0, emotions.boredom + 0.02); // Boredom increases over time if idle
+    emotions.energy -= 0.005; // Base metabolic rate
+    if (emotions.energy < 0) emotions.energy = 0;
     
     struct Goal { 
         std::string name; 

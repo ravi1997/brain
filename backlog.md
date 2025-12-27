@@ -57,13 +57,13 @@
 ## 🌌 The Great 1000-Step Roadmap
 - [ ] [Cognition] Benchmark Planning Unit for improved precision <!-- id: 1 -->
 - [ ] [Cognition] Benchmark Planning Unit for improved scalability <!-- id: 2 -->
-- [ ] [Cognition] Benchmark Postgres Interface logic using SIMD/AVX <!-- id: 3 -->
+- [x] [Cognition] Benchmark Postgres Interface logic using SIMD/AVX <!-- id: 3 -->
 - [ ] [Cognition] Benchmark Reflex Module for improved recall <!-- id: 4 -->
 - [ ] [Cognition] Benchmark Sentiment Engine logic using OpenMP <!-- id: 5 -->
 - [ ] [Cognition] Benchmark concurrency handling in Auth System <!-- id: 6 -->
 - [ ] [Cognition] Benchmark concurrency handling in Redis Cache <!-- id: 7 -->
-- [ ] [Cognition] Benchmark throughput handling in Memory Store <!-- id: 8 -->
-- [ ] [Cognition] Benchmark user experience handling in Neural Visualizer <!-- id: 9 -->
+- [x] [Cognition] Benchmark throughput handling in Memory Store <!-- id: 8 -->
+- [x] [Cognition] Benchmark user experience handling in Neural Visualizer <!-- id: 9 -->
 - [ ] [Cognition] De-risk API Gateway logic using React Hooks <!-- id: 10 -->
 - [ ] [Cognition] De-risk Auth System logic using Protobuf <!-- id: 11 -->
 - [ ] [Cognition] De-risk Decision Tree logic using gRPC <!-- id: 12 -->

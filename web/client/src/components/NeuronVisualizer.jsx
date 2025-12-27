@@ -56,38 +56,42 @@ export default function NeuronVisualizer({ brainState }) {
     ];
 
     const neurons = [];
+    const dummy = new THREE.Object3D();
+    
     regions.forEach((region, regionIdx) => {
       const geometry = new THREE.SphereGeometry(0.3, 8, 8);
+      const material = new THREE.MeshPhongMaterial({ 
+          color: region.color,
+          emissive: region.color,
+          emissiveIntensity: 0.2
+      });
       
-      // Create grid layout for neurons in this region
+      const instancedMesh = new THREE.InstancedMesh(geometry, material, region.count);
+      instancedMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      
       const gridSize = Math.ceil(Math.sqrt(region.count));
       const spacing = 1.5;
       
       for (let i = 0; i < region.count; i++) {
-        const material = new THREE.MeshPhongMaterial({ 
-          color: region.color,
-          emissive: region.color,
-          emissiveIntensity: 0.2
-        });
-        const neuron = new THREE.Mesh(geometry, material);
-        
-        // Position in grid
         const x = (i % gridSize) * spacing - (gridSize * spacing) / 2;
         const y = Math.floor(i / gridSize) * spacing - (gridSize * spacing) / 2;
-        neuron.position.set(
+        
+        dummy.position.set(
           region.position[0] + x / 2,
           region.position[1] + y / 2,
           region.position[2]
         );
-        
-        scene.add(neuron);
-        neurons.push({ 
-          mesh: neuron, 
-          regionIdx, 
-          neuronIdx: i,
-          baseColor: region.color 
-        });
+        dummy.updateMatrix();
+        instancedMesh.setMatrixAt(i, dummy.matrix);
       }
+      
+      scene.add(instancedMesh);
+      neurons.push({ 
+        instancedMesh, 
+        regionIdx, 
+        count: region.count,
+        baseColor: region.color 
+      });
     });
 
     neuronsRef.current = neurons;
@@ -135,27 +139,25 @@ export default function NeuronVisualizer({ brainState }) {
       brainState.cognitive_center_activity || []
     ];
 
-    neuronsRef.current.forEach((neuron) => {
-      const activity = activities[neuron.regionIdx];
-      if (!activity || neuron.neuronIdx >= activity.length) return;
+    neuronsRef.current.forEach((region) => {
+      const activity = activities[region.regionIdx];
+      if (!activity) return;
 
-      const activation = activity[neuron.neuronIdx];
-      
-      // Map activation (0-1) to color (blue -> yellow -> red)
-      let color;
-      if (activation < 0.5) {
-        // Blue to yellow
-        const t = activation * 2;
-        color = new THREE.Color().setRGB(t, t, 1 - t);
-      } else {
-        // Yellow to red
-        const t = (activation - 0.5) * 2;
-        color = new THREE.Color().setRGB(1, 1 - t, 0);
+      for (let i = 0; i < region.count; i++) {
+        const activation = activity[i] || 0;
+        
+        let color;
+        if (activation < 0.5) {
+          const t = activation * 2;
+          color = new THREE.Color().setRGB(t, t, 1 - t);
+        } else {
+          const t = (activation - 0.5) * 2;
+          color = new THREE.Color().setRGB(1, 1 - t, 0);
+        }
+
+        region.instancedMesh.setColorAt(i, color);
       }
-
-      neuron.mesh.material.color = color;
-      neuron.mesh.material.emissive = color;
-      neuron.mesh.material.emissiveIntensity = activation * 0.8;
+      region.instancedMesh.instanceColor.needsUpdate = true;
     });
   }, [brainState, isLoaded]);
 

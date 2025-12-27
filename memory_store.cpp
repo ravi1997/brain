@@ -222,30 +222,41 @@ std::string MemoryStore::get_graph_json(int max_nodes) {
     }
     ss << "], \"links\": [";
     
-    bool first_link = true;
-    for (int i = 0; i < actual_nodes; i++) {
-        for (int j = i + 1; j < actual_nodes; j++) {
-            const auto& ids1 = inverted_index_[top_tokens[i]];
-            const auto& ids2 = inverted_index_[top_tokens[j]];
-            
-            int weight = 0;
-            size_t p1 = 0, p2 = 0;
-            while(p1 < ids1.size() && p2 < ids2.size()) {
-                if (ids1[p1] == ids2[p2]) {
-                    weight++; p1++; p2++;
-                } else if (ids1[p1] < ids2[p2]) {
-                    p1++;
-                } else {
-                    p2++;
+    std::vector<std::string> links;
+    #pragma omp parallel
+    {
+        std::vector<std::string> local_links;
+        #pragma omp for schedule(dynamic)
+        for (int i = 0; i < actual_nodes; i++) {
+            for (int j = i + 1; j < actual_nodes; j++) {
+                const auto& ids1 = inverted_index_[top_tokens[i]];
+                const auto& ids2 = inverted_index_[top_tokens[j]];
+                
+                int weight = 0;
+                size_t p1 = 0, p2 = 0;
+                while(p1 < ids1.size() && p2 < ids2.size()) {
+                    if (ids1[p1] == ids2[p2]) {
+                        weight++; p1++; p2++;
+                    } else if (ids1[p1] < ids2[p2]) {
+                        p1++;
+                    } else {
+                        p2++;
+                    }
+                }
+                
+                if (weight > 0) {
+                    std::string link = "{\"source\": \"" + top_tokens[i] + "\", \"target\": \"" + top_tokens[j] + "\", \"weight\": " + std::to_string(weight) + "}";
+                    local_links.push_back(link);
                 }
             }
-            
-            if (weight > 0) {
-                if (!first_link) ss << ",";
-                ss << "{\"source\": \"" << top_tokens[i] << "\", \"target\": \"" << top_tokens[j] << "\", \"weight\": " << weight << "}";
-                first_link = false;
-            }
         }
+        #pragma omp critical
+        links.insert(links.end(), local_links.begin(), local_links.end());
+    }
+
+    for (size_t i = 0; i < links.size(); i++) {
+        ss << links[i];
+        if (i < links.size() - 1) ss << ",";
     }
     ss << "]}";
     return ss.str();

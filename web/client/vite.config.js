@@ -9,6 +9,11 @@ export default defineConfig({
         outDir: '../public',
         emptyOutDir: true,
     },
+    test: {
+        globals: true,
+        environment: 'jsdom',
+        setupFiles: './src/setupTests.js',
+    },
     server: {
         proxy: {
             '/ws': {

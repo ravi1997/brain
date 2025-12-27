@@ -42,6 +42,12 @@ bool PostgresStorage::connect() {
         "ALTER TABLE brain_kv_store ADD COLUMN IF NOT EXISTS embedding vector(384)"
     );
 
+    // Add HNSW index for high-scale vector search
+    execute_non_query(
+        "CREATE INDEX IF NOT EXISTS brain_vector_idx ON brain_kv_store "
+        "USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64)"
+    );
+
     return true;
 }
 
@@ -67,6 +73,28 @@ void PostgresStorage::store_memory(const std::string& key, const std::string& va
         std::cerr << "[Postgres] Store failed: " << PQerrorMessage(conn) << std::endl;
     }
     PQclear(res);
+}
+
+void PostgresStorage::store_memories_bulk(const std::map<std::string, std::string>& memories) {
+    if (!check_status() || memories.empty()) return;
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    execute_non_query("BEGIN");
+
+    for (const auto& [key, value] : memories) {
+        const char* paramValues[2] = { key.c_str(), value.c_str() };
+        PGresult* res = PQexecParams(conn,
+            "INSERT INTO brain_kv_store (key, value) VALUES ($1, $2) "
+            "ON CONFLICT (key) DO UPDATE SET value = $2",
+            2, nullptr, paramValues, nullptr, nullptr, 0);
+        
+        if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+            std::cerr << "[Postgres] Bulk Store failed for key " << key << ": " << PQerrorMessage(conn) << std::endl;
+        }
+        PQclear(res);
+    }
+
+    execute_non_query("COMMIT");
 }
 
 std::string PostgresStorage::retrieve_memory(const std::string& key) {

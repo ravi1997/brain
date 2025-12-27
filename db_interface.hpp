@@ -14,6 +14,7 @@ public:
 
     // Core Memory Operations
     virtual void store_memory(const std::string& key, const std::string& value) = 0;
+    virtual void store_memories_bulk(const std::map<std::string, std::string>& memories) = 0;
     virtual std::string retrieve_memory(const std::string& key) = 0;
     
     // For vector search support (future)
