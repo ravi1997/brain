@@ -52,7 +52,8 @@ export default function NeuronVisualizer({ brainState }) {
       { name: 'Encoder', color: 0x3b82f6, count: 256, position: [-20, 10, 0] },
       { name: 'Decoder', color: 0x8b5cf6, count: 256, position: [20, 10, 0] },
       { name: 'Memory', color: 0x10b981, count: 256, position: [-20, -10, 0] },
-      { name: 'Cognitive', color: 0xf59e0b, count: 256, position: [20, -10, 0] }
+      { name: 'Cognitive', color: 0xf59e0b, count: 256, position: [20, -10, 0] },
+      { name: 'Sensory', color: 0xec4899, count: 384, position: [0, 0, 10] }
     ];
 
     const neurons = [];
@@ -136,7 +137,8 @@ export default function NeuronVisualizer({ brainState }) {
       brainState.language_encoder_activity || [],
       brainState.language_decoder_activity || [],
       brainState.memory_center_activity || [],
-      brainState.cognitive_center_activity || []
+      brainState.cognitive_center_activity || [],
+      (brainState.sensory_activity && brainState.sensory_activity[0]?.activity) || []
     ];
 
     neuronsRef.current.forEach((region) => {

@@ -9,7 +9,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 if(MSVC)
     add_compile_options(/W3 /permissive- /volatile:iso)
 else()
-    add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion)
+    add_compile_options(-Wall -Wextra -Wpedantic -O3 -mavx2 -mfma)
 endif()
 
 # Include vendor libraries

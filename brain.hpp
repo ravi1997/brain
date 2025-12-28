@@ -4,6 +4,8 @@
 #include "memory_store.hpp"
 #include "research_utils.hpp"
 #include "reflex.hpp"
+#include "sensory_unit.hpp"
+#include <map>
 #include "task_manager.hpp"
 #include "redis_client.hpp"
 #include "planning_unit.hpp"
@@ -141,6 +143,12 @@ public:
     std::unique_ptr<MemoryStore> memory_store;
     std::unique_ptr<RedisClient> redis_cache;
     std::string db_conn_str = "host=postgres dbname=brain_db user=brain_user password=brain_password";
+
+    // Multi-Modal Sensory Bridge [Pillar 3]
+    std::vector<std::unique_ptr<dnn::SensoryUnit>> sensory_inputs;
+    void register_sensory_unit(std::unique_ptr<dnn::SensoryUnit> unit);
+    void update_sensory_focus(); // Adjusts focus levels based on intent/context
+    std::vector<double> get_aggregate_sensory_input();
 
     // Context Window (Short-term Conversation History)
     std::deque<std::string> conversation_context;

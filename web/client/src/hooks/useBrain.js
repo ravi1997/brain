@@ -18,10 +18,10 @@ export const useBrain = () => {
 
         const connect = () => {
             setStatus('connecting');
-            socket = new WebSocket('ws://' + window.location.host + '/proxy/9005');
+            socket = new WebSocket('ws://' + window.location.host + '/proxy/9001');
 
             socket.onopen = () => {
-                console.log("Connected to Brain");
+                console.log("Connected to Brain Dashboard");
                 setStatus('connected');
                 reconnectDelay = 1000; // Reset delay on success
             };
@@ -36,6 +36,8 @@ export const useBrain = () => {
                         setMessages(prev => [...prev.slice(-49), { type: 'thought', text: msg.payload }]);
                     } else if (msg.type === 'chat') {
                         setMessages(prev => [...prev.slice(-49), { type: 'chat', text: msg.payload }]);
+                    } else if (msg.type === 'state') {
+                        setBrainData(prev => ({ ...prev, ...msg.payload }));
                     }
                 } catch (e) {
                     console.error("Parse error", e);

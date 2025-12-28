@@ -6,6 +6,7 @@
 #include <sstream>
 #include <regex>
 #include "planning_unit.hpp"
+#include "vision_unit.hpp"
 
 // Simple Config Loader
 struct BrainConfig {
@@ -74,8 +75,8 @@ Brain::Brain() {
     // Thought Vector -> Memory Context
     memory_center = std::make_unique<Region>("Memory", std::vector<std::size_t>{VECTOR_DIM, 128, VECTOR_DIM});
     
-    // Thought + Memory -> New Thought
-    cognitive_center = std::make_unique<Region>("Cognitive", std::vector<std::size_t>{VECTOR_DIM * 2, 256, VECTOR_DIM});
+    // Thought + Memory + Sensory -> New Thought
+    cognitive_center = std::make_unique<Region>("Cognitive", std::vector<std::size_t>{VECTOR_DIM * 3, 256, VECTOR_DIM});
     
     // Enable plasticity
     language_encoder->network.set_plasticity(true);
@@ -135,6 +136,9 @@ Brain::Brain() {
 
     // MEGA-BATCH 5: Load Reflex Weights
     reflex.load("reflex_weights.json");
+
+    // Pillar 3: Register initial sensory units
+    register_sensory_unit(std::make_unique<dnn::VisionUnit>(std::vector<std::size_t>{64*64, 512, VECTOR_DIM}));
 }
 
 Brain::~Brain() {
@@ -354,6 +358,13 @@ std::string Brain::interact(const std::string& input_text) {
     std::vector<double> cognitive_input = thought;
     cognitive_input.insert(cognitive_input.end(), memory_context.begin(), memory_context.end());
     
+    // Pillar 3: Integrate Sensory Data
+    std::vector<double> sensory_raw = get_aggregate_sensory_input();
+    cognitive_input.insert(cognitive_input.end(), sensory_raw.begin(), sensory_raw.end());
+    
+    // We must ensure cognitive_center structure matches or adjust input
+    // The constructor for cognitive_center uses VECTOR_DIM * 2. 
+    // Now it needs VECTOR_DIM * 3.
     std::vector<double> response_thought = cognitive_center->process(cognitive_input);
 
     // 5. Decoding to Text
@@ -895,6 +906,9 @@ void Brain::automata_loop() {
         // 1. Evaluate Needs & Generate Goals
         evaluate_goals();
         
+        // 1b. Update Sensory Focus (Task #39)
+        update_sensory_focus();
+
         // 2. Execute Tasks
         Task* current = task_manager.get_next_task();
         if (current) {
@@ -971,7 +985,22 @@ std::string Brain::get_json_state() {
     ss << "\"fear\": " << emotions.fear << ",";
     ss << "\"energy\": " << emotions.energy << ",";
     ss << "\"boredom\": " << emotions.boredom;
-    ss << "}";
+    ss << "},";
+    ss << "\"sensory_activity\": [";
+    for (size_t i = 0; i < sensory_inputs.size(); ++i) {
+        ss << "{";
+        ss << "\"name\": \"" << sensory_inputs[i]->name() << "\",";
+        ss << "\"type\": " << (int)sensory_inputs[i]->type() << ",";
+        ss << "\"focus\": " << sensory_inputs[i]->get_focus() << ",";
+        ss << "\"activity\": [";
+        auto act = sensory_inputs[i]->get_current_activity();
+        for (size_t j = 0; j < act.size(); ++j) {
+            ss << act[j] << (j < act.size() - 1 ? "," : "");
+        }
+        ss << "]";
+        ss << "}" << (i < sensory_inputs.size() - 1 ? "," : "");
+    }
+    ss << "]";
     ss << "}";
     return ss.str();
 }
@@ -1336,4 +1365,59 @@ std::vector<std::string> Brain::find_similar_concepts(const std::string& term) {
     }
     if (vec.empty()) return {}; 
     return memory_store->search_similar(vec, 5);
+}
+
+void Brain::register_sensory_unit(std::unique_ptr<dnn::SensoryUnit> unit) {
+    std::lock_guard<std::recursive_mutex> lock(brain_mutex);
+    sensory_inputs.push_back(std::move(unit));
+    log_activity("[Sensory]: Registered unit: " + sensory_inputs.back()->name());
+}
+
+void Brain::update_sensory_focus() {
+    std::lock_guard<std::recursive_mutex> lock(brain_mutex);
+    // Task #39: Focus Mechanism
+    // If we are in "Research" mode or "Deep Scan", increase vision/lidar focus
+    // If we are in "Interaction" mode, increase audio focus
+    
+    std::string intent = "";
+    if (!conversation_history.empty()) intent = conversation_history.back().intent;
+
+    for (auto& unit : sensory_inputs) {
+        double target_focus = 0.5; // Baseline
+        
+        if (unit->type() == dnn::SensoryType::Vision) {
+            if (intent == "SCENE_ANALYSIS" || focus_topic != "None") target_focus = 0.9;
+        } else if (unit->type() == dnn::SensoryType::Audio) {
+            if (intent == "LISTENING") target_focus = 0.9;
+        }
+
+        // Smooth adjustment toward target
+        double current = unit->get_focus();
+        unit->set_focus(current * 0.8 + target_focus * 0.2);
+    }
+}
+
+std::vector<double> Brain::get_aggregate_sensory_input() {
+    std::lock_guard<std::recursive_mutex> lock(brain_mutex);
+    std::vector<double> aggregate(VECTOR_DIM, 0.0);
+    
+    double total_weight = 0.0;
+    for (const auto& unit : sensory_inputs) {
+        if (!unit->is_active()) continue;
+        
+        std::vector<double> act = unit->get_current_activity();
+        if (act.size() != VECTOR_DIM) continue;
+        
+        double focus = unit->get_focus();
+        for (size_t i = 0; i < VECTOR_DIM; ++i) {
+            aggregate[i] += act[i] * focus;
+        }
+        total_weight += focus;
+    }
+    
+    if (total_weight > 0.0) {
+        for (double& val : aggregate) val /= total_weight;
+    }
+    
+    return aggregate;
 }

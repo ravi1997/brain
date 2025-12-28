@@ -44,7 +44,7 @@ const Dashboard = () => {
                 <StatCard 
                     id="dash-energy" 
                     title="ENERGY RESERVES" 
-                    value={`${brainData.needs?.energy || 0}%`} 
+                    value={`${(brainData.emotions?.energy * 100 || 0).toFixed(0)}%`} 
                     icon={Zap} 
                     color="var(--accent-color)" 
                     tooltip="CURRENT SYSTEM POWER LEVEL"
@@ -52,7 +52,7 @@ const Dashboard = () => {
                 <StatCard 
                     id="dash-happiness" 
                     title="COGNITIVE SYNC" 
-                    value={`${brainData.needs?.happiness || 0}%`} 
+                    value={`${(brainData.emotions?.happiness * 100 || 0).toFixed(0)}%`} 
                     icon={Activity} 
                     color="var(--success-color)" 
                     tooltip="ALIGNMENT WITH USER OBJECTIVES"
@@ -60,7 +60,7 @@ const Dashboard = () => {
                 <StatCard 
                     id="dash-boredom" 
                     title="NEURAL LOAD" 
-                    value={`${brainData.needs?.boredom || 0}%`} 
+                    value={`${(brainData.emotions?.boredom * 100 || 0).toFixed(0)}%`} 
                     icon={Cpu} 
                     color="var(--warning-color)" 
                     tooltip="ACTIVE PROCESSING SATURATION"

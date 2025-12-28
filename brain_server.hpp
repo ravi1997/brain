@@ -40,7 +40,8 @@ public:
 
         // Wire Brain Events
         brain.set_log_callback([this](const std::string& msg) {
-            log_server->broadcast(msg);
+            log_server->broadcast(msg + "\n");
+            dash_server->broadcast("{\"type\": \"log\", \"payload\": \"" + msg + "\"}\n");
             // Also echo to console for docker logs
             std::cout << msg << std::endl; 
         });
@@ -51,7 +52,8 @@ public:
         });
         
         brain.set_thought_callback([this](const std::string& msg) {
-            thought_server->broadcast(msg);
+            thought_server->broadcast(msg + "\n");
+            dash_server->broadcast("{\"type\": \"thought\", \"payload\": \"" + msg + "\"}\n");
         });
         
         brain.on_emotion_update = [this](const std::string& msg) {
@@ -109,6 +111,12 @@ public:
                 admin_server->broadcast("Unknown command: " + msg);
             }
         });
+
+        // Unified Dashboard Input (Port 9001)
+        dash_server->on_input([this](const std::string& msg) {
+            std::string response = brain.interact(msg);
+            dash_server->broadcast("{\"type\": \"chat\", \"payload\": \"Brain: " + response + "\"}\n");
+        });
     }
     
     void start() {
@@ -133,11 +141,13 @@ public:
             }
         }).detach();
 
-        // Background thread to push State Updates to 9011
+        // Background thread to push State Updates to 9011 (Control) and 9001 (Dashboard)
         std::thread([this]() {
             while(true) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
-                control_server->broadcast(brain.get_json_state());
+                std::string state = brain.get_json_state();
+                control_server->broadcast(state + "\n");
+                dash_server->broadcast("{\"type\": \"state\", \"payload\": " + state + "}\n");
             }
         }).detach();
 
