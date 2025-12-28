@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package brain;
+
+// Item 53, 54, 55: gRPC Service Definitions
+
+service BrainService {
+    rpc GetState (Empty) returns (BrainState);
+    rpc Interact (InteractionRequest) returns (InteractionResponse);
+}
+
+message Empty {}
+
+message InteractionRequest {
+    string text = 1;
+    string user_id = 2;
+}
+
+message InteractionResponse {
+    string text = 1;
+    float emotion_delta = 2;
+}

@@ -42,6 +42,7 @@ add_executable(brain_tests
     test_spatial_autonomy.cpp
     test_mega_batch.cpp
     benchmark_suite.cpp
+    test_cognition_sprint.cpp
 )
 
 target_link_libraries(brain_tests

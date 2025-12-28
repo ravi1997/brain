@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package brain;
+
+// Item 30, 41, 42: Protobuf Definitions
+
+message EmotionProto {
+    float happiness = 1;
+    float energy = 2;
+    string dominant_mood = 3; 
+}
+
+message ReflexProto {
+    string stimulus = 1;
+    string response = 2;
+    float weight = 3;
+}
+
+message BrainState {
+    EmotionProto emotions = 1;
+    repeated ReflexProto reflexes = 2;
+    int32 memory_count = 3;
+}
