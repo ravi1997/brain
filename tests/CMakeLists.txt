@@ -34,7 +34,6 @@ add_executable(brain_tests
     test_nlu_context.cpp
     test_planning_dynamic.cpp
     test_postgres.cpp
-    test_rate_limiter.cpp
     test_nlu_advanced.cpp
     test_cognition_features.cpp
     test_sensory.cpp

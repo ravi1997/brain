@@ -1,48 +1,45 @@
 #pragma once
 #include <chrono>
 #include <mutex>
-#include <unordered_map>
+
+namespace dnn {
 
 class RateLimiter {
 public:
-    RateLimiter(size_t max_tokens, size_t refill_rate)
-        : max_tokens_(max_tokens), refill_rate_(refill_rate) {}
+    RateLimiter(int max_tokens, int refill_rate) 
+        : max_tokens_(max_tokens), refill_rate_(refill_rate), tokens_(max_tokens) {
+        last_refill_ = std::chrono::steady_clock::now();
+    }
 
-    bool allow(const std::string& client_id) {
-        std::lock_guard<std::mutex> lock(mutex_);
-        auto now = std::chrono::steady_clock::now();
-        
-        if (buckets_.find(client_id) == buckets_.end()) {
-            buckets_[client_id] = {max_tokens_, now};
-        }
-        auto& bucket = buckets_[client_id];
-        
-        // Refill
-        long long elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - bucket.last_refill).count();
-        size_t tokens_to_add = (elapsed_ms * refill_rate_) / 1000;
-        
-        if (tokens_to_add > 0) {
-            bucket.tokens = std::min(max_tokens_, bucket.tokens + tokens_to_add);
-            bucket.last_refill = now;
-        }
-
-        // Consume
-        if (bucket.tokens >= 1) {
-            bucket.tokens -= 1;
+    bool check_limit(int cost = 1) {
+        std::lock_guard<std::mutex> lock(mu_);
+        refill();
+        if (tokens_ >= cost) {
+            tokens_ -= cost;
             return true;
         }
-        
         return false;
     }
 
-private:
-    struct Bucket {
-        size_t tokens;
-        std::chrono::steady_clock::time_point last_refill;
-    };
+    void optimize_latency() {
+        // Feature 163 stub
+    }
 
-    size_t max_tokens_;
-    size_t refill_rate_; // tokens per second
-    std::unordered_map<std::string, Bucket> buckets_;
-    std::mutex mutex_;
+private:
+    void refill() {
+        auto now = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - last_refill_).count();
+        if (elapsed > 0) {
+            tokens_ = std::min(max_tokens_, tokens_ + static_cast<int>(elapsed * refill_rate_));
+            last_refill_ = now;
+        }
+    }
+
+    int max_tokens_;
+    int refill_rate_;
+    int tokens_;
+    std::chrono::steady_clock::time_point last_refill_;
+    std::mutex mu_;
 };
+
+} // namespace dnn

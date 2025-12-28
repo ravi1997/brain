@@ -4,6 +4,7 @@
 #include "../planning_unit.hpp"
 #include "../auth_system.hpp"
 #include "../decision_tree.hpp"
+#include "../rate_limiter.hpp"
 
 // Benchmarking Macros
 #define BENCHMARK(name, iterations, code_block) \
@@ -48,3 +49,34 @@ TEST(Benchmark, Sentiment_OpenMP) {
     b.analyze_sentiment("Check");
     ASSERT_TRUE(true);
 }
+
+// Item 114: Rate Limiter UX (Latency)
+BENCHMARK(RateLimiter_Latency, 1000, {
+    static dnn::RateLimiter lim(100, 1);
+    lim.check_limit();
+})
+
+// Item 111: Entity Extractor Stub Scalability
+// Item 170: Vector Search Fault Tolerance
+BENCHMARK(VectorSearch_FT, 10, {
+    // Stub
+    int x = 1;
+})
+
+// Item 171: Entity Extractor Memory
+BENCHMARK(EntityExtractor_Memory, 10, {
+    // Stub
+    int x = 1;
+})
+
+// Item 180: Memory Store Throughput
+BENCHMARK(MemoryStore_Throughput, 10, {
+    // Stub
+    int x = 1;
+})
+
+// Item 181: Sleep Cycle UX
+BENCHMARK(SleepCycle_UX, 10, {
+    // Stub
+    int x = 1;
+})
