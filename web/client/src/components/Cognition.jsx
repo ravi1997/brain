@@ -4,7 +4,7 @@ import NeuronVisualizer from './NeuronVisualizer';
 import Tooltip from './Tooltip';
 
 const Cognition = () => {
-    const { status, messages, brainData } = useBrain();
+    const { status, messages, brainData, neuralEvents } = useBrain();
 
     // Filter thoughts only
     const thoughts = messages.filter(m => m.type === 'thought');
@@ -88,6 +88,28 @@ const Cognition = () => {
                         {(!brainData.sensory_activity || brainData.sensory_activity.length === 0) && (
                             <div style={{ fontSize: '12px', opacity: 0.5, fontStyle: 'italic' }}>No active sensory units detected.</div>
                         )}
+                    </div>
+                </div>
+                <div className="glass-panel" style={{ flex: 1, padding: '20px', display: 'flex', flexDirection: 'column', minHeight: '300px' }}>
+                    <h3 style={{ color: 'var(--accent-color)', marginTop: 0 }}>NEURAL BYPASS (LIVE)</h3>
+                    <div style={{ 
+                        flex: 1, 
+                        background: '#0a0a0a', 
+                        borderRadius: '4px', 
+                        padding: '10px', 
+                        fontFamily: 'var(--font-mono)', 
+                        fontSize: '11px', 
+                        color: 'rgba(0, 240, 255, 0.7)',
+                        overflowY: 'auto',
+                        border: '1px solid var(--glass-border)'
+                    }}>
+                        {neuralEvents.length === 0 && <span style={{ opacity: 0.3 }}>Waiting for neural activity...</span>}
+                        {neuralEvents.map(ev => (
+                            <div key={ev.id} style={{ marginBottom: '4px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '2px' }}>
+                                <span style={{ color: '#ec4899', marginRight: '6px' }}>[{ev.time}]</span>
+                                <span style={{ fontWeight: 'bold' }}>{ev.type.toUpperCase()}:</span> {ev.data}
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>

@@ -7,6 +7,8 @@
 #include <regex>
 #include "planning_unit.hpp"
 #include "vision_unit.hpp"
+#include "audio_unit.hpp"
+#include "clock_unit.hpp"
 
 // Simple Config Loader
 struct BrainConfig {
@@ -139,6 +141,8 @@ Brain::Brain() {
 
     // Pillar 3: Register initial sensory units
     register_sensory_unit(std::make_unique<dnn::VisionUnit>(std::vector<std::size_t>{64*64, 512, VECTOR_DIM}));
+    register_sensory_unit(std::make_unique<dnn::AudioUnit>());
+    register_sensory_unit(std::make_unique<dnn::ClockUnit>());
 }
 
 Brain::~Brain() {
@@ -156,6 +160,12 @@ std::string Brain::interact(const std::string& input_text) {
     // Update Context (User Input) - Always capture what user said
     conversation_context.push_back("User: " + input_text);
     last_interaction_time = std::chrono::system_clock::now();
+    for (auto& unit : sensory_inputs) {
+        if (unit->name().find("Clock") != std::string::npos) {
+            static_cast<dnn::ClockUnit*>(unit.get())->record_interaction();
+        }
+    }
+    emit_neural_event("input", input_text);
     
     // MEGA-BATCH 2: Intelligent STM Cleanup
     // Prune if too long OR if too much time has passed (simulated 1 hour gap)
@@ -1387,13 +1397,24 @@ void Brain::update_sensory_focus() {
         
         if (unit->type() == dnn::SensoryType::Vision) {
             if (intent == "SCENE_ANALYSIS" || focus_topic != "None") target_focus = 0.9;
+            emit_neural_event("sensory_focus", "Vision focus adjusted to " + std::to_string(target_focus));
         } else if (unit->type() == dnn::SensoryType::Audio) {
-            if (intent == "LISTENING") target_focus = 0.9;
+            if (intent == "LISTENING" || intent == "CHAT") target_focus = 0.9;
+            emit_neural_event("sensory_focus", "Audio focus adjusted to " + std::to_string(target_focus));
+        } else if (unit->type() == dnn::SensoryType::Internal) {
+            // Clock/Internal usually have constant focus unless we are "Meditating"
+            target_focus = 0.7;
         }
 
         // Smooth adjustment toward target
         double current = unit->get_focus();
         unit->set_focus(current * 0.8 + target_focus * 0.2);
+    }
+}
+
+void Brain::emit_neural_event(const std::string& type, const std::string& data) {
+    if (bypass_enabled && on_neural_event) {
+        on_neural_event(type, data);
     }
 }
 

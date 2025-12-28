@@ -149,6 +149,10 @@ public:
     void register_sensory_unit(std::unique_ptr<dnn::SensoryUnit> unit);
     void update_sensory_focus(); // Adjusts focus levels based on intent/context
     std::vector<double> get_aggregate_sensory_input();
+    
+    // Neural Bypass UI [Pillar 4]
+    std::atomic<bool> bypass_enabled{true};
+    void emit_neural_event(const std::string& type, const std::string& data);
 
     // Context Window (Short-term Conversation History)
     std::deque<std::string> conversation_context;
@@ -215,6 +219,7 @@ public:
     std::function<void(const std::string&)> on_error;
     std::function<void(const std::string&)> on_thought;
     std::function<void(const std::string&)> on_emotion_update;
+    std::function<void(const std::string&, const std::string&)> on_neural_event;
     std::function<void(const std::string&)> on_research_update;
     
     void set_log_callback(std::function<void(const std::string&)> cb) { on_log = cb; }

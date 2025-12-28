@@ -8,6 +8,7 @@ export const useBrain = () => {
         thought: "Initializing...",
         input: ""
     });
+    const [neuralEvents, setNeuralEvents] = useState([]);
     const [ws, setWs] = useState(null);
 
     // Connection management with auto-reconnect
@@ -38,6 +39,13 @@ export const useBrain = () => {
                         setMessages(prev => [...prev.slice(-49), { type: 'chat', text: msg.payload }]);
                     } else if (msg.type === 'state') {
                         setBrainData(prev => ({ ...prev, ...msg.payload }));
+                    } else if (msg.type === 'neural_event') {
+                        setNeuralEvents(prev => [...prev.slice(-19), {
+                            id: Date.now() + Math.random(),
+                            type: msg.event_type,
+                            data: msg.data,
+                            time: new Date().toLocaleTimeString()
+                        }]);
                     }
                 } catch (e) {
                     console.error("Parse error", e);
@@ -71,5 +79,5 @@ export const useBrain = () => {
         }
     }, [ws]);
 
-    return { status, messages, brainData, sendMessage };
+    return { status, messages, brainData, neuralEvents, sendMessage };
 };

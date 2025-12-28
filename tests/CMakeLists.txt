@@ -38,6 +38,7 @@ add_executable(brain_tests
     test_nlu_advanced.cpp
     test_cognition_features.cpp
     test_sensory.cpp
+    test_sensory_fusion.cpp
 )
 
 target_link_libraries(brain_tests

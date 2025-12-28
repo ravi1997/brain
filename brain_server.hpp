@@ -67,6 +67,12 @@ public:
         brain.on_research_update = [this](const std::string& msg) {
             research_server->broadcast(msg);
         };
+
+        brain.on_neural_event = [this](const std::string& type, const std::string& data) {
+            std::stringstream ss;
+            ss << "{\"type\": \"neural_event\", \"event_type\": \"" << type << "\", \"data\": \"" << data << "\"}\n";
+            dash_server->broadcast(ss.str());
+        };
         
         // Handle Chat Input
         chat_server->on_input([this](const std::string& msg) {
