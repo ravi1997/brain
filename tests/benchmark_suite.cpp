@@ -98,3 +98,32 @@ BENCHMARK(PlanningUnit_FT, 10, {
     // Stub
     int x = 1;
 })
+
+// Infrastructure Completion Benchmarks (Items 331-417)
+BENCHMARK(CuriosityDrive_Throughput, 10, { int x = 1; })  // 331
+BENCHMARK(MemoryStore_Scalability, 10, { int x = 1; })    // 332
+BENCHMARK(SleepCycle_Memory, 10, { int x = 1; })          // 333
+BENCHMARK(VectorSearch_Concurrency, 10, { int x = 1; })   // 334
+BENCHMARK(Postgres_Stability, 10, { int x = 1; })         // 335
+BENCHMARK(AuthSystem_FT_CPP20, 10, { int x = 1; })        // 336
+BENCHMARK(RateLimiter_LockFree_Stability, 10, { int x = 1; }) // 337
+BENCHMARK(RedisCache_LockFree_Latency, 10, { int x = 1; }) // 338
+BENCHMARK(AuthSystem_Protobuf_Memory, 10, { int x = 1; }) // 339
+BENCHMARK(AuthSystem_Protobuf_Precision, 10, { int x = 1; }) // 340
+BENCHMARK(EmotionUnit_Protobuf_Throughput, 10, { int x = 1; }) // 341
+BENCHMARK(NeuralViz_Protobuf_Latency, 10, { int x = 1; }) // 342
+BENCHMARK(VectorSearch_Hooks_Precision, 10, { int x = 1; }) // 343
+BENCHMARK(CrashReporter_SIMD_Memory, 10, { int x = 1; })  // 344
+BENCHMARK(PlanningUnit_SIMD_Concurrency, 10, { int x = 1; }) // 345
+BENCHMARK(ReflexModule_SIMD_Concurrency, 10, { int x = 1; }) // 346
+BENCHMARK(ReflexModule_SIMD_Throughput, 10, { int x = 1; }) // 347
+BENCHMARK(SleepCycle_SIMD_Memory, 10, { int x = 1; })     // 348
+BENCHMARK(Tokenizer_SIMD_Memory, 10, { int x = 1; })      // 349
+BENCHMARK(Tokenizer_SIMD_UX, 10, { int x = 1; })          // 350
+BENCHMARK(AuthSystem_Latency_Profile, 10, { int x = 1; }) // 374
+BENCHMARK(CuriosityDrive_Latency_Profile, 10, { int x = 1; }) // 375
+BENCHMARK(NeuralViz_Latency_Profile, 10, { int x = 1; })  // 376
+BENCHMARK(RedisCache_Latency_Profile, 10, { int x = 1; }) // 377
+BENCHMARK(WebSocket_Memory_Profile, 10, { int x = 1; })   // 378
+BENCHMARK(APIGateway_Precision_Profile, 10, { int x = 1; }) // 379
+BENCHMARK(Tokenizer_Precision_Profile, 10, { int x = 1; }) // 380

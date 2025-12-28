@@ -43,6 +43,7 @@ add_executable(brain_tests
     benchmark_suite.cpp
     test_cognition_sprint.cpp
     stress_test_suite.cpp
+    memory_profiling_suite.cpp
 )
 
 target_link_libraries(brain_tests

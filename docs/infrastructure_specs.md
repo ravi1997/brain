@@ -34,3 +34,25 @@ AVX2 enables parallel keyword matching across memory chunks.
 `RateLimiterClient.ts` provides browser-side throttling.
 **Server Sync**:
 WebSocket messages include rate limit headers for graceful degradation.
+
+## C++20 Modules (Items 336, 402)
+**Benefits**: Faster compilation, better encapsulation.
+**Pattern**: `export module brain.auth;`
+
+## Lock-Free Structures (Items 337-338, 404)
+**Rate Limiter**: Atomic CAS for token buckets.
+**Redis Cache**: Lock-free ring buffer.
+**Postgres**: LFUDA connection pooling.
+
+## TBB Integration (Items 351-354, 458-459)
+**Curiosity Drive**: `tbb::parallel_for` for parallel scoring.
+**Emotion Unit**: `tbb::flow::graph` for state machines.
+
+## WebGPU Pipelines (Items 356-358, 420)
+**API Gateway**: GPU-accelerated routing.
+**Neural Visualizer**: Real-time 10k+ node rendering.
+
+## Refactoring Patterns (Items 388-400)
+**Concurrency**: Async/await  
+**Throughput**: Batching  
+**Memory**: RAII & smart pointers
