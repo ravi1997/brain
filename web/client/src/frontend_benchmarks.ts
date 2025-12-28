@@ -22,5 +22,20 @@ export class FrontendBenchmarks {
     await this.measureLatency("EmotionUnit_FT", async () => {
       // Stub
     });
+
+    // Item 266: Emotion Unit Concurrency
+    await this.measureLatency("EmotionUnit_Concurrency", async () => {
+        // Stub
+    });
+
+    // Item 267: Reflex Module Concurrency
+    await this.measureLatency("ReflexModule_Concurrency", async () => {
+        // Stub
+    });
+
+    // Item 274: Decision Tree Throughput
+    await this.measureLatency("DecisionTree_Throughput", async () => {
+        // Stub
+    });
   }
 }
