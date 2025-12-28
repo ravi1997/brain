@@ -62,29 +62,29 @@
 - [/] **Forgetting Curves**: Added `strength` and `last_recall` columns to Memory DB to support decay logic.
 
 ## 🌌 The Great 1000-Step Roadmap
-- [ ] [Cognition] Benchmark Planning Unit for improved precision <!-- id: 1 -->
-- [ ] [Cognition] Benchmark Planning Unit for improved scalability <!-- id: 2 -->
+- [x] [Cognition] Benchmark Planning Unit for improved precision <!-- id: 1 -->
+- [x] [Cognition] Benchmark Planning Unit for improved scalability <!-- id: 2 -->
 - [x] [Cognition] Benchmark Postgres Interface logic using SIMD/AVX <!-- id: 3 -->
-- [ ] [Cognition] Benchmark Reflex Module for improved recall <!-- id: 4 -->
-- [ ] [Cognition] Benchmark Sentiment Engine logic using OpenMP <!-- id: 5 -->
-- [ ] [Cognition] Benchmark concurrency handling in Auth System <!-- id: 6 -->
-- [ ] [Cognition] Benchmark concurrency handling in Redis Cache <!-- id: 7 -->
+- [x] [Cognition] Benchmark Reflex Module for improved recall <!-- id: 4 -->
+- [x] [Cognition] Benchmark Sentiment Engine logic using OpenMP <!-- id: 5 -->
+- [x] [Cognition] Benchmark concurrency handling in Auth System <!-- id: 6 -->
+- [x] [Cognition] Benchmark concurrency handling in Redis Cache <!-- id: 7 -->
 - [x] [Cognition] Benchmark throughput handling in Memory Store <!-- id: 8 -->
 - [x] [Cognition] Benchmark user experience handling in Neural Visualizer <!-- id: 9 -->
-- [ ] [Cognition] De-risk API Gateway logic using React Hooks <!-- id: 10 -->
-- [ ] [Cognition] De-risk Auth System logic using Protobuf <!-- id: 11 -->
-- [ ] [Cognition] De-risk Decision Tree logic using gRPC <!-- id: 12 -->
-- [ ] [Cognition] De-risk Vector Search for improved fault tolerance <!-- id: 13 -->
-- [ ] [Cognition] De-risk concurrency handling in Decision Tree <!-- id: 14 -->
-- [ ] [Cognition] De-risk throughput handling in Planning Unit <!-- id: 15 -->
-- [ ] [Cognition] Document API Gateway logic using TypeScript <!-- id: 16 -->
-- [ ] [Cognition] Document Auth System logic using OpenMP <!-- id: 17 -->
-- [ ] [Cognition] Document Memory Store for improved memory usage <!-- id: 18 -->
-- [ ] [Cognition] Document Vector Search for improved user experience <!-- id: 19 -->
-- [ ] [Cognition] Document fault tolerance handling in Vector Search <!-- id: 20 -->
-- [ ] [Cognition] Expand Decision Tree for improved user experience <!-- id: 21 -->
-- [ ] [Cognition] Expand Emotion Unit for improved fault tolerance <!-- id: 22 -->
-- [ ] [Cognition] Expand Memory Store for improved concurrency <!-- id: 23 -->
+- [x] [Cognition] De-risk API Gateway logic using React Hooks <!-- id: 10 -->
+- [x] [Cognition] De-risk Auth System logic using Protobuf <!-- id: 11 -->
+- [x] [Cognition] De-risk Decision Tree logic using gRPC <!-- id: 12 -->
+- [x] [Cognition] De-risk Vector Search for improved fault tolerance <!-- id: 13 -->
+- [x] [Cognition] De-risk concurrency handling in Decision Tree <!-- id: 14 -->
+- [x] [Cognition] De-risk throughput handling in Planning Unit <!-- id: 15 -->
+- [x] [Cognition] Document API Gateway logic using TypeScript <!-- id: 16 -->
+- [x] [Cognition] Document Auth System logic using OpenMP <!-- id: 17 -->
+- [x] [Cognition] Document Memory Store for improved memory usage <!-- id: 18 -->
+- [x] [Cognition] Document Vector Search for improved user experience <!-- id: 19 -->
+- [x] [Cognition] Document fault tolerance handling in Vector Search <!-- id: 20 -->
+- [x] [Cognition] Expand Decision Tree for improved user experience <!-- id: 21 -->
+- [x] [Cognition] Expand Emotion Unit for improved fault tolerance <!-- id: 22 -->
+- [x] [Cognition] Expand Memory Store for improved concurrency <!-- id: 23 -->
 - [ ] [Cognition] Expand Neural Visualizer for improved user experience <!-- id: 24 -->
 - [ ] [Cognition] Expand Tokenizer logic using React Hooks <!-- id: 25 -->
 - [ ] [Cognition] Expand memory usage handling in Sleep Cycle <!-- id: 26 -->
