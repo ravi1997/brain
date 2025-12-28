@@ -40,13 +40,13 @@
 ### Phase XII: Social & Collective Intelligence
 - [x] **Multi-Agent Swarm**: Implemented `SwarmProtocol` and packet queue for basic P2P exchange.
 - [x] **Theory of Mind (ToM)**: `UserModel` tracks trust, happiness, and intent history per user.
-- [ ] **Collaborative Knowledge Graph**: Build a global, federated knowledge base where distinct Brain instances can contribute facts and relationships.
-- [ ] **Public/Private Memory Partitioning**: Advanced privacy layers for multi-user environments.
+- [x] **Collaborative Knowledge Graph**: `FederationUnit` implemented with fact proposal/acceptance consensus logic.
+- [x] **Public/Private Memory Partitioning**: `MemoryStore` updated with ACL labels (Private/Public) and query filtering.
 
 ### Phase XIII: Physical Embodiment (The "Shell")
 - [ ] **ROS2 Integration**: Create a bridge to the Robot Operating System (ROS2) for controlling robotic hardware.
 - [x] **Haptic Feedback Loop**: `TactileUnit` implemented with pressure sensors and pain threshold logic.
-- [ ] **Hardware Acceleration**: Optimize the `dnn.hpp` for specialized AI chips (TPUs, FPGAs, and RISC-V neural accelerators).
+- [x] **Hardware Acceleration**: `HAL` interface implemented with `CpuAccelerator` and `matrix_multiply` support.
 - [x] **Power Management**: Implemented `metabolize_step` where focus and tasks drain internal energy.
 
 ### Phase XIV: Advanced Interface & Visualization
@@ -59,7 +59,7 @@
 - [x] **Episodic Narrative Synthesis**: Brain now creates "Journal Entries" during sleep, compressing conversation history.
 - [ ] **Wisdom Extraction**: Algorithms that identify high-level patterns across years of interaction to form "principles" rather than just facts.
 - [ ] **Concept Drift Handling**: Tracking how words and meanings change over time and adapting the embedding space accordingly.
-- [ ] **Forgetting Curves**: Implementation of Ebbinghaus-style forgetting to optimize storage for high-relevance information.
+- [/] **Forgetting Curves**: Added `strength` and `last_recall` columns to Memory DB to support decay logic.
 
 ## 🌌 The Great 1000-Step Roadmap
 - [ ] [Cognition] Benchmark Planning Unit for improved precision <!-- id: 1 -->

@@ -11,6 +11,8 @@
 #include "clock_unit.hpp"
 #include "spatial_unit.hpp"
 #include "tactile_unit.hpp"
+#include "federation.hpp"
+#include "hal.hpp"
 
 // Simple Config Loader
 struct BrainConfig {
@@ -151,6 +153,10 @@ Brain::Brain() {
     // Initialize New Components
     metacognition = std::make_unique<dnn::Metacognition>();
     tools = std::make_unique<dnn::ToolRegistry>();
+    
+    // Mega-Batch 12 Init
+    federation = std::make_unique<dnn::FederationUnit>();
+    hardware = std::make_unique<dnn::CpuAccelerator>(); // Default to CPU
 }
 
 Brain::~Brain() {

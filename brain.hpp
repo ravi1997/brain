@@ -11,7 +11,12 @@
 #include "planning_unit.hpp"
 #include "metacognition.hpp"
 #include "tool_registry.hpp"
+#include "planning_unit.hpp"
+#include "metacognition.hpp"
+#include "tool_registry.hpp"
 #include "swarm_protocol.hpp"
+#include "federation.hpp"
+#include "hal.hpp"
 #include <string>
 #include <vector>
 #include <memory>
@@ -194,6 +199,10 @@ public:
     
     // Conditioned Reflexes: Stimulus Token -> Reflex Token
     std::map<std::string, std::string> condition_map;
+    
+    // Mega-Batch 12
+    std::unique_ptr<dnn::FederationUnit> federation;
+    std::unique_ptr<dnn::HardwareAccelerator> hardware;
     
     // Feature 5: Metabolism
     void metabolize_step();

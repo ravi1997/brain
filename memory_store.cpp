@@ -26,7 +26,10 @@ bool MemoryStore::init() {
                       "timestamp BIGINT,"
                       "type TEXT,"
                       "content TEXT,"
-                      "tags TEXT);";
+                      "tags TEXT,"
+                      "acl TEXT DEFAULT 'PUBLIC',"
+                      "strength DOUBLE PRECISION DEFAULT 1.0,"
+                      "last_recall BIGINT DEFAULT 0);";
     
     if (!pg_client->execute(sql)) return false;
     
@@ -34,15 +37,21 @@ bool MemoryStore::init() {
     return true;
 }
 
-bool MemoryStore::store(const std::string& type, const std::string& content, const std::string& tags) {
+bool MemoryStore::store(const std::string& type, const std::string& content, const std::string& tags, const std::string& acl) {
     std::lock_guard<std::mutex> lock(db_mutex_);
     if (!pg_client->is_connected()) return false;
 
     long long timestamp = std::chrono::duration_cast<std::chrono::seconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
 
+    // WARNING: PostgresClient::store_memory stub needs update to handle ACL/Strength columns
+    // For now we just call it and assume DB schema migration is handled manually or by SQL above
     int id = pg_client->store_memory(timestamp, type, content, tags);
     if (id == -1) return false;
+    
+    // Feature 6: Update ACL (Manual SQL until client updated)
+    std::string update_sql = "UPDATE memories SET acl = '" + acl + "', strength = 1.0, last_recall = " + std::to_string(timestamp) + " WHERE id = " + std::to_string(id) + ";";
+    pg_client->execute(update_sql.c_str());
     
     index_memory(id, content);
     
@@ -52,7 +61,7 @@ bool MemoryStore::store(const std::string& type, const std::string& content, con
 // Global or static instance to share connection across calls
 static RedisClient redis_cache_("redis");
 
-std::vector<Memory> MemoryStore::query(const std::string& keyword) {
+std::vector<Memory> MemoryStore::query(const std::string& keyword, const std::string& user_acl) {
     std::lock_guard<std::mutex> lock(db_mutex_);
     
     std::string cache_key = "query:" + keyword;
@@ -104,16 +113,21 @@ std::vector<Memory> MemoryStore::query(const std::string& keyword) {
         if (++count >= 20) break;
     }
 
-    std::string sql_str = "SELECT id, timestamp, type, content, tags FROM memories WHERE id IN (" + id_list + ") ORDER BY timestamp DESC;";
+    std::string sql_str = "SELECT id, timestamp, type, content, tags, acl FROM memories WHERE id IN (" + id_list + ") ORDER BY timestamp DESC;";
     auto rows = pg_client->query(sql_str);
 
     for (const auto& row : rows) {
+        // ACL Check
+        std::string acl = row.columns.size() > 5 ? row.columns[5] : "PUBLIC";
+        if (acl != "PUBLIC" && acl != user_acl) continue; // Basic ACL simulation
+
         Memory m;
         m.id = std::stoi(row.columns[0]);
         m.timestamp = std::stoll(row.columns[1]);
         m.type = row.columns[2];
         m.content = row.columns[3];
         m.tags = row.columns[4];
+        m.acl_label = acl;
         results.push_back(m);
     }
     

@@ -14,6 +14,11 @@ struct Memory {
     std::string type; // "Observation", "Thought", "Research"
     std::string content;
     std::string tags;
+    
+    // Feature 6 & 10 fields
+    std::string acl_label = "PUBLIC"; // PUBLIC, PRIVATE, RESTRICTED
+    double strength = 1.0; // Decay factor (Ebbinghaus)
+    long long last_recall_time = 0;
 };
 
 class MemoryStore {
@@ -22,8 +27,8 @@ public:
     ~MemoryStore();
 
     bool init();
-    bool store(const std::string& type, const std::string& content, const std::string& tags = "");
-    std::vector<Memory> query(const std::string& keyword);
+    bool store(const std::string& type, const std::string& content, const std::string& tags = "", const std::string& acl = "PUBLIC");
+    std::vector<Memory> query(const std::string& keyword, const std::string& user_acl = "PUBLIC");
     std::vector<Memory> get_recent(int limit = 10);
     long long get_memory_count();
     std::string get_graph_json(int max_nodes = 50);

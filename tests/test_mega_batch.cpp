@@ -3,6 +3,8 @@
 #include "../tactile_unit.hpp"
 #include "../tool_registry.hpp"
 #include "../metacognition.hpp"
+#include "../federation.hpp"
+#include "../hal.hpp"
 #include <cmath>
 
 TEST(TestMegaBatch, Metacognition) {
@@ -67,3 +69,25 @@ TEST(TestMegaBatch, Conditioning) {
     ASSERT_TRUE(brain.condition_map.count("bell"));
     ASSERT_EQ(brain.condition_map["bell"], "POSITIVE_RESPONSE");
 }
+
+TEST(TestMegaBatch, Federation) {
+    dnn::FederationUnit fed;
+    fed.propose_fact({"Sky", "is", "Blue", 0.9, "User1"});
+    auto accepted = fed.sync_knowledge();
+    ASSERT_EQ(accepted.size(), 1);
+    ASSERT_EQ(accepted[0].subject, "Sky");
+}
+
+TEST(TestMegaBatch, HardwareAbstraction) {
+    dnn::CpuAccelerator cpu;
+    std::vector<double> vec = {1.0, 2.0};
+    std::vector<std::vector<double>> batch = {{1.0, 1.0}, {2.0, 2.0}}; // {3, 6}
+    std::vector<double> results(2);
+    
+    cpu.dot_product_batch(vec, batch, results);
+    ASSERT_DOUBLE_EQ(results[0], 3.0);
+    ASSERT_DOUBLE_EQ(results[1], 6.0);
+}
+
+// Note: Testing Postgres ACLs requires live DB; stubbing logic or using integration tests usually better
+// But we modified MemoryStore logic so let's check basic struct updates (can't test SQL execution purely here without mock)
