@@ -46,6 +46,7 @@ add_executable(brain_tests
     memory_profiling_suite.cpp
     nlu_test_suite.cpp
     qa_complete_suite.cpp
+    nextgen_foundation_suite.cpp
 )
 
 target_link_libraries(brain_tests
