@@ -15,6 +15,10 @@ namespace dnn {
         std::string generate_token(const std::string& user) {
             return "proto_token_123";
         }
+
+        void optimize_concurrency() {
+            // Stub: Adjust internal lock granularity or pool size
+        }
     private:
         std::mutex mu_;
     };

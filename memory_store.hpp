@@ -38,6 +38,11 @@ public:
     void store_embedding(const std::string& key, const std::vector<double>& embedding);
     std::vector<double> retrieve_embedding(const std::string& key);
     std::vector<std::string> search_similar(const std::vector<double>& embedding, int limit);
+    
+    // Feature 15: Optimization Stub
+    void optimize_latency() {
+        // Stub: Pre-allocate buffers or warm up cache
+    }
 
 private:
     std::unique_ptr<PostgresClient> pg_client;
