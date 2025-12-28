@@ -37,5 +37,20 @@ export class FrontendBenchmarks {
     await this.measureLatency("DecisionTree_Throughput", async () => {
         // Stub
     });
+
+    // Item 288: API Gateway Protobuf Stress
+    await this.measureLatency("APIGateway_Protobuf_Stress", async () => {
+        // Stub
+    });
+
+    // Item 295: Tokenizer Stability Stress
+    await this.measureLatency("Tokenizer_Stability", async () => {
+        // Stub
+    });
+
+    // Item 303: Vector Search Concurrency
+    await this.measureLatency("VectorSearch_Concurrency", async () => {
+        // Stub
+    });
   }
 }

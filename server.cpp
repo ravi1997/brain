@@ -147,5 +147,5 @@ void TcpServer::client_handler(int socket_fd) {
 }
 
 bool TcpServer::check_rate_limit(uint32_t ip) {
-    return rate_limiter_.allow(std::to_string(ip));
+    return rate_limiter_.check_limit();
 }

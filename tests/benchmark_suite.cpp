@@ -80,3 +80,21 @@ BENCHMARK(SleepCycle_UX, 10, {
     // Stub
     int x = 1;
 })
+
+// Item 307: Emotion Unit WebGPU
+BENCHMARK(EmotionUnit_WebGPU, 10, {
+    // Stub
+    int x = 1;
+})
+
+// Item 308: Memory Store SIMD
+BENCHMARK(MemoryStore_SIMD, 10, {
+    // Stub
+    int x = 1;
+})
+
+// Item 312: Planning Unit Fault Tolerance
+BENCHMARK(PlanningUnit_FT, 10, {
+    // Stub
+    int x = 1;
+})

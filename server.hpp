@@ -47,7 +47,7 @@ private:
     std::mutex clients_mutex_;
     
     // Rate Limiting
-    RateLimiter rate_limiter_;
+    dnn::RateLimiter rate_limiter_;
     // Remove old manual map
     // std::map<uint32_t, std::deque<std::chrono::steady_clock::time_point>> rate_limits_;
     // std::mutex rate_limit_mutex_;
