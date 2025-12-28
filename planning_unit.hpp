@@ -22,10 +22,22 @@ struct PlanNode {
     }
 };
 
+struct Goal {
+    int id;
+    std::string description;
+    int priority; // 0-100
+    std::string status; // "PENDING", "ACTIVE", "COMPLETED"
+    std::string type; // "RESEARCH", "CREATION", "MAINTENANCE"
+};
+
 class PlanningUnit {
 public:
     PlanningUnit();
     std::string decide_best_action(const std::string& context, double energy, double boredom);
+    
+    // Phase X: Autonomous Goal Generation
+    std::vector<Goal> generate_goals(double boredom, double curiosity, const std::string& recent_topic);
+    std::vector<Goal> active_goals;
     
 private:
     std::unique_ptr<PlanNode> root;

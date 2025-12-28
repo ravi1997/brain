@@ -39,6 +39,8 @@ add_executable(brain_tests
     test_cognition_features.cpp
     test_sensory.cpp
     test_sensory_fusion.cpp
+    test_spatial_autonomy.cpp
+    test_mega_batch.cpp
 )
 
 target_link_libraries(brain_tests

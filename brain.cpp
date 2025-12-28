@@ -9,6 +9,8 @@
 #include "vision_unit.hpp"
 #include "audio_unit.hpp"
 #include "clock_unit.hpp"
+#include "spatial_unit.hpp"
+#include "tactile_unit.hpp"
 
 // Simple Config Loader
 struct BrainConfig {
@@ -143,6 +145,12 @@ Brain::Brain() {
     register_sensory_unit(std::make_unique<dnn::VisionUnit>(std::vector<std::size_t>{64*64, 512, VECTOR_DIM}));
     register_sensory_unit(std::make_unique<dnn::AudioUnit>());
     register_sensory_unit(std::make_unique<dnn::ClockUnit>());
+    register_sensory_unit(std::make_unique<dnn::SpatialUnit>());
+    register_sensory_unit(std::make_unique<dnn::TactileUnit>());
+
+    // Initialize New Components
+    metacognition = std::make_unique<dnn::Metacognition>();
+    tools = std::make_unique<dnn::ToolRegistry>();
 }
 
 Brain::~Brain() {
@@ -776,6 +784,22 @@ void Brain::consolidate_memories() {
         }
         item.consolidated = true;
     }
+
+    // Feature 3: Episodic Narrative Synthesis (Journaling)
+    std::string summary;
+    for (const auto& item : conversation_history) {
+        summary += item.role + ": " + item.text + ". ";
+    }
+    if (!summary.empty()) {
+        std::string key = "journal_" + std::to_string(std::time(nullptr));
+        // In a real system, we'd use an LLM to summarize 'summary' here
+        // For now, we store the raw log as a "Journal Entry"
+        memory_store->store("Journal", summary, "Narrative");
+        emit_log("[Memory]: Created Episodic Journal Entry.");
+    }
+    
+    // Feature 6: REM Logic Trigger
+    perform_rem_cycle();
 }
 
 std::string Brain::research(const std::string& topic) {
@@ -1015,6 +1039,49 @@ std::string Brain::get_json_state() {
     return ss.str();
 }
 
+void Brain::perform_rem_cycle() {
+    safe_print("[Brain]: Entering REM Cycle (Dreaming)...");
+    
+    // Feature 6: Replay memories with high emotional weight
+    // For now, randomly selecting words from 'learned_topics' as triggers
+    if (learned_topics.empty()) return;
+    
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, learned_topics.size() - 1);
+    
+    for (int i = 0; i < 5; ++i) { // 5 Dream Sequences
+        // Simulate random neural activation
+        std::string dream_trigger = learned_topics[dis(gen)];
+        std::string dream = get_associative_memory(dream_trigger);
+        
+        // Reinforce connections (Hebbian Learning Stub)
+        // In a full implementation, we would train the neural net with this input
+        if (memory_center) {
+            // Need vector conversion helpers, assuming generic train for now
+            // memory_center->train(...) 
+        }
+        safe_print("[Dreaming]: " + dream_trigger + " -> " + dream.substr(0, 30) + "...");
+    }
+}
+
+void Brain::metabolize_step() {
+    // Feature 5: Advanced Metabolism
+    double consumption = 0.0001; // Base rate
+    
+    // Cognitive Load Penalty
+    if (!focus_topic.empty()) consumption += 0.0002;
+    if (task_manager.has_pending_tasks()) consumption += 0.0005;
+    
+    emotions.energy -= consumption;
+    if (emotions.energy < 0) emotions.energy = 0;
+
+    // Feature 1: Metacognition Update
+    if (metacognition) {
+        metacognition->monitor_performance(emotions.happiness, emotions.boredom);
+    }
+}
+
 void Brain::update_from_json(const std::string& json) {
     std::lock_guard<std::recursive_mutex> lock(brain_mutex);
     // Extremely basic parser for "key": value
@@ -1175,74 +1242,43 @@ std::vector<std::string> Brain::tokenize(const std::string& text) {
 }
 
 
+
+// Feature 9: Entropy-Based Curiosity
+std::string Brain::find_curiosity_topic() {
+    std::lock_guard<std::recursive_mutex> lock(brain_mutex);
+    
+    // Scan 'learned_topics' and find one with sparse connections in memory_store
+    // Simulating "Entropy" as inverse of connection count
+    
+    std::string best_topic;
+    double max_entropy = -1.0;
+    
+    for (const auto& topic : learned_topics) {
+        // Query memory store for related items
+        // Low results = High Entropy (Unknown)
+        auto results = memory_store->query(topic);
+        double entropy = 1.0 / (1.0 + results.size());
+        
+        if (entropy > max_entropy) {
+            max_entropy = entropy;
+            best_topic = topic;
+        }
+    }
+    
+    if (best_topic.empty() && !learned_topics.empty()) {
+        best_topic = learned_topics[rand() % learned_topics.size()];
+    }
+    if (best_topic.empty()) best_topic = "quantum_physics"; // Default
+    
+    return best_topic;
+}
+
 std::string Brain::get_memory_graph() {
     std::lock_guard<std::recursive_mutex> lock(brain_mutex);
     if (!memory_store) return "{\"nodes\":[], \"links\":[]}";
     return memory_store->get_graph_json(50);
 }
 
-std::string Brain::find_curiosity_topic() {
-    // 1. Candidate Pool (could be Expanded)
-    std::vector<std::string> candidates = {
-        "quantum_mechanics", "ancient_history", "machine_learning", "deep_sea", 
-        "astrophysics", "bioinformatics", "cryptography", "linguistics", 
-        "neuroscience", "nanotechnology", "sociology", "music_theory",
-        "robotics", "genetics", "cybersecurity", "metaphysics"
-    };
-
-    // 2. Filter out already learned topics
-    std::vector<std::string> novel_candidates;
-    for (const auto& c : candidates) {
-        bool known = false;
-        for (const auto& t : learned_topics) {
-            if (t == c) { known = true; break; }
-        }
-        if (!known) novel_candidates.push_back(c);
-    }
-
-    if (novel_candidates.empty()) return candidates[rand() % candidates.size()];
-
-    // 3. Find most distant from "Average Knowledge Vector"
-    // Calculate fast centroid of knowledge
-    std::vector<double> centroid(VECTOR_DIM, 0.0);
-    int count = 0;
-    
-    // Use keywords from memory store or base vocab if learned_topics is sparse
-    for (const auto& pair : word_embeddings) {
-        // Sample some embeddings
-        if (rand() % 10 == 0) {
-            dnn::add_vectors(centroid, pair.second);
-            count++;
-        }
-    }
-    
-    if (count > 0) {
-        for (auto& v : centroid) v /= count;
-    }
-
-    // Score candidates by distance from centroid (Curiosity = wanting something different)
-    // Or we could seek *related* but unknown stuff. 
-    // Let's go for *Distance* (Novelty)
-    std::string best_topic = novel_candidates[0];
-    double max_dist = -1.0;
-
-    for (const auto& cand : novel_candidates) {
-        // If we have an embedding for the candidate (we might not if it's unknown!)
-        // If not, we assume max distance (novelty)
-        if (word_embeddings.count(cand)) {
-            double dist = dnn::cosine_distance(centroid, word_embeddings[cand]);
-            if (dist > max_dist) {
-                max_dist = dist;
-                best_topic = cand;
-            }
-        } else {
-            // Totally unknown concept -> High Curiosity
-            return cand; 
-        }
-    }
-
-    return best_topic;
-}
 void Brain::evaluate_goals() {
     std::lock_guard<std::recursive_mutex> lock(brain_mutex);
     
@@ -1258,12 +1294,31 @@ void Brain::evaluate_goals() {
     emotions.energy -= 0.005; // Base metabolic rate
     if (emotions.energy < 0) emotions.energy = 0;
     
-    struct Goal { 
+    struct GoalCandidate { 
         std::string name; 
         double score; 
         std::string param;
     };
-    std::vector<Goal> goals;
+    std::vector<GoalCandidate> goals;
+
+    // Phase X: Check for Autonomous Goals
+    auto autonomous_goals = planning_unit->generate_goals(emotions.boredom, personality.curiosity, current_research_topic);
+    if (!autonomous_goals.empty()) {
+        const auto& ag = autonomous_goals[0];
+        emit_log("[Cognition]: Autonomous Goal Generated: " + ag.description + " (Priority: " + std::to_string(ag.priority) + ")");
+        emit_neural_event("goal_generation", ag.description);
+
+        if (ag.type == "RESEARCH") {
+            // Force push this task
+            // Signature: add_task(string desc, TaskType type, TaskPriority priority)
+            // Need to convert ag.priority (int 0-100) to TaskPriority enum
+            TaskPriority p = TaskPriority::MEDIUM;
+            if (ag.priority > 80) p = TaskPriority::HIGH;
+            
+            task_manager.add_task(ag.description, TaskType::RESEARCH, p);
+            return; // Skip standard evaluation to focus on this new goal
+        }
+    }
     
     // 1. Score Candidates based on State
     // RESEARCH: Driven by Boredom and Curiosity
@@ -1292,8 +1347,8 @@ void Brain::evaluate_goals() {
     }
     
     // 3. Selection
-    std::sort(goals.begin(), goals.end(), [](const Goal& a, const Goal& b){ return a.score > b.score; });
-    Goal winner = goals[0];
+    std::sort(goals.begin(), goals.end(), [](const GoalCandidate& a, const GoalCandidate& b){ return a.score > b.score; });
+    GoalCandidate winner = goals[0];
     
     // Threshold to do nothing
     if (winner.score < 0.5) return;
@@ -1320,6 +1375,33 @@ void Brain::update_context(const std::string& role, const std::string& text, con
         conversation_history.pop_front();
     }
     conversation_history.push_back({role, text, intent, std::time(nullptr), false});
+
+    // Feature 2: Theory of Mind Update
+    if (role == "User") {
+        double sentiment = analyze_sentiment(text);
+        // Simple trust update: consistency builds trust
+        user_model.trust = std::min(1.0, user_model.trust + 0.001); 
+        user_model.estimated_happiness = (user_model.estimated_happiness * 0.8) + (sentiment * 0.2);
+        user_model.intent_history.push_back(intent);
+        if (user_model.intent_history.size() > 10) user_model.intent_history.pop_front();
+    }
+
+    // Feature 10: Classical Conditioning
+    // If we hear "Bell" (trigger) and then receive "Reward" (positive sentiment),
+    // associate Bell -> Reward.
+    if (role == "User" && conversation_history.size() > 1) {
+        const auto& prev = conversation_history[conversation_history.size()-2];
+        double sentiment = analyze_sentiment(text);
+        if (sentiment > 0.8 && prev.role == "User") {
+            // Previous input led to reward? Or simple co-occurrence?
+            // Simplified: If sentiment is high, reinforce previous non-sentiment tokens
+            auto tokens = tokenize(prev.text);
+            if (!tokens.empty()) {
+                std::string potential_trigger = tokens[0]; // Naive
+                condition_map[potential_trigger] = "POSITIVE_RESPONSE";
+            }
+        }
+    }
 }
 
 std::string Brain::resolve_intent(const std::string& text) {

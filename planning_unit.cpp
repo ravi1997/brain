@@ -12,6 +12,37 @@ void PlanningUnit::build_tree() {
     // Tree is now built dynamically during MCTS expansion
 }
 
+std::vector<Goal> PlanningUnit::generate_goals(double boredom, double curiosity, const std::string& recent_topic) {
+    std::vector<Goal> new_goals;
+    static int goal_counter = 1000;
+
+    // High Boredom + High Curiosity -> Self-directed Research
+    if (boredom > 0.6 && curiosity > 0.5) {
+        Goal g;
+        g.id = goal_counter++;
+        g.description = "Research " + (recent_topic.empty() ? "random_physics" : recent_topic);
+        g.priority = static_cast<int>(boredom * 100);
+        g.status = "PENDING";
+        g.type = "RESEARCH";
+        new_goals.push_back(g);
+        active_goals.push_back(g);
+    }
+
+    // High Boredom + Low Curiosity -> Maintenance / Cleanup
+    if (boredom > 0.8 && curiosity < 0.3) {
+        Goal g;
+        g.id = goal_counter++;
+        g.description = "Organize Memory Graph";
+        g.priority = 60;
+        g.status = "PENDING";
+        g.type = "MAINTENANCE";
+        new_goals.push_back(g);
+        active_goals.push_back(g);
+    }
+
+    return new_goals;
+}
+
 std::string PlanningUnit::decide_best_action(const std::string& context, double energy, double boredom) {
     // Run MCTS for 200 iterations (increased for detailed search)
     for (int i = 0; i < 200; ++i) {

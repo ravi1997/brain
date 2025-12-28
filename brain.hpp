@@ -9,6 +9,9 @@
 #include "task_manager.hpp"
 #include "redis_client.hpp"
 #include "planning_unit.hpp"
+#include "metacognition.hpp"
+#include "tool_registry.hpp"
+#include "swarm_protocol.hpp"
 #include <string>
 #include <vector>
 #include <memory>
@@ -47,6 +50,13 @@ struct Emotions {
     double fear = 0.0;      // 0-1
     double energy = 1.0;    // 0-1
     double boredom = 0.0;   // 0-1 (High = bored)
+};
+
+// Feature 2: Theory of Mind
+struct UserModel {
+    double estimated_happiness = 0.5;
+    double trust = 0.5;
+    std::deque<std::string> intent_history;
 };
 
 // Region represents a distinct functional area of the brain
@@ -175,6 +185,20 @@ public:
     void load_stopwords();
     bool is_stop_word(const std::string& word);
     std::chrono::system_clock::time_point last_interaction_time;
+    
+    // Mega-Batch 11 New Components
+    std::unique_ptr<dnn::Metacognition> metacognition;
+    std::unique_ptr<dnn::ToolRegistry> tools;
+    UserModel user_model; // Single user for now
+    std::deque<dnn::SwarmPacket> swarm_queue;
+    
+    // Conditioned Reflexes: Stimulus Token -> Reflex Token
+    std::map<std::string, std::string> condition_map;
+    
+    // Feature 5: Metabolism
+    void metabolize_step();
+    // Feature 6: REM Logic
+    void perform_rem_cycle();
 
     Brain();
     ~Brain();

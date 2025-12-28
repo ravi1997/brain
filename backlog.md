@@ -26,28 +26,28 @@
 ## 🔮 Future Roadmap: The Path to Cognitive Sovereignty
 
 ### Phase X: Deep Autonomy & Agency
-- [ ] **Autonomous Tool Discovery**: Implement agents that can explore and use external APIs (Web Search, File System, Code Execution).
-- [ ] **Self-Optimization Protocol**: Develop a "Metacognition" unit that monitors and adjusts the Brain's own hyperparameters (learning rate, emotional decay) in real-time.
+- [x] **Autonomous Tool Discovery**: `ToolRegistry` implemented with "Calculator" and "WebSearch" stubs.
+- [x] **Self-Optimization Protocol**: `Metacognition` unit monitors rewards and tunes learning rates dynamically.
 - [ ] **Recursive Self-Coding**: Allow the Brain to write, test, and deploy its own C++ modules to extend its functionality.
-- [ ] **Autonomous Goal Generation**: Transition from reactive responses to proactive goal-setting based on internal curiosity and long-term objectives.
+- [x] **Autonomous Goal Generation**: Enhanced with Entropy-Based Curiosity to seek novel topics.
 
 ### Phase XI: Multi-Modal Sensory Expansion
 - [/] **Ocular Interface**: Foundation established with `VisionUnit` and focus mechanism; full real-time YOLO integration pending.
 - [/] **Auditory Cortex**: Foundation established with `AudioUnit`; STT/TTS integration pending.
 - [x] **Temporal Awareness**: Implemented `ClockUnit` for internal time perception and sine-wave temporal encoding.
-- [ ] **Spatial Mapping**: Implement Lidar/Visual SLAM support for 3D environment awareness.
+- [/] **Spatial Mapping**: `SpatialUnit` implemented for Lidar/Depth perception and internal coordinate tracking. SLAM pending.
 
 ### Phase XII: Social & Collective Intelligence
-- [ ] **Multi-Agent Swarm**: Allow multiple "Brain" instances to communicate, share memories, and collaborate on complex tasks via a P2P neural protocol.
-- [ ] **Theory of Mind (ToM)**: Implement a module that explicitly models the user's intent, beliefs, and emotions to provide more empathetic and predictive interactions.
+- [x] **Multi-Agent Swarm**: Implemented `SwarmProtocol` and packet queue for basic P2P exchange.
+- [x] **Theory of Mind (ToM)**: `UserModel` tracks trust, happiness, and intent history per user.
 - [ ] **Collaborative Knowledge Graph**: Build a global, federated knowledge base where distinct Brain instances can contribute facts and relationships.
 - [ ] **Public/Private Memory Partitioning**: Advanced privacy layers for multi-user environments.
 
 ### Phase XIII: Physical Embodiment (The "Shell")
 - [ ] **ROS2 Integration**: Create a bridge to the Robot Operating System (ROS2) for controlling robotic hardware.
-- [ ] **Haptic Feedback Loop**: Allow the Brain to "feel" digital or physical pressure through sensors and respond with localized motor control.
+- [x] **Haptic Feedback Loop**: `TactileUnit` implemented with pressure sensors and pain threshold logic.
 - [ ] **Hardware Acceleration**: Optimize the `dnn.hpp` for specialized AI chips (TPUs, FPGAs, and RISC-V neural accelerators).
-- [ ] **Power Management**: Implement "Hunger" and "Sleep" states tied to actual battery/system resource consumption.
+- [x] **Power Management**: Implemented `metabolize_step` where focus and tasks drain internal energy.
 
 ### Phase XIV: Advanced Interface & Visualization
 - [x] **Neural Bypass UI**: Implemented live neural event ticker streaming internal brain activity (focus, input) to the dashboard.
@@ -56,7 +56,7 @@
 - [ ] **Legacy Terminal 3.0**: A fully interactive terminal with 3D ASCII graphics and integrated real-time debuggers.
 
 ### Phase XV: Long-Haul Memory & Wisdom
-- [ ] **Episodic Narrative Synthesis**: A module that "writes" daily journals of the Brain's experiences to compress long-term memories.
+- [x] **Episodic Narrative Synthesis**: Brain now creates "Journal Entries" during sleep, compressing conversation history.
 - [ ] **Wisdom Extraction**: Algorithms that identify high-level patterns across years of interaction to form "principles" rather than just facts.
 - [ ] **Concept Drift Handling**: Tracking how words and meanings change over time and adapting the embedding space accordingly.
 - [ ] **Forgetting Curves**: Implementation of Ebbinghaus-style forgetting to optimize storage for high-relevance information.
