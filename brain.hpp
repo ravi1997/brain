@@ -31,6 +31,8 @@
 #include <filesystem>
 #include <fstream>
 #include <unordered_set>
+#include "include/cognitive_core.hpp"
+
 
 // Simple thread-safe logger
 inline void safe_print(const std::string& msg) {
@@ -209,6 +211,10 @@ public:
     // Feature 6: REM Logic
     void perform_rem_cycle();
 
+    // Cognitive Core - Unified access to all 100 AI features
+    std::unique_ptr<dnn::CognitiveCore> cognitive_core;
+
+
     Brain();
     ~Brain();
 
@@ -244,7 +250,41 @@ public:
     void save(const std::string& filename);
     void load(const std::string& filename);
     
+    // ========== COGNITIVE CORE ACCESS METHODS ==========
+    // Brain 2.0: Unified AI capabilities through cognitive_core
+    
+    /**
+     * Deep reasoning about a query using causal inference, abduction, and explanation
+     */
+    std::string deep_reason(const std::string& query, const std::vector<std::string>& context = {});
+    
+    /**
+     * Understand cause and effect relationships
+     */
+    float analyze_causality(const std::string& cause, const std::string& effect);
+    
+    /**
+     * What-if counterfactual reasoning
+     */
+    std::string what_if(const std::string& variable, float new_value, const std::string& target);
+    
+    /**
+     * Query common sense knowledge
+     */
+    std::vector<std::string> query_commonsense(const std::string& subject, const std::string& relation = "");
+    
+    /**
+     * Meta-learn from few examples (adapt quickly)
+     */
+    void adapt_from_examples(const std::vector<std::pair<std::vector<float>, std::vector<float>>>& examples);
+    
+    /**
+     * Get cognitive system status
+     */
+    std::string get_cognitive_status();
+    
     // Supervised Learning
+
     void teach(const std::string& input, const std::string& target);
     
     // Event Callbacks

@@ -47,6 +47,15 @@ add_executable(brain_tests
     nlu_test_suite.cpp
     qa_complete_suite.cpp
     nextgen_foundation_suite.cpp
+    phase1_batch_a_suite.cpp
+    phase1_batch_b_suite.cpp
+    phase1_batch_c_suite.cpp
+    phase1_batch_d_suite.cpp
+    phase1_batch_e_suite.cpp
+    phase1_batch_f_suite.cpp
+    phase2_batch_a_suite_part1.cpp
+    phase2_batch_a_suite_part2.cpp
+    brain_integration_test.cpp
 )
 
 target_link_libraries(brain_tests

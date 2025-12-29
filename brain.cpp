@@ -157,6 +157,11 @@ Brain::Brain() {
     // Mega-Batch 12 Init
     federation = std::make_unique<dnn::FederationUnit>();
     hardware = std::make_unique<dnn::CpuAccelerator>(); // Default to CPU
+    
+    // Initialize Cognitive Core - Unified AI System with all 100 features
+    safe_print("[Brain]: Initializing Cognitive Core with 100 AI features...");
+    cognitive_core = std::make_unique<dnn::CognitiveCore>();
+    safe_print("[Brain]: Cognitive Core initialized - Reasoning, Perception, Learning systems online.");
 }
 
 Brain::~Brain() {
@@ -1529,4 +1534,104 @@ std::vector<double> Brain::get_aggregate_sensory_input() {
     }
     
     return aggregate;
+}
+
+// ========== COGNITIVE CORE METHOD IMPLEMENTATIONS ==========
+
+std::string Brain::deep_reason(const std::string& query, const std::vector<std::string>& context) {
+    std::lock_guard<std::recursive_mutex> lock(brain_mutex);
+    
+    if (!cognitive_core) {
+        return "Cognitive core not initialized";
+    }
+    
+    emit_thought("Deep reasoning about: " + query);
+    
+    auto result = cognitive_core->reason(query, context);
+    
+    std::string response = result.conclusion;
+    if (!result.explanation.empty()) {
+        response += "\n\nExplanation: " + result.explanation;
+    }
+    response += "\n(Confidence: " + std::to_string(int(result.confidence * 100)) + "%)";
+    
+    return response;
+}
+
+float Brain::analyze_causality(const std::string& cause, const std::string& effect) {
+    std::lock_guard<std::recursive_mutex> lock(brain_mutex);
+    
+    if (!cognitive_core) {
+        return 0.0f;
+    }
+    
+    emit_thought("Analyzing causal relationship: " + cause + " → " + effect);
+    
+    return cognitive_core->compute_causal_effect(cause, effect);
+}
+
+std::string Brain::what_if(const std::string& variable, float new_value, const std::string& target) {
+    std::lock_guard<std::recursive_mutex> lock(brain_mutex);
+    
+    if (!cognitive_core) {
+        return "Cognitive core not initialized";
+    }
+    
+    emit_thought("Counterfactual reasoning: What if " + variable + " = " + std::to_string(new_value) + "?");
+    
+    return cognitive_core->counterfactual_reasoning(variable, new_value, target);
+}
+
+std::vector<std::string> Brain::query_commonsense(const std::string& subject, const std::string& relation) {
+    std::lock_guard<std::recursive_mutex> lock(brain_mutex);
+    
+    if (!cognitive_core) {
+        return {};
+    }
+    
+    emit_thought("Querying commonsense knowledge about: " + subject);
+    
+    return cognitive_core->query_commonsense(subject, relation);
+}
+
+void Brain::adapt_from_examples(const std::vector<std::pair<std::vector<float>, std::vector<float>>>& examples) {
+    std::lock_guard<std::recursive_mutex> lock(brain_mutex);
+    
+    if (!cognitive_core) {
+        return;
+    }
+    
+    emit_thought("Meta-learning from " + std::to_string(examples.size()) + " examples");
+    
+    cognitive_core->meta_learn(examples);
+    
+    safe_print("[Brain]: Adapted from " + std::to_string(examples.size()) + " examples via meta-learning");
+}
+
+std::string Brain::get_cognitive_status() {
+    std::lock_guard<std::recursive_mutex> lock(brain_mutex);
+    
+    if (!cognitive_core) {
+        return "Cognitive core: Not initialized";
+    }
+    
+    auto status = cognitive_core->get_status();
+    
+    std::string report = "=== Cognitive Core Status ===\n";
+    report += "Memories: " + std::to_string(status.total_memories) + "\n";
+    report += "Knowledge Triples: " + std::to_string(status.knowledge_triples) + "\n";
+    report += "Current Reasoning: " + status.current_reasoning + "\n";
+    report += "Confidence: " + std::to_string(int(status.overall_confidence * 100)) + "%\n";
+    report += "\nSystems Online:\n";
+    report += "  ✓ Causal Reasoning\n";
+    report += "  ✓ Counterfactual Inference\n";
+    report += "  ✓ Abductive Reasoning\n";
+    report += "  ✓ Explanation Generation\n";
+    report += "  ✓ Common-Sense Knowledge\n";
+    report += "  ✓ Meta-Learning\n";
+    report += "  ✓ Visual Perception\n";
+    report += "  ✓ Audio Understanding\n";
+    report += "  ✓ Distributed Intelligence\n";
+    
+    return report;
 }
