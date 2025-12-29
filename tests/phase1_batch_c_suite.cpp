@@ -9,10 +9,16 @@
 TEST(Phase1_Perception, SceneGraphGeneration) {
     dnn::perception::SceneGraphGenerator sgg;
     
-    std::vector<dnn::perception::SceneGraphGenerator::Object> objects = {
-        {"person", 0, 0.9f, {100, 100, 50, 100}},
-        {"car", 1, 0.8f, {200, 200, 80, 60}}
-    };
+    std::vector<dnn::perception::SceneGraphGenerator::Object> objects;
+    
+    dnn::perception::SceneGraphGenerator::Object obj_person("person", 0, 0.9f);
+    obj_person.bbox = {100, 100, 50, 100};
+    objects.push_back(obj_person);
+    
+    dnn::perception::SceneGraphGenerator::Object obj_car("car", 1, 0.8f);
+    obj_car.bbox = {200, 200, 80, 60};
+    objects.push_back(obj_car);
+
     
     auto graph = sgg.generate(objects);
     ASSERT_EQ(graph.objects.size(), 2);
