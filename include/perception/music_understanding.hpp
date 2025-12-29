@@ -84,7 +84,7 @@ public:
             auto chord = chroma_to_chord(chroma);
             chord.timestamp = pos / sample_rate_;
             
-            chord.push_back(chord);
+            chords.push_back(chord);
         }
         
         return chords;

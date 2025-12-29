@@ -115,7 +115,7 @@ public:
             values["gate" + std::to_string(i)] = result;
         }
         
-        return values.empty() ? 0.0f : values.rbegin()->second;
+        return values.empty() ? 0.0f : values.begin()->second;
     }
     
 private:

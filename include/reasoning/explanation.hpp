@@ -84,7 +84,7 @@ public:
         // Create key features with importances
         for (size_t i = 0; i < decision.input_features.size(); i++) {
             Feature f = decision.input_features[i];
-            if (i < importance.size()) {
+            if (i < importances.size()) {
                 f.importance = importances[i];
             }
             exp.key_features.push_back(f);

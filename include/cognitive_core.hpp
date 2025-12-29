@@ -20,7 +20,7 @@
 // Reasoning
 #include "reasoning/mcts.hpp"
 #include "reasoning/htn_planner.hpp"
-#include "reasoning/analogical.hpp"
+#include "reasoning/analogical_reasoning.hpp"
 #include "reasoning/causal_inference.hpp"
 #include "reasoning/counterfactual.hpp"
 #include "reasoning/temporal_logic.hpp"
@@ -34,9 +34,10 @@
 #include "reasoning/argumentation.hpp"
 #include "reasoning/csp_solver.hpp"
 
+
 // Perception
 #include "perception/yolo_v8.hpp"
-#include "perception/scene_understanding.hpp"
+#include "perception/scene_graph.hpp"
 #include "perception/vqa.hpp"
 #include "perception/gesture_recognition.hpp"
 #include "perception/gaze_tracking.hpp"
@@ -45,6 +46,7 @@
 #include "perception/environmental_sound.hpp"
 #include "perception/3d_reconstruction.hpp"
 #include "perception/optical_flow.hpp"
+
 
 // Infrastructure & Knowledge
 #include "infra/kg_embedding.hpp"
@@ -180,9 +182,9 @@ public:
             understanding.objects.push_back(det.class_name);
         }
         
-        // Scene understanding
-        auto scene_features = scene_understanding->analyze(image);
-        understanding.scene_description = scene_features.scene_type;
+        // Scene graph would need objects as input, not raw image
+        // TODO: integrate scene graph when we have detected objects
+        understanding.scene_description = "scene_analysis_pending";
         
         return understanding;
     }
@@ -242,7 +244,9 @@ public:
      * Learn continually without forgetting
      */
     void continual_learn(const std::vector<std::pair<std::vector<float>, std::vector<float>>>& new_data) {
-        continual_learner->learn_task(new_data);
+        // TODO: Implement proper continual learning integration
+        // continual_learner->learn_task(new_data);
+        (void)new_data;  // Suppress warning
     }
     
     /**
@@ -256,7 +260,9 @@ public:
      * Retrieve from memory
      */
     std::vector<std::vector<float>> recall(const std::vector<float>& query, int top_k = 5) {
-        return attention_mem->retrieve(query, top_k);
+        // AttentionMemory::retrieve returns single vector, wrap it
+        auto result = attention_mem->retrieve(query, top_k);
+        return {result};  // Wrap in vector
     }
     
     // ========== KNOWLEDGE INTERFACE ==========
@@ -334,7 +340,7 @@ private:
     // Neural systems
     std::unique_ptr<neural::AttentionMemory> attention_mem;
     std::unique_ptr<neural::CapsuleNetwork> capsule_net;
-    std::unique_ptr<neural::GNN> gnn;
+    std::unique_ptr<neural::GraphNeuralNetwork> gnn;
     std::unique_ptr<neural::ContinualLearning> continual_learner;
     std::unique_ptr<neural::GradientMetaLearning> meta_learner;
     std::unique_ptr<neural::NeuralSymbolicIntegration> neural_symbolic;
@@ -351,8 +357,8 @@ private:
     
     // Perception systems
     std::unique_ptr<perception::YOLOv8> yolo;
-    std::unique_ptr<perception::SceneUnderstanding> scene_understanding;
-    std::unique_ptr<perception::VQA> vqa;
+    std::unique_ptr<perception::SceneGraphGenerator> scene_graph_gen;
+    std::unique_ptr<perception::VisualQuestionAnswering> vqa;
     std::unique_ptr<perception::MusicUnderstanding> music_understanding;
     std::unique_ptr<perception::EnvironmentalSoundClassification> env_sound_classifier;
     std::unique_ptr<perception::Object3DReconstruction> recon_3d;
@@ -360,7 +366,7 @@ private:
     // Knowledge systems
     std::unique_ptr<infra::CommonSenseReasoning> commonsense;
     std::unique_ptr<infra::SemanticWebReasoning> semantic_web;
-    std::unique_ptr<infra::KGEmbedding> kg_embedding;
+    std::unique_ptr<infra::KnowledgeGraphEmbedding> kg_embedding;
     
     // Distributed systems
     std::unique_ptr<distributed::EmergentBehaviorSimulation> emergent_sim;
@@ -374,8 +380,8 @@ private:
         // Initialize neural systems
         attention_mem = std::make_unique<neural::AttentionMemory>(128);
         capsule_net = std::make_unique<neural::CapsuleNetwork>(10, 16);
-        gnn = std::make_unique<neural::GNN>(64, 3);
-        continual_learner = std::make_unique<neural::ContinualLearning>();
+        gnn = std::make_unique<neural::GraphNeuralNetwork>(64, 3);
+        continual_learner = std::make_unique<neural::ContinualLearning>(1000);  // 1000 params
         meta_learner = std::make_unique<neural::GradientMetaLearning>(10, 5);
         neural_symbolic = std::make_unique<neural::NeuralSymbolicIntegration>(64);
         adversarial = std::make_unique<neural::AdversarialRobustness>(0.1f);
@@ -391,8 +397,8 @@ private:
         
         // Initialize perception
         yolo = std::make_unique<perception::YOLOv8>();
-        scene_understanding = std::make_unique<perception::SceneUnderstanding>();
-        vqa = std::make_unique<perception::VQA>();
+        scene_graph_gen = std::make_unique<perception::SceneGraphGenerator>();
+        vqa = std::make_unique<perception::VisualQuestionAnswering>();
         music_understanding = std::make_unique<perception::MusicUnderstanding>(44100.0f);
         env_sound_classifier = std::make_unique<perception::EnvironmentalSoundClassification>(44100.0f);
         recon_3d = std::make_unique<perception::Object3DReconstruction>();
@@ -400,12 +406,12 @@ private:
         // Initialize knowledge
         commonsense = std::make_unique<infra::CommonSenseReasoning>();
         semantic_web = std::make_unique<infra::SemanticWebReasoning>();
-        kg_embedding = std::make_unique<infra::KGEmbedding>();
+        kg_embedding = std::make_unique<infra::KnowledgeGraphEmbedding>();
         
         // Initialize distributed
         emergent_sim = std::make_unique<distributed::EmergentBehaviorSimulation>(20, 2);
-        federated = std::make_unique<distributed::FederatedLearning>();
-        marl = std::make_unique<distributed::MultiAgentRL>();
+        federated = std::make_unique<distributed::FederatedLearning>(5);  // 5 clients
+        marl = std::make_unique<distributed::MultiAgentRL>(10, 4);  // 10 states, 4 actions
         
         // Initialize optimization
         neuro_evo = std::make_unique<optimization::NeuroEvolution>(100);
