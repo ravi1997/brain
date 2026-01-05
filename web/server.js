@@ -78,6 +78,10 @@ wss.on('connection', (ws, req) => {
             if (msg.type === 'input') {
                 console.log(`[Proxy] Forwarding input to brain: ${msg.payload}`);
                 tcpClient.write(msg.payload + '\n');
+            } else {
+                // Forward everything else (including cognitive_test)
+                console.log(`[Proxy] Forwarding command to brain: ${msg.type}`);
+                tcpClient.write(data + '\n');
             }
         } catch (e) {
             console.log(`[Proxy] Forwarding raw input to brain: ${data}`);

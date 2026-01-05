@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../brain.hpp"
+#include "brain.hpp"
 #include <thread>
 #include <vector>
 
@@ -55,4 +55,38 @@ TEST_F(EmotionLogicTest, MixedStatePrioritization) {
     Task* t = brain.task_manager.get_next_task();
     ASSERT_NE(t, nullptr);
     EXPECT_EQ(t->type, TaskType::RESEARCH);
+}
+
+// Test 4: Hunger -> Eat
+TEST_F(EmotionLogicTest, HungerTriggersEat) {
+    brain.metabolism.hunger = 0.9;
+    brain.emotions.energy = 0.5;
+    
+    brain.evaluate_goals();
+    
+    Task* t = brain.task_manager.get_next_task();
+    ASSERT_NE(t, nullptr);
+    EXPECT_EQ(t->type, TaskType::EAT);
+}
+
+// Test 5: Thirst -> Drink
+TEST_F(EmotionLogicTest, ThirstTriggersDrink) {
+    brain.metabolism.thirst = 0.9;
+    brain.emotions.energy = 0.5;
+    
+    brain.evaluate_goals();
+    
+    Task* t = brain.task_manager.get_next_task();
+    ASSERT_NE(t, nullptr);
+    EXPECT_EQ(t->type, TaskType::DRINK);
+}
+
+// Test 6: Metabolism Pulse
+TEST_F(EmotionLogicTest, MetabolismPulse) {
+    double initial_hunger = brain.metabolism.hunger;
+    brain.environment.time_of_day = 12.0; // Day
+    
+    brain.metabolize_step();
+    
+    EXPECT_GT(brain.metabolism.hunger, initial_hunger);
 }

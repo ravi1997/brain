@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "../brain.hpp"
-#include "../vision_unit.hpp"
+#include "brain.hpp"
+#include "vision_unit.hpp"
 #include <memory>
 
 class SensoryTest : public ::testing::Test {

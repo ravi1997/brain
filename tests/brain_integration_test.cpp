@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../brain.hpp"
+#include "brain.hpp"
 #include <memory>
 
 /**
@@ -198,7 +198,4 @@ TEST_F(BrainIntegrationTest, Brain_CognitiveImprovesOverBaseline) {
     );
 }
 
-int main(int argc, char** argv) {
-    testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}
+// Google Test will provide main() automatically

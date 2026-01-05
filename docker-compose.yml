@@ -9,7 +9,7 @@ services:
     # Override the default command to build and run the executable
     # This allows for incremental builds when source files change
     command: >
-      bash -c "mkdir -p build && cd build && cmake .. && make -j$(nproc) && ./brain_replica"
+      bash -c "mkdir -p build && cd build && cmake .. && make -j$(nproc) brain_replica && ./brain_replica"
     ports:
       - "9001-9012:9001-9012"
     stdin_open: true

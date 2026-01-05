@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "../brain.hpp"
-#include "../spatial_unit.hpp"
+#include "brain.hpp"
+#include "spatial_unit.hpp"
 #include <cmath>
 
 TEST(TestSpatial, LidarProcessing) {

@@ -1,14 +1,14 @@
 #include <gtest/gtest.h>
-#include "../include/neural/program_synthesis.hpp"
-#include "../include/neural/diff_reasoning.hpp"
-#include "../include/reasoning/causal_inference.hpp"
-#include "../include/reasoning/counterfactual.hpp"
-#include "../include/reasoning/theorem_proving.hpp"
-#include "../include/reasoning/abductive.hpp"
-#include "../include/reasoning/default_logic.hpp"
-#include "../include/reasoning/nonmonotonic.hpp"
-#include "../include/reasoning/unification.hpp"
-#include "../include/reasoning/explanation.hpp"
+#include "neural/program_synthesis.hpp"
+#include "neural/diff_reasoning.hpp"
+#include "reasoning/causal_inference.hpp"
+#include "reasoning/counterfactual.hpp"
+#include "reasoning/theorem_proving.hpp"
+#include "reasoning/abductive.hpp"
+#include "reasoning/default_logic.hpp"
+#include "reasoning/nonmonotonic.hpp"
+#include "reasoning/unification.hpp"
+#include "reasoning/explanation.hpp"
 
 // Neural Program Synthesis Test
 TEST(Phase2_Neural, ProgramSynthesis) {

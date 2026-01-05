@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../brain.hpp"
+#include "brain.hpp"
 
 class EmotionTest : public ::testing::Test {
 protected:

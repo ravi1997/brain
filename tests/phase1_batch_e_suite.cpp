@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
-#include "../include/neural/neural_rendering.hpp"
-#include "../include/neural/attention_flow.hpp"
-#include "../include/reasoning/temporal_logic.hpp"
-#include "../include/reasoning/htn_planner.hpp"
-#include "../include/perception/vqa.hpp"
+#include "neural/neural_rendering.hpp"
+#include "neural/attention_flow.hpp"
+#include "reasoning/temporal_logic.hpp"
+#include "reasoning/htn_planner.hpp"
+#include "perception/vqa.hpp"
 
 // Neural Rendering Test
 TEST(Phase1_Neural, NeuralRendering) {

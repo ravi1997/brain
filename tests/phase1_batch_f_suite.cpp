@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
-#include "../include/neural/neural_modules.hpp"
-#include "../include/reasoning/probabilistic_logic.hpp"
-#include "../include/neural/gradient_meta_learning.hpp"
-#include "../include/perception/gaze_tracking.hpp"
-#include "../include/perception/visual_grounding.hpp"
+#include "neural/neural_modules.hpp"
+#include "reasoning/probabilistic_logic.hpp"
+#include "neural/gradient_meta_learning.hpp"
+#include "perception/gaze_tracking.hpp"
+#include "perception/visual_grounding.hpp"
 
 // Neural Module Networks Test
 TEST(Phase1_Neural, NeuralModuleNetworks) {

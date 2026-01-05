@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "../websocket_server.hpp"
-#include "../auth_system.hpp"
+#include "websocket_server.hpp"
+#include "auth_system.hpp"
 
 // Item 38: Verify Lock-free WebSocket counters
 TEST(CognitionSprint, WebSocketLockFree) {

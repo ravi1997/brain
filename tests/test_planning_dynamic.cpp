@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../planning_unit.hpp"
+#include "planning_unit.hpp"
 
 class PlanningDynamicTest : public ::testing::Test {
 protected:

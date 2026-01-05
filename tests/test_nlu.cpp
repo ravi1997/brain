@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../brain.hpp"
+#include "brain.hpp"
 
 class NLUTest : public ::testing::Test {
 protected:

@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../postgres_storage.hpp"
+#include "postgres_storage.hpp"
 
 class PostgresTest : public ::testing::Test {
 protected:

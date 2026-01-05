@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../memory_store.hpp"
+#include "memory_store.hpp"
 #include <filesystem>
 
 class MemoryOptimizationTest : public ::testing::Test {

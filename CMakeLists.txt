@@ -43,11 +43,22 @@ endif()
 include_directories(${LIBPQ_INCLUDE_DIR})
 
 # The main executable
-# The main executable
-add_executable(brain_replica main.cpp dnn.cpp brain.cpp memory_store.cpp server.cpp reflex.cpp task_manager.cpp planning_unit.cpp postgres_client.cpp postgres_storage.cpp crash_reporter.cpp)
+add_executable(brain_replica 
+    src/main.cpp 
+    src/dnn.cpp 
+    src/brain.cpp 
+    src/memory_store.cpp 
+    src/server.cpp 
+    src/reflex.cpp 
+    src/task_manager.cpp 
+    src/planning_unit.cpp 
+    src/postgres_client.cpp 
+    src/postgres_storage.cpp 
+    src/crash_reporter.cpp
+)
 
 # Enable Precompiled Headers (PCH) for faster builds
-target_precompile_headers(brain_replica PRIVATE stable.hpp)
+target_precompile_headers(brain_replica PRIVATE include/stable.hpp)
 
 # Link libraries
 target_link_libraries(brain_replica PRIVATE Threads::Threads sqlite3 hiredis ${LIBPQ_LIBRARY})
@@ -69,7 +80,7 @@ add_subdirectory(tests)
 
 # Benchmarks
 add_executable(benchmark_simd tests/benchmark_simd.cpp)
-target_include_directories(benchmark_simd PRIVATE .)
+target_include_directories(benchmark_simd PRIVATE include src)
 if(OpenMP_CXX_FOUND)
     target_link_libraries(benchmark_simd PRIVATE OpenMP::OpenMP_CXX)
 endif()

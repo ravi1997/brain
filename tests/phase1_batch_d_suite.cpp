@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
-#include "../include/perception/emotion_speech.hpp"
-#include "../include/perception/sensor_fusion.hpp"
-#include "../include/reasoning/decision_theory.hpp"
-#include "../include/reasoning/cbr.hpp"
-#include "../include/nlu/open_ie.hpp"
+#include "perception/emotion_speech.hpp"
+#include "perception/sensor_fusion.hpp"
+#include "reasoning/decision_theory.hpp"
+#include "reasoning/cbr.hpp"
+#include "nlu/open_ie.hpp"
 
 // Emotion Recognition from Speech Test
 TEST(Phase1_Perception, EmotionRecognitionSpeech) {

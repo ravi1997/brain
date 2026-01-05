@@ -1,4 +1,4 @@
-#include "../brain.hpp"
+#include "brain.hpp"
 #include <gtest/gtest.h>
 
 class ContextTest : public ::testing::Test {

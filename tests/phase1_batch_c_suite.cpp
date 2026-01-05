@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
-#include "../include/perception/scene_graph.hpp"
-#include "../include/optimization/aco.hpp"
-#include "../include/neural/uncertainty.hpp"
-#include "../include/nlu/relation_extraction.hpp"
-#include "../include/infra/kb_completion.hpp"
+#include "perception/scene_graph.hpp"
+#include "optimization/aco.hpp"
+#include "neural/uncertainty.hpp"
+#include "nlu/relation_extraction.hpp"
+#include "infra/kb_completion.hpp"
 
 // Scene Graph Generation Test
 TEST(Phase1_Perception, SceneGraphGeneration) {

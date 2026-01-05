@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../reflex.hpp"
+#include "reflex.hpp"
 #include <iostream>
 
 class ReflexFuzzyTest : public ::testing::Test {

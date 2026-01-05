@@ -1,14 +1,14 @@
 #include <gtest/gtest.h>
-#include "../include/perception/music_understanding.hpp"
-#include "../include/perception/environmental_sound.hpp"
-#include "../include/perception/3d_reconstruction.hpp"
-#include "../include/reasoning/argumentation.hpp"
-#include "../include/infra/semantic_web.hpp"
-#include "../include/infra/commonsense.hpp"
-#include "../include/neural/adversarial.hpp"
-#include "../include/neural/neural_symbolic.hpp"
-#include "../include/optimization/neuroevolution.hpp"
-#include "../include/distributed/emergent_behavior.hpp"
+#include "perception/music_understanding.hpp"
+#include "perception/environmental_sound.hpp"
+#include "perception/3d_reconstruction.hpp"
+#include "reasoning/argumentation.hpp"
+#include "infra/semantic_web.hpp"
+#include "infra/commonsense.hpp"
+#include "neural/adversarial.hpp"
+#include "neural/neural_symbolic.hpp"
+#include "optimization/neuroevolution.hpp"
+#include "distributed/emergent_behavior.hpp"
 
 // Music Understanding Test
 TEST(Phase2_Perception, MusicUnderstanding) {

@@ -155,11 +155,24 @@ public:
      * Plan action sequence using HTN planning
      */
     std::vector<std::string> plan_actions(const std::string& goal) {
-        reasoning::HTNPlanner::TaskNetwork network;
-        network.goal = goal;
+        // Create a simple task for the goal
+        reasoning::HTNPlanner::Task task;
+        task.name = goal;
+        task.is_primitive = false;  // Not a primitive action
         
-        auto plan = htn_planner->plan(network);
-        return plan.actions;
+        // Create initial state
+        reasoning::HTNPlanner::State state;
+        
+        // Plan with HTN planner
+        auto actions = htn_planner->plan({task}, state);
+        
+        // Convert Action objects to action names
+        std::vector<std::string> action_names;
+        for (const auto& action : actions) {
+            action_names.push_back(action.name);
+        }
+        
+        return action_names;
     }
     
     // ========== PERCEPTION INTERFACE ==========
@@ -176,15 +189,25 @@ public:
     VisualUnderstanding perceive_visual(const std::vector<std::vector<std::vector<float>>>& image) {
         VisualUnderstanding understanding;
         
-        // Object detection
-        auto detections = yolo->detect(image);
-        for (const auto& det : detections) {
-            understanding.objects.push_back(det.class_name);
+        // Flatten 3D image to 1D for YOLO
+        std::vector<float> flattened_image;
+        for (const auto& channel : image) {
+            for (const auto& row : channel) {
+                for (float pixel : row) {
+                    flattened_image.push_back(pixel);
+                }
+            }
         }
         
-        // Scene graph would need objects as input, not raw image
-        // TODO: integrate scene graph when we have detected objects
-        understanding.scene_description = "scene_analysis_pending";
+        // Object detection
+        if (!flattened_image.empty()) {
+            auto detections = yolo->detect(flattened_image);
+            for (const auto& det : detections) {
+                understanding.objects.push_back(det.class_name);
+            }
+        }
+        
+        understanding.scene_description = "Objects detected: " + std::to_string(understanding.objects.size());
         
         return understanding;
     }
@@ -193,9 +216,33 @@ public:
      * Answer visual questions
      */
     std::string answer_visual_question(const std::vector<std::vector<std::vector<float>>>& image,
-                                      const std::string& question) {
-        auto answer = vqa->answer(image, question);
-        return answer.answer_text;
+                                      const std::string& question_text) {
+        // Create Question object
+        perception::VisualQuestionAnswering::Question question(question_text);
+        
+        // Extract simple visual features from image
+        std::vector<perception::VisualQuestionAnswering::VisualFeature> features;
+        
+        // Flatten image and create a basic feature
+        std::vector<float> flattened;
+        for (const auto& channel : image) {
+            for (const auto& row : channel) {
+                for (float pixel : row) {
+                    flattened.push_back(pixel);
+                }
+            }
+        }
+        
+        if (!flattened.empty()) {
+            perception::VisualQuestionAnswering::VisualFeature feat;
+            feat.object_name = "image";
+            feat.features = {flattened.begin(), flattened.begin() + std::min(size_t(10), flattened.size())};
+            feat.confidence = 0.8f;
+            features.push_back(feat);
+        }
+        
+        // Answer the question
+        return vqa->answer(question, features);
     }
     
     /**
@@ -237,16 +284,46 @@ public:
      * Meta-learn from few examples (few-shot learning)
      */
     void meta_learn(const std::vector<std::pair<std::vector<float>, std::vector<float>>>& examples) {
-        meta_learner->adapt(examples);
+        // Create Task from examples
+        neural::GradientMetaLearning::Task task;
+        
+        for (const auto& [input, output] : examples) {
+            task.support_x.push_back(input);
+            task.support_y.push_back(output);
+        }
+        
+        // Use same examples for query (in real scenario, would be different)
+        task.query_x = task.support_x;
+        task.query_y = task.support_y;
+        
+        // Adapt to this task
+        meta_learner->adapt(task);
     }
     
     /**
      * Learn continually without forgetting
      */
     void continual_learn(const std::vector<std::pair<std::vector<float>, std::vector<float>>>& new_data) {
-        // TODO: Implement proper continual learning integration
-        // continual_learner->learn_task(new_data);
-        (void)new_data;  // Suppress warning
+        // Compute simple gradient from new data
+        std::vector<float> gradient(1000, 0.0f);  // Initialize with param size
+        
+        for (const auto& [input, target] : new_data) {
+            // Simple gradient computation (MSE derivative)
+            for (size_t i = 0; i < std::min(input.size(), gradient.size()); i++) {
+                float error = (i < target.size()) ? (input[i] - target[i]) : input[i];
+                gradient[i] += 2.0f * error * input[i];
+            }
+        }
+        
+        // Normalize gradient
+        if (!new_data.empty()) {
+            for (auto& g : gradient) {
+                g /= new_data.size();
+            }
+        }
+        
+        // Update with EWC (Elastic Weight Consolidation) for continual learning
+        continual_learner->update(gradient);
     }
     
     /**

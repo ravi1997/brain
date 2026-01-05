@@ -12,15 +12,15 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 add_executable(brain_tests
-    ../brain.cpp
-    ../dnn.cpp
-    ../memory_store.cpp
-    ../task_manager.cpp
-    ../reflex.cpp
-    ../planning_unit.cpp
-    ../postgres_client.cpp
-    ../postgres_storage.cpp
-    ../crash_reporter.cpp
+    ../src/brain.cpp
+    ../src/dnn.cpp
+    ../src/memory_store.cpp
+    ../src/task_manager.cpp
+    ../src/reflex.cpp
+    ../src/planning_unit.cpp
+    ../src/postgres_client.cpp
+    ../src/postgres_storage.cpp
+    ../src/crash_reporter.cpp
     test_memory.cpp
     test_nlu.cpp
     test_context.cpp
@@ -56,7 +56,10 @@ add_executable(brain_tests
     phase2_batch_a_suite_part1.cpp
     phase2_batch_a_suite_part2.cpp
     brain_integration_test.cpp
+    test_biological_dynamics.cpp
 )
+
+target_include_directories(brain_tests PRIVATE ../include ../src)
 
 target_link_libraries(brain_tests
     gtest_main

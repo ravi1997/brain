@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../brain.hpp"
+#include "brain.hpp"
 
 class CognitionFeaturesTest : public ::testing::Test {
 protected:

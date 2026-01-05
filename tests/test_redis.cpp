@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../redis_client.hpp"
+#include "redis_client.hpp"
 #include <thread>
 #include <chrono>
 

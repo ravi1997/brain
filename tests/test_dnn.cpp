@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../dnn.hpp"
+#include "dnn.hpp"
 
 TEST(DNNTest, PlasticLayerConstructor) {
     std::mt19937_64 rng(42);

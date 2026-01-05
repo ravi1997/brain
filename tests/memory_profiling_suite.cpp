@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "../memory_store.hpp"
-#include "../auth_system.hpp"
+#include "memory_store.hpp"
+#include "auth_system.hpp"
 
 // Memory Profiling Suite covering items 418-530
 

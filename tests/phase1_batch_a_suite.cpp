@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
-#include "../include/optimization/nas.hpp"
-#include "../include/neural/hypernetwork.hpp"
-#include "../include/reasoning/mcts.hpp"
-#include "../include/reasoning/csp_solver.hpp"
-#include "../include/perception/optical_flow.hpp"
+#include "optimization/nas.hpp"
+#include "neural/hypernetwork.hpp"
+#include "reasoning/mcts.hpp"
+#include "reasoning/csp_solver.hpp"
+#include "perception/optical_flow.hpp"
 
 // Neural Architecture Search Test
 TEST(Phase1_Optimization, NeuralArchitectureSearch) {

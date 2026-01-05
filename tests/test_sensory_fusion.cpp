@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include "../brain.hpp"
-#include "../audio_unit.hpp"
-#include "../clock_unit.hpp"
+#include "brain.hpp"
+#include "audio_unit.hpp"
+#include "clock_unit.hpp"
 #include <cmath>
 #include <thread>
 

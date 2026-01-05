@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../brain.hpp"
+#include "brain.hpp"
 #include <algorithm>
 
 class ImprovedNLUTest : public ::testing::Test {

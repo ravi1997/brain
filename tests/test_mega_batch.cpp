@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
-#include "../brain.hpp"
-#include "../tactile_unit.hpp"
-#include "../tool_registry.hpp"
-#include "../metacognition.hpp"
-#include "../federation.hpp"
-#include "../hal.hpp"
+#include "brain.hpp"
+#include "tactile_unit.hpp"
+#include "tool_registry.hpp"
+#include "metacognition.hpp"
+#include "federation.hpp"
+#include "hal.hpp"
 #include <cmath>
 
 TEST(TestMegaBatch, Metacognition) {

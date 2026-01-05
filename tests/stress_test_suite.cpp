@@ -2,8 +2,8 @@
 #include <thread>
 #include <vector>
 #include <atomic>
-#include "../profiler.hpp"
-#include "../auth_system.hpp"
+#include "profiler.hpp"
+#include "auth_system.hpp"
 
 // Stress Test 1: Concurrency on Auth System
 TEST(StressTest, AuthConcurrency) {

@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 #include <chrono>
-#include "../brain.hpp"
-#include "../planning_unit.hpp"
-#include "../auth_system.hpp"
-#include "../decision_tree.hpp"
-#include "../rate_limiter.hpp"
+#include "brain.hpp"
+#include "planning_unit.hpp"
+#include "auth_system.hpp"
+#include "decision_tree.hpp"
+#include "rate_limiter.hpp"
 
 // Benchmarking Macros
 #define BENCHMARK(name, iterations, code_block) \

@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
-#include "../include/neural/continual_learning.hpp"
-#include "../include/neural/bayesian_layer.hpp"
-#include "../include/neural/td_learning.hpp"
-#include "../include/reasoning/analogical_reasoning.hpp"
-#include "../include/reasoning/inference_engine.hpp"
+#include "neural/continual_learning.hpp"
+#include "neural/bayesian_layer.hpp"
+#include "neural/td_learning.hpp"
+#include "reasoning/analogical_reasoning.hpp"
+#include "reasoning/inference_engine.hpp"
 
 // Continual Learning (EWC) Test
 TEST(Phase1_Neural, ContinualLearning) {
