@@ -1,128 +1,86 @@
-# Workflow: Docker Development Loop
+# Meta-Workflow: Docker Development Loop
 
-**Purpose:** Debug Docker build and runtime issues
-**When to use:** Docker build fails, containers won't start, or development loop broken
-**Prerequisites:** Docker installed, docker-compose.yml exists
-**Estimated time:** 15-30 minutes
-**Outputs:** Working Docker environment
-
----
-
-## Prerequisites
-
-- [ ] Docker is installed and running
-- [ ] docker-compose.yml exists
-- [ ] You have disk space (check `df -h`)
-- [ ] Environment detected
+**Purpose:** Debug Docker build and runtime issues across stacks.
+**When to use:** Docker build fails, containers won't start, or development loop broken.
+**Prerequisites:** Docker installed, stack identified.
+**Type:** Universal Meta-Workflow
 
 ---
 
-## Step 1: Diagnose
+## Workflow Contract
 
-### Check Docker Status
-// turbo
+| Attribute | Details |
+| :--- | :--- |
+| **Inputs** | `docker-compose.yml`, `PROJECT_FINGERPRINT` |
+| **Outputs** | Working Docker environment |
+| **Policy** | Containers must pass health checks |
+| **Stop Conditions** | Docker daemon not running, disk full |
+
+---
+
+## Step 0: Context Detection
+
+Identify stack to understand container expectations (e.g., JVM vs. Python runtime).
+
 ```bash
-# Docker running?
-docker ps
-
-# Check logs
-docker-compose logs
-
-# Check disk space
-docker system df
+# Check fingerprint
+cat agent/contracts/PROJECT_FINGERPRINT.md
 ```
 
-### Common Issues
+### Stack Norms
 
-**A) Build Failure**
+- **Java:** Expect long startup times, high memory usage.
+- **Python:** Expect fast reload, watch out for `__pycache__` mounts.
+- **C++:** Expect compile steps in build stage.
+- **Web:** Expect node_modules volume mounts.
+
+### Decision Trace
+
+> [!NOTE]
+> Record the detected stack and specific container issues.
+
+---
+
+## Step 1: Diagnose (Universal)
+
+1.  **Status:** `docker ps`
+2.  **Logs:** `docker-compose logs`
+3.  **Space:** `docker system df`
+
+---
+
+## Step 2: Stack-Specific Fixes
+
+Depending on the stack detected in Step 0, apply specific fixes.
+
+### Common Stack Issues
+
+- **Java (Maven/Gradle):** Memory limit reached (OOM). Increase Docker memory.
+- **Python (Pip):** Dependency conflict. Rebuild without cache.
+- **Web (NPM):** Node versions mismatch. Check base image.
+
 ```bash
-# Check build output
+# General Rebuild (Safe)
 docker-compose build --no-cache
-
-# Common causes:
-# - No space left
-# - Network timeout
-# - Missing dependency
-```
-
-**B) Container Won't Start**
-```bash
-# Check why
-docker-compose up
-# Look for:
-# - Port already in use
-# - Volume mount errors
-# - Environment variable missing
-```
-
-**C) Permission Denied**
-```bash
-# Check file permissions
-ls -la
-
-# Fix ownership
-sudo chown -R $USER:$USER .
 ```
 
 ---
 
-## Step 2: Fix
-
-### Clean Up (if needed)
-```bash
-# Remove old containers
-docker-compose down
-
-# Clean system
-docker system prune -a
-
-# Remove volumes (careful!)
-docker volume prune
-```
-
-### Rebuild
-```bash
-# Build fresh
-docker-compose build --no-cache
-
-# Start
-docker-compose up -d
-
-# Check logs
-docker-compose logs -f
-```
-
----
-
-## Step 3: Verify
+## Step 3: Verify (Universal)
 
 // turbo
 ```bash
 # All containers running?
 docker-compose ps
-# Expected: All "Up"
 
-# Test application
-curl http://localhost:8000/healthz
-# Expected: 200 OK
-
-# Check logs for errors
-docker-compose logs | grep -i error
-# Expected: No critical errors
+# Health endpoints?
+curl http://localhost:8000/healthz (or equivalent)
 ```
 
 ---
 
 ## Completion Criteria
 
-- ✅ All containers running
-- ✅ Application accessible
-- ✅ No errors in logs
-- ✅ Can make code changes and see updates
-
----
-
-## See Also
-
-- [`../checklists/DOCKER_BUILD_FAIL_EVIDENCE.md`](../checklists/DOCKER_BUILD_FAIL_EVIDENCE.md)
-- [`../skills/docker_compose_debug.md`](../skills/docker_compose_debug.md)
+- ✅ All containers "Up"
+- ✅ App responding
+- ✅ No critical errors in logs

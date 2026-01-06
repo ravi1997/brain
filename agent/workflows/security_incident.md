@@ -1,155 +1,101 @@
-# Workflow: Security Incident Response
+# Meta-Workflow: Security Incident Response
 
-**Purpose:** Handle security incidents and vulnerabilities
-**When to use:** When security issue detected (injection, breach, vulnerability)
-**Prerequisites:** Access to logs, security tools, incident response plan
-**Estimated time:** 30-90 minutes (depending on severity)
-**Outputs:** Incident contained, vulnerability fixed, incident report
-
----
-
-## Prerequisites
-
-- [ ] Security incident confirmed
-- [ ] Incident severity assessed (P1-P4)
-- [ ] Stakeholders notified (if P1/P2)
-- [ ] Environment detected
-- [ ] Production → `policy/PRODUCTION_POLICY.md`
+**Purpose:** Handle security incidents and vulnerabilities.
+**When to use:** Security issue detected (injection, breach, vulnerability).
+**Prerequisites:** Logs, stack identified, P1-P4 assessment.
+**Type:** Universal Meta-Workflow
 
 ---
 
-## Step 1: Contain the Incident
+## Workflow Contract
 
-### Immediate Actions (P1/P2)
-```bash
-# 1. Block malicious IP (if identified)
-sudo iptables -A INPUT -s <malicious-ip> -j DROP
-
-# 2. Disable affected endpoint (if applicable)
-# Edit nginx config to return 503
-
-# 3. Rotate compromised credentials
-# Change API keys, passwords, tokens
-
-# 4. Enable additional logging
-# Increase log verbosity temporarily
-```
+| Attribute | Details |
+| :--- | :--- |
+| **Inputs** | Incident report, Logs, `ACTIVE_SCOPE`, `PROJECT_FINGERPRINT` |
+| **Outputs** | Contained incident, Patch |
+| **Policy** | P1 incidents require immediate escalation. See `agent/security/SECRETS_POLICY.md` |
+| **Stop Conditions** | False positive detected |
 
 ---
 
-## Step 2: Investigate
+## Step 0: Context & Safety Setup
 
-### Collect Evidence
-```bash
-# Check access logs
-grep -E "sql|script|\.\./" /var/log/nginx/access.log
+**Objective**: Secure the active scope and determine allowed actions (Execution Level).
 
-# Check application logs
-grep -i "error\|exception" /var/log/myapp/app.log
-
-# Check authentication logs
-grep "Failed password" /var/log/auth.log
-
-# Check for suspicious files
-find /var/www -name "*.php" -mtime -1
-```
-
-### Identify Attack Vector
-- SQL Injection?
-- Path Traversal?
-- XSS?
-- Authentication bypass?
-- DDoS?
-
----
-
-## Step 3: Fix Vulnerability
-
-### For SQL Injection
-```python
-# Bad (vulnerable)
-query = f"SELECT * FROM users WHERE id = {user_id}"
-
-# Good (safe)
-query = "SELECT * FROM users WHERE id = %s"
-cursor.execute(query, (user_id,))
-```
-
-### For Path Traversal
-```python
-# Bad (vulnerable)
-file_path = f"/uploads/{filename}"
-
-# Good (safe)
-import os
-filename = os.path.basename(filename)  # Remove path
-file_path = os.path.join("/uploads", filename)
-if not file_path.startswith("/uploads"):
-    raise ValueError("Invalid path")
-```
-
-### For XSS
-```python
-# Use proper escaping
-from markupsafe import escape
-safe_input = escape(user_input)
-```
-
----
-
-## Step 4: Deploy Fix
+### 1. Resolve Scope & Impact
+Identify the component we are working on and valid impact.
 
 ```bash
-# 1. Test fix locally
-pytest tests/security/
+# Set scope
+export ACTIVE_SCOPE="${ACTIVE_SCOPE:-default}"
 
-# 2. Deploy to staging
-# ... deploy ...
+# Load scope rules
+source agent/scripts/resolve_scope.sh "$ACTIVE_SCOPE"
 
-# 3. Verify fix
-# ... test ...
-
-# 4. Deploy to production
-# Follow deploy_and_migrate.md
+# Check Component Graph for impact
+source agent/workflows/monorepo_change_impact.md
 ```
+
+### 2. Threat Model Checklist
+Identify the threat model based on the stack:
+- **Web/Python/Java (Backend):** SQL Injection, RCE, Deserialization.
+- **Flutter/Mobile:** Insecure Storage, API Key Leakage, Jailbreak detection.
+- **C++:** Buffer Overflow, Memory Corruption.
+- **General:** Broken Auth, XSS (Frontend).
 
 ---
 
-## Step 5: Verify & Monitor
+## Step 1: Contain (Universal)
 
+1.  **Block:** IP ban.
+2.  **Disable:** Turn off affected feature.
+3.  **Rotate:** Change compromised keys (See `SECRETS_POLICY.md`).
+4.  **Redact:** Remove raw secrets from logs/PRs immediately if found.
+
+---
+
+## Step 2: Investigate (Stack-Specific)
+
+Refer to `agent/security/SECURITY_BASELINES.md` for tools and audit commands.
+
+**Backend (SQLi):**
 ```bash
-# 1. Verify vulnerability is fixed
-# Run security scanner
-
-# 2. Monitor logs for 24 hours
-tail -f /var/log/nginx/access.log | grep -E "sql|script"
-
-# 3. Check for similar vulnerabilities
-# Code review related endpoints
+grep -i "union select" /var/log/nginx/access.log
 ```
+
+**C++ (Segfault/Crash):**
+Analyze core dump with `gdb`.
+
+**Mobile:**
+Check for unusual API traffic/patterns.
+
+---
+
+## Step 3: Fix & Patch (Universal)
+
+1.  **Reproduce:** Create a test case (exploit).
+2.  **Fix:** Patch the code.
+    - If dependency issue: Follow **Remediation Playbook** in `SECURITY_BASELINES.md`.
+3.  **Verify:** Run test case again (must fail).
+
+---
+
+## Step 4: Deploy & Monitor
+
+1.  **Deploy:** Urgent hotfix.
+2.  **Monitor:** Watch logs for attempts.
+
+---
+
+## Step 5: Post-Mortem & Rollback Plan
+
+- **Rollback:** If hotfix causes regression, revert to previous commit and re-apply "Contain" steps (Disable feature) instead of patching.
+- **Verify:** Ensure metrics return to normal.
 
 ---
 
 ## Completion Criteria
 
 - ✅ Incident contained
-- ✅ Vulnerability identified and fixed
-- ✅ Fix deployed and verified
-- ✅ No ongoing malicious activity
-- ✅ Incident report created
-- ✅ Stakeholders notified
-
----
-
-## Required Artifacts
-
-- **Always:** `artifacts/incident_report.md`
-- **If major:** `artifacts/postmortem.md`
-- **Always:** Security patch notes
-
----
-
-## See Also
-
-- [`../workflows/security_sqli_path.md`](security_sqli_path.md)
-- [`../policy/PRODUCTION_POLICY.md`](../policy/PRODUCTION_POLICY.md)
+- ✅ Vulnerability patched
+- ✅ No new exploits observed

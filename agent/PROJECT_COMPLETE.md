@@ -54,7 +54,7 @@
 - `00_SYSTEM.md` (200+ lines) - Agent instructions
 - `01_PROJECT_CONTEXT.md` (107 lines) - Universal schema
 - `02_CONVENTIONS.md` - Language-agnostic conventions
-- `03_DEFAULTS.md` - Universal defaults
+- `02_CONVENTIONS.md` (Defaults) - Universal defaults
 
 ---
 
@@ -134,7 +134,7 @@
 - `MIGRATION_GUIDE.md` (200+ lines)
 - `QUICK_REFERENCE.md` (200+ lines)
 - `UNIVERSAL_SUPPORT.md` (600+ lines)
-- `VERSION.md` - Complete history
+- `CHANGELOG.md` - Complete history
 - `COMPLETION_SUMMARY.md`
 - `examples/` (4 files)
 

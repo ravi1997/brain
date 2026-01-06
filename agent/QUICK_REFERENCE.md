@@ -200,3 +200,36 @@ cat agent/autofill/PATH_AND_SERVICE_INFERENCE.md
 **Version:** 4.0 | **Updated:** 2026-01-05
 
 **Need help?** → [`README.md`](README.md) | **Examples:** → [`examples/`](examples/)
+
+---
+
+## ⚡ Command Phrase Book (from 10_COMMANDS)
+(You speak short; agent does deep)
+
+### Debug / Fix
+- `fix this error: <paste traceback/log>`
+- `reproduce and fix: <symptom>`
+- `write a regression test for: <bug>`
+- `why nginx 502? <paste minimal logs>`
+- `gunicorn keeps restarting <logs>`
+
+### DevOps
+- `make docker dev loop stable`
+- `optimize compose for dev`
+- `systemd service failing <unit name/logs>`
+- `add maintenance mode for app`
+
+### Security
+- `harden inputs for route <route>`
+- `review logs for sqli/path traversal patterns`
+- `add safe request logging middleware`
+
+### Performance
+- `profile slow endpoint <path>`
+- `reduce memory usage`
+- `add caching safely`
+
+### Feature work
+- `implement feature: <one sentence>`
+- `turn this into tasks: <goal>`
+- `generate PR description for <changes>`

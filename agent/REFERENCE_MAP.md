@@ -10,13 +10,14 @@
 
 | Tag | File | Purpose |
 |-----|------|---------|
-| `ENTRYPOINT` | [`00_INDEX.md`](00_INDEX.md) | Main router - start here |
+| `BOOTSTRAP` | [`00_BOOTSTRAP.md`](00_BOOTSTRAP.md) | Bootstrap logic (Actual Start) |
+| `ENTRYPOINT` | [`00_INDEX.md`](00_INDEX.md) | Legacy router (Redirects to Bootstrap) |
 | `SYSTEM` | [`00_SYSTEM.md`](00_SYSTEM.md) | Agent instructions |
 | `QUICKSTART` | [`QUICKSTART.md`](QUICKSTART.md) | 30-second setup guide |
 | `CONTEXT` | [`01_PROJECT_CONTEXT.md`](01_PROJECT_CONTEXT.md) | Project configuration |
-| `CONVENTIONS` | [`02_CONVENTIONS.md`](02_CONVENTIONS.md) | Coding standards |
-| `DEFAULTS` | [`03_DEFAULTS.md`](03_DEFAULTS.md) | Default assumptions |
-| `COMMANDS` | [`10_COMMANDS.md`](10_COMMANDS.md) | Quick commands |
+| `CONVENTIONS` | [`02_CONVENTIONS.md`](02_CONVENTIONS.md) | Coding standards & defaults |
+| `DEFAULTS` | [`02_CONVENTIONS.md`](02_CONVENTIONS.md) | Default assumptions (Merged) |
+| `COMMANDS` | [`QUICK_REFERENCE.md`](QUICK_REFERENCE.md) | Quick commands |
 
 ---
 
@@ -64,6 +65,7 @@
 | `POLICY:PHI_SAFE` | [`policy/PHI_SAFE_LOGGING.md`](policy/PHI_SAFE_LOGGING.md) | PHI/PII redaction |
 | `POLICY:COMMAND_SAFETY` | [`policy/COMMAND_SAFETY.md`](policy/COMMAND_SAFETY.md) | Command safety rules |
 | `POLICY:ENV_DETECTION` | [`policy/ENV_DETECTION.md`](policy/ENV_DETECTION.md) | Environment detection |
+| `POLICY:RELEASE` | [`agent/release/RELEASE_POLICY.md`](agent/release/RELEASE_POLICY.md) | Release engineering policy |
 
 ---
 
@@ -164,7 +166,7 @@
 | `DOC:UNIVERSAL_SUPPORT` | [`UNIVERSAL_SUPPORT.md`](UNIVERSAL_SUPPORT.md) | Language support (600+ lines) |
 | `DOC:MIGRATION_GUIDE` | [`MIGRATION_GUIDE.md`](MIGRATION_GUIDE.md) | v3 → v4 upgrade |
 | `DOC:QUICK_REFERENCE` | [`QUICK_REFERENCE.md`](QUICK_REFERENCE.md) | Cheat sheet |
-| `DOC:VERSION` | [`VERSION.md`](VERSION.md) | Version history |
+| `DOC:VERSION` | [`CHANGELOG.md`](CHANGELOG.md) | Version history |
 
 ---
 

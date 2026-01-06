@@ -32,19 +32,20 @@ Copy/paste and edit. **Leave unknowns blank** - agent will infer.
 
 ```yaml
 # CORE (Required)
-app_name: "brain"              # REQUIRED
-project_type: "cpp"          # python|nodejs|java|cpp|go|rust|flutter|static
+app_name: "brain_replica" # REQUIRED
+project_type: "cpp"       # python|nodejs|java|cpp|go|rust|flutter|static
+PRIMARY_STACK: "cpp"      # OPTIONAL: Manual override for stack detection (e.g. "python", "java")
 env: "dev"                # REQUIRED - dev|staging|production
 
 # STRUCTURE
-repo_root: "/home/ravi/workspace/brain"
-source_dir: "src"            # src/|app/|lib/
-build_dir: "build"             # dist/|build/|target/
-test_dir: "tests"              # tests/|test/
+repo_root: "."
+source_dir: "src/"        # src/|app/|lib/
+build_dir: "build/"       # dist/|build/|target/
+test_dir: "tests/"        # tests/|test/
 
 # BUILD
-build_system: "cmake"          # cmake|makefile|maven|npm|pip|uv|cargo
-build_cmd: "cmake -B build -S . && cmake --build build"
+build_system: "cmake"     # cmake|makefile|maven|npm|pip|uv|cargo
+build_cmd: "cmake -B build && cmake --build build"
 clean_cmd: "rm -rf build"
 
 # PACKAGE MANAGER
@@ -52,19 +53,19 @@ package_manager: ""       # pip|uv|npm|maven|cargo|pub
 install_cmd: ""
 
 # RUNTIME
-runtime: "gcc"               # python|node|java|gcc|go|dart
-entrypoint: "build/brain"
-run_cmd: "./build/brain"
+runtime: "gcc"            # python|node|java|gcc|go|dart
+entrypoint: "build/brain_replica"
+run_cmd: "./build/brain_replica"
 
 # WEB (if applicable)
-framework: "react"             # flask|express|spring|react
-server_type: "node"           # gunicorn|node|tomcat
+framework: ""             # flask|express|spring|react
+server_type: ""           # gunicorn|node|tomcat
 listen_host: "0.0.0.0"
-app_port: 3000
-health_path: "/"
+app_port: 8000
+health_path: "/healthz"
 
 # DATABASE (if applicable)
-db_kind: "sqlite"               # postgres|mysql|sqlite|mongo|none
+db_kind: "postgres"       # postgres|mysql|sqlite|mongo|none
 migration_tool: ""        # alembic|flyway|sequelize|none
 
 # DOCKER (if applicable)
@@ -73,15 +74,15 @@ compose_file: "docker-compose.yml"
 compose_backend_service: "brain"
 
 # DEPLOYMENT (if applicable)
-deployment_type: "docker"       # docker|systemd|k8s|serverless
+deployment_type: "docker" # docker|systemd|k8s|serverless
 systemd_unit: ""
 
 # TESTING
-test_cmd: "./test.sh"              # pytest|npm test|mvn test
+test_cmd: "ctest --test-dir build" # pytest|npm test|mvn test
 lint_cmd: ""              # ruff check .|npm run lint
 
 # SECURITY
-has_phi_pii: false         # Default true for safety
+has_phi_pii: false        # Default true for safety
 ```
 
 See [`contracts/UNIVERSAL_PROJECT_SCHEMA.md`](contracts/UNIVERSAL_PROJECT_SCHEMA.md) for complete schema.
@@ -91,12 +92,12 @@ See [`contracts/UNIVERSAL_PROJECT_SCHEMA.md`](contracts/UNIVERSAL_PROJECT_SCHEMA
 ## Validation Checklist
 
 Agent MUST verify:
-- [x] `app_name` is filled (REQUIRED)
-- [x] `project_type` is set (REQUIRED)
-- [x] `env` is correct (dev/staging/production)
-- [x] All blank fields processed by autofill
-- [x] Confidence level calculated
-- [x] If uncertain about env → defaulted to production
+- [ ] `app_name` is filled (REQUIRED)
+- [ ] `project_type` is set (REQUIRED)
+- [ ] `env` is correct (dev/staging/production)
+- [ ] All blank fields processed by autofill
+- [ ] Confidence level calculated
+- [ ] If uncertain about env → defaulted to production
 
 ---
 

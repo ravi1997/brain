@@ -271,7 +271,7 @@ See [`profiles/`](file:///home/programmer/Desktop/projects/aiims/ai-agent-md-pac
 ### For Your Project
 1. Fill [`01_PROJECT_CONTEXT.md`](file:///home/programmer/Desktop/projects/aiims/ai-agent-md-pack/agent/01_PROJECT_CONTEXT.md) with your project details
 2. Adjust [`02_CONVENTIONS.md`](file:///home/programmer/Desktop/projects/aiims/ai-agent-md-pack/agent/02_CONVENTIONS.md) for your coding standards
-3. Modify [`03_DEFAULTS.md`](file:///home/programmer/Desktop/projects/aiims/ai-agent-md-pack/agent/03_DEFAULTS.md) for your stack preferences
+3. Modify [`02_CONVENTIONS.md`](file:///home/programmer/Desktop/projects/aiims/ai-agent-md-pack/agent/02_CONVENTIONS.md) for your stack preferences (Defaults section)
 
 ### Adding Custom Workflows
 1. Create new file in `workflows/`
@@ -301,9 +301,9 @@ Use [`ROUTING_RULES.md`](file:///home/programmer/Desktop/projects/aiims/ai-agent
 ## 📖 Documentation
 
 - **Setup:** [`QUICKSTART.md`](file:///home/programmer/Desktop/projects/aiims/ai-agent-md-pack/agent/QUICKSTART.md), [`COPY_INTO_NEW_REPO.md`](file:///home/programmer/Desktop/projects/aiims/ai-agent-md-pack/agent/COPY_INTO_NEW_REPO.md)
-- **Commands:** [`10_COMMANDS.md`](file:///home/programmer/Desktop/projects/aiims/ai-agent-md-pack/agent/10_COMMANDS.md) - Quick command reference
+- **Commands:** [`QUICK_REFERENCE.md`](file:///home/programmer/Desktop/projects/aiims/ai-agent-md-pack/agent/QUICK_REFERENCE.md) - Quick command reference
 - **Taxonomy:** [`TAXONOMY.md`](file:///home/programmer/Desktop/projects/aiims/ai-agent-md-pack/agent/TAXONOMY.md) - Error classification
-- **Version:** [`VERSION.md`](file:///home/programmer/Desktop/projects/aiims/ai-agent-md-pack/agent/VERSION.md) - Changelog
+- **Version:** [`CHANGELOG.md`](file:///home/programmer/Desktop/projects/aiims/ai-agent-md-pack/agent/CHANGELOG.md) - Changelog
 
 ---
 
@@ -311,7 +311,7 @@ Use [`ROUTING_RULES.md`](file:///home/programmer/Desktop/projects/aiims/ai-agent
 
 ### For Users
 1. **Start minimal** - Fill only what you know in `01_PROJECT_CONTEXT.md`
-2. **Use short commands** - See `10_COMMANDS.md` for examples
+2. **Use short commands** - See `QUICK_REFERENCE.md` for examples
 3. **Trust autofill** - Let the agent infer missing details
 4. **Review outputs** - Check generated artifacts before committing
 
@@ -337,7 +337,7 @@ Use [`ROUTING_RULES.md`](file:///home/programmer/Desktop/projects/aiims/ai-agent
 - Basic policy framework
 - Artifact templates
 
-See [`VERSION.md`](file:///home/programmer/Desktop/projects/aiims/ai-agent-md-pack/agent/VERSION.md) for details
+See [`CHANGELOG.md`](file:///home/programmer/Desktop/projects/aiims/ai-agent-md-pack/agent/CHANGELOG.md) for details
 
 ---
 

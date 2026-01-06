@@ -140,7 +140,7 @@ sequenceDiagram
 | `00_INDEX.md` | Request router | Every request |
 | `01_PROJECT_CONTEXT.md` | Project-specific config | Every request |
 | `02_CONVENTIONS.md` | Code standards | During implementation |
-| `03_DEFAULTS.md` | Fallback values | When context incomplete |
+| `02_CONVENTIONS.md` | Fallback values | When context incomplete (See Defaults) |
 
 ### Routing & Navigation
 | File | Purpose | When Used |

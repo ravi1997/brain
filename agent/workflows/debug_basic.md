@@ -17,6 +17,49 @@
 
 ---
 
+## Step 0: Context & Safety Setup
+
+**Objective**: Secure the active scope and determine allowed actions (Execution Level).
+
+### 1. Resolve Scope
+Identify the component we are working on.
+
+```bash
+# Set scope (must match a component in agent/components/)
+export ACTIVE_SCOPE="${ACTIVE_SCOPE:-default}"
+
+# Verify component exists
+if [ ! -f "agent/components/${ACTIVE_SCOPE}.md" ]; then
+  echo "Error: Component ${ACTIVE_SCOPE} not found."
+  # create it or ask user
+fi
+```
+
+### 2. Resolve Execution Level
+Determine `PLAN_ONLY`, `SAFE_LOCAL`, or `ELEVATED` based on `agent/environments/EXECUTION_CONTRACT.md`.
+
+```bash
+# Detect Environment Mode
+source agent/scripts/detect_environment.sh
+
+# Determine Level
+if [ "$ENV_MODE" == "PROD_READONLY" ]; then
+  export EXECUTION_LEVEL="PLAN_ONLY"
+elif [ -f ".agent/elevated_access_token" ]; then
+  export EXECUTION_LEVEL="ELEVATED"
+else
+  export EXECUTION_LEVEL="SAFE_LOCAL"
+fi
+
+echo "Active Scope: $ACTIVE_SCOPE"
+echo "Execution Level: $EXECUTION_LEVEL"
+```
+
+### 3. Policy Check
+- **Read Policy**: `agent/environments/COMMAND_POLICY.md`
+
+---
+
 ## Step 1: Reproduce the Error
 
 ### Collect Information

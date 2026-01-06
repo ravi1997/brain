@@ -48,7 +48,7 @@ This project uses AI agent configuration for automated development, testing, and
 
 **Agent docs:** [`agent/00_INDEX.md`](00_INDEX.md)
 
-**Quick commands:** [`agent/10_COMMANDS.md`](10_COMMANDS.md)
+**Quick commands:** [`agent/QUICK_REFERENCE.md`](QUICK_REFERENCE.md)
 ```
 
 ### 4) Start working
@@ -155,7 +155,7 @@ Edit [`agent/02_CONVENTIONS.md`](02_CONVENTIONS.md):
 - Security rules specific to your domain
 
 ### Default behaviors
-Edit [`agent/03_DEFAULTS.md`](03_DEFAULTS.md):
+Edit [`agent/02_CONVENTIONS.md`](02_CONVENTIONS.md):
 - Preferred testing framework
 - Linting tools
 - Database migration approach
@@ -172,7 +172,7 @@ Add new workflows to [`agent/workflows/`](workflows/):
 
 1. ✅ Verify setup (see above)
 2. 📖 Read [`QUICKSTART.md`](QUICKSTART.md)
-3. 🎯 Give agent first task (see [`10_COMMANDS.md`](10_COMMANDS.md))
+3. 🎯 Give agent first task (see [`QUICK_REFERENCE.md`](QUICK_REFERENCE.md))
 4. 🔧 Customize conventions (see [`02_CONVENTIONS.md`](02_CONVENTIONS.md))
 
 ---

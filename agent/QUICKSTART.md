@@ -52,7 +52,7 @@ domain: "localhost"
 
 ### 3) **Start** with the entrypoint: `agent/00_INDEX.md`
 
-Tell your AI agent to read `agent/00_INDEX.md` and give it a task using short commands from `agent/10_COMMANDS.md`.
+Tell your AI agent to read `agent/00_INDEX.md` and give it a task using short commands from `agent/QUICK_REFERENCE.md`.
 
 ---
 
@@ -149,7 +149,7 @@ Agent infers:
 - Ensure standard directory structure (app/, backend/, etc.)
 
 ### Wrong workflow selected?
-- Use more specific keywords (see `10_COMMANDS.md`)
+- Use more specific keywords (see `QUICK_REFERENCE.md`)
 - Check `ROUTING_RULES.md` for keyword triggers
 - Manually specify: "use workflow: nginx_502_504.md"
 
@@ -163,7 +163,7 @@ Agent infers:
 ## Next Steps
 
 - **Read:** [`00_INDEX.md`](file:///home/programmer/Desktop/projects/aiims/ai-agent-md-pack/agent/00_INDEX.md) - Main router
-- **Commands:** [`10_COMMANDS.md`](file:///home/programmer/Desktop/projects/aiims/ai-agent-md-pack/agent/10_COMMANDS.md) - Quick command reference
+- **Commands:** [`QUICK_REFERENCE.md`](file:///home/programmer/Desktop/projects/aiims/ai-agent-md-pack/agent/QUICK_REFERENCE.md) - Quick command reference
 - **Customize:** [`02_CONVENTIONS.md`](file:///home/programmer/Desktop/projects/aiims/ai-agent-md-pack/agent/02_CONVENTIONS.md) - Your coding standards
 - **Full docs:** [`README.md`](file:///home/programmer/Desktop/projects/aiims/ai-agent-md-pack/agent/README.md) - Complete documentation
 

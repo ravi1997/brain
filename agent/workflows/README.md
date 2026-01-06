@@ -85,10 +85,11 @@
 All workflows follow this standard structure:
 
 1. **Header** - Purpose, when to use, prerequisites
-2. **Prerequisites** - What must be true before starting
-3. **Steps** - Numbered steps with commands and expected output
-4. **Failure Handling** - What to do if steps fail
-5. **Completion Criteria** - When the workflow is done
+2. **Step 0: Context & Safety** - Scope resolution and execution level check
+3. **Prerequisites** - What must be true before starting
+4. **Steps** - Numbered steps with commands and expected output
+5. **Failure Handling** - What to do if steps fail
+6. **Completion Criteria** - When the workflow is done
 6. **Validation** - How to verify success
 7. **See Also** - Related workflows and checklists
 

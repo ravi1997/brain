@@ -177,7 +177,7 @@ cp -r agent/ /your/project/
 ### Reference
 - [`QUICK_REFERENCE.md`](QUICK_REFERENCE.md) - One-page cheat sheet
 - [`MIGRATION_GUIDE.md`](MIGRATION_GUIDE.md) - v3 → v4 upgrade
-- [`VERSION.md`](VERSION.md) - Version history
+- [`CHANGELOG.md`](CHANGELOG.md) - Version history
 - [`COMPLETION_SUMMARY.md`](COMPLETION_SUMMARY.md) - This file
 
 ### Examples
