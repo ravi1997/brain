@@ -1,0 +1,9 @@
+
+[BRAIN REQUEST]: Hello Brain
+[WAITING FOR RESPONSE]...
+
+[BRAIN REQUEST]: Create a step-by-step plan for: Build a spaceship
+[WAITING FOR RESPONSE]...
+
+[BRAIN REQUEST]: Reflect on this context and suggest improvements: I failed to build the spaceship
+[WAITING FOR RESPONSE]...

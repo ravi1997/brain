@@ -55,6 +55,8 @@ add_executable(brain_replica
     src/postgres_client.cpp 
     src/postgres_storage.cpp 
     src/crash_reporter.cpp
+    src/cognitive_engine.cpp
+    src/skill_manager.cpp
 )
 
 # Enable Precompiled Headers (PCH) for faster builds
@@ -83,4 +85,14 @@ add_executable(benchmark_simd tests/benchmark_simd.cpp)
 target_include_directories(benchmark_simd PRIVATE include src)
 if(OpenMP_CXX_FOUND)
     target_link_libraries(benchmark_simd PRIVATE OpenMP::OpenMP_CXX)
+endif()
+
+# Test RL Engine
+add_executable(test_rl_engine tests/test_rl_engine.cpp src/cognitive_engine.cpp)
+target_include_directories(test_rl_engine PRIVATE include src)
+# Test Skill Manager
+add_executable(test_skill_manager tests/test_skill_manager.cpp src/skill_manager.cpp src/dnn.cpp)
+target_include_directories(test_skill_manager PRIVATE include src)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(test_skill_manager PRIVATE OpenMP::OpenMP_CXX)
 endif()

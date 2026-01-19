@@ -18,6 +18,7 @@
 #include "federation.hpp"
 #include "hal.hpp"
 #include "infra/ros_bridge.hpp"
+#include "cognitive_engine.hpp"
 #include <string>
 #include <vector>
 #include <memory>
@@ -33,6 +34,7 @@
 #include <fstream>
 #include <unordered_set>
 #include "cognitive_core.hpp"
+#include "skill_manager.hpp"
 
 
 // Simple thread-safe logger
@@ -236,6 +238,8 @@ public:
 
     // Cognitive Core - Unified access to all 100 AI features
     std::unique_ptr<dnn::CognitiveCore> cognitive_core;
+    std::unique_ptr<dnn::CognitiveEngine> cognitive_engine;
+    std::unique_ptr<dnn::SkillManager> skill_manager;
 
     // Infrastructure Bridges
     std::unique_ptr<dnn::infra::RosBridge> ros_bridge;
@@ -275,6 +279,11 @@ public:
 
     void save(const std::string& filename);
     void load(const std::string& filename);
+    
+    // Phase 4: Language Acquisition
+    void save_vocab(const std::string& filename = "state/vocab.txt");
+    void load_vocab(const std::string& filename = "state/vocab.txt");
+    void learn_word(const std::string& word); // One-shot learning
     
     // ========== COGNITIVE CORE ACCESS METHODS ==========
     // Brain 2.0: Unified AI capabilities through cognitive_core

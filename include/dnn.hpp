@@ -93,6 +93,7 @@ namespace dnn {
 
         std::size_t input_size() const { return plastic_layers_.empty() ? 0 : plastic_layers_.front().in_size; }
         std::size_t output_size() const { return plastic_layers_.empty() ? 0 : plastic_layers_.back().out_size; }
+        std::size_t get_layer_count() const { return plastic_layers_.size(); }
 
         std::vector<double> predict(const std::vector<double> &input) const;
 

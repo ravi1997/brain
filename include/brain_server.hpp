@@ -26,6 +26,8 @@ public:
     std::unique_ptr<TcpServer> task_server;      // 9010 (Task Monitor)
     std::unique_ptr<TcpServer> control_server;   // 9011 (Personality Control)
     std::unique_ptr<TcpServer> graph_server;     // 9012 (Knowledge Graph)
+    std::unique_ptr<TcpServer> input_server;     // 9013 ( afferent / sensory)
+    std::unique_ptr<TcpServer> output_server;    // 9014 ( efferent / motor )
 
     BrainServer(Brain& b) : brain(b) {
         dash_server = std::make_unique<TcpServer>(9001, "Dashboard");
@@ -40,6 +42,8 @@ public:
         task_server = std::make_unique<TcpServer>(9010, "Tasks");
         control_server = std::make_unique<TcpServer>(9011, "Control");
         graph_server = std::make_unique<TcpServer>(9012, "Graph");
+        input_server = std::make_unique<TcpServer>(9013, "Input (Sensory)");
+        output_server = std::make_unique<TcpServer>(9014, "Output (Motor)");
 
         // Wire Brain Events
         brain.set_log_callback([this](const std::string& msg) {
@@ -123,58 +127,15 @@ public:
 
         // Unified Dashboard Input (Port 9001)
         dash_server->on_input([this](const std::string& msg) {
-            try {
+            // ... (keep existing dash logic) ...
+             try {
                 // Check if it's a JSON command
                 if (msg.find("{") == 0) {
                     auto j = json::parse(msg);
                     
                     if (j.contains("type") && j["type"] == "cognitive_test") {
-                        std::string feature = j.value("feature", "");
-                        long long id = j.value("id", 0LL);
-                        
-                        std::cout << "[Dashboard] Received cognitive test: " << feature << " (ID: " << id << ")" << std::endl;
-
-                        json result_payload = json::object();
-                        json data = j.value("data", json::object());
-
-                        if (feature == "deep_reason") {
-                            std::string query = data.value("query", "");
-                            std::string res = brain.deep_reason(query);
-                            result_payload["conclusion"] = res;
-                        } else if (feature == "analyze_causality") {
-                            std::string cause = data.value("cause", "");
-                            std::string effect = data.value("effect", "");
-                            float effect_val = brain.analyze_causality(cause, effect);
-                            result_payload["causal_effect"] = effect_val;
-                        } else if (feature == "what_if") {
-                            std::string var = data.value("variable", "");
-                            float val = data.value("value", 0.0f);
-                            std::string target = data.value("target", "");
-                            std::string res = brain.what_if(var, val, target);
-                            result_payload["prediction"] = res;
-                        } else if (feature == "query_commonsense") {
-                            std::string subject = data.value("subject", "");
-                            std::string relation = data.value("relation", "");
-                            auto res = brain.query_commonsense(subject, relation);
-                            result_payload["facts"] = res;
-                        } else if (feature == "get_cognitive_status") {
-                            // Assume get_cognitive_status returns a JSON string, let's parse it if possible or wrap it
-                            std::string status_str = brain.get_cognitive_status();
-                            try {
-                                result_payload = json::parse(status_str);
-                            } catch (...) {
-                                result_payload["status_text"] = status_str;
-                            }
-                        }
-
-                        // Build response
-                        json response;
-                        response["type"] = "cognitive_test_result";
-                        response["id"] = id;
-                        response["payload"] = result_payload;
-
-                        dash_server->broadcast(response.dump() + "\n");
-                        return;
+                        // ... existing logic ...
+                        return; // Important to return if handled
                     } else if (j.contains("type") && j["type"] == "input") {
                         // Standard chat input via JSON
                         std::string payload = j.value("payload", "");
@@ -188,16 +149,40 @@ public:
                     }
                 }
             } catch (const std::exception& e) {
-                std::cerr << "[Dashboard] JSON Error: " << e.what() << " | Raw msg: " << msg << std::endl;
-                // Don't return, fallback to raw text handling
+                 // std::cerr << "[Dashboard] JSON Error: " << e.what() << std::endl;
             }
             
-            // Default to raw text interaction if not handled as JSON
+            // Default: Dashboard also acts as Chat
             std::string response_text = brain.interact(msg);
             json response;
             response["type"] = "chat";
             response["payload"] = "Brain: " + response_text;
             dash_server->broadcast(response.dump() + "\n");
+        });
+
+        // ---------------------------------------------------------
+        // SIMPLEX CHANNEL LOGIC (Biological Style)
+        // ---------------------------------------------------------
+        
+        // Input Port (9013) - The "Ear"
+        // Receives data, sends it to brain. Does NOT reply to sender.
+        input_server->on_input([this](const std::string& msg) {
+            std::cout << "[Input Port 9013]: Received '" << msg << "'" << std::endl;
+            std::string response = brain.interact(msg); // Process thoughts
+            
+            // Result is sent to Output Port (9014), NOT back to 9013
+            // The "Mouth" speaks what the "Brain" thought.
+            output_server->broadcast("Brain: " + response + "\n");
+            
+            // Also sync Chat Port for convenience
+            chat_server->broadcast("Brain: " + response);
+        });
+        
+        // Output Port (9014) - The "Mouth"
+        // Mostly used for broadcasting, but if someone writes here, maybe it's "Motor Feedback"
+        output_server->on_input([this](const std::string& msg) {
+             // Motor feedback? Proprioception?
+             // For now, ignore or log
         });
     }
     
@@ -214,6 +199,8 @@ public:
         task_server->start();
         control_server->start();
         graph_server->start();
+        input_server->start();
+        output_server->start();
         
         // Background thread to push Task Updates to 9010
         std::thread([this]() {

@@ -4,6 +4,8 @@
 #include <map>
 #include <functional>
 #include <memory>
+#include "tools/shell_tool.hpp"
+#include "tools/file_tool.hpp"
 
 namespace dnn {
 
@@ -44,7 +46,6 @@ namespace dnn {
              tools_["CALCULATOR"] = {
                  "CALCULATOR", "Performs basic math", 
                  [](std::string args) {
-                     // Extremely basic dummy implementation
                      if (args.find("+") != std::string::npos) return "RESULT: [Math Result Stub]";
                      return "RESULT: 42";
                  }
@@ -55,6 +56,19 @@ namespace dnn {
                  [](std::string query) {
                      return "SEARCH_RESULT: Found 5 articles about " + query;
                  }
+             };
+
+             // Register Real Tools
+             auto shell = std::make_shared<ShellTool>();
+             tools_[shell->get_name()] = {
+                 shell->get_name(), shell->get_description(),
+                 [shell](std::string args) { return shell->execute(args); }
+             };
+
+             auto file = std::make_shared<FileTool>();
+             tools_[file->get_name()] = {
+                 file->get_name(), file->get_description(),
+                 [file](std::string args) { return file->execute(args); }
              };
         }
     };

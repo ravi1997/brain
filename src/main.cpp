@@ -41,6 +41,22 @@ int main() {
              }
         }
 
+        // Launch Console Input Thread
+        std::thread console_thread([&brain]() {
+            std::string input;
+            while (true) {
+                std::getline(std::cin, input);
+                if (input == "exit" || input == "quit") {
+                    exit(0);
+                }
+                if (!input.empty()) {
+                    std::string response = brain.interact(input);
+                    std::cout << "\n[Brain]: " << response << "\n> " << std::flush;
+                }
+            }
+        });
+        console_thread.detach();
+
         // Main thread loop (keep alive)
         while (true) {
             std::this_thread::sleep_for(std::chrono::seconds(1));

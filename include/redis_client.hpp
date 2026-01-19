@@ -1,9 +1,11 @@
 #pragma once
-#include <hiredis/hiredis.h>
 #include <string>
 #include <iostream>
 #include <mutex>
 #include <optional>
+
+#ifdef USE_REDIS
+#include <hiredis/hiredis.h>
 
 class RedisClient {
 public:
@@ -66,3 +68,16 @@ private:
     redisContext* context_;
     std::mutex mutex_;
 };
+#else
+
+// STUB IMPLEMENTATION
+class RedisClient {
+public:
+    RedisClient(const std::string& host = "redis", int port = 6379) {}
+    ~RedisClient() {}
+
+    bool connect() { return false; } // Fail silently or just pretend
+    void set(const std::string& key, const std::string& value, int ttl_seconds = 60) {}
+    std::optional<std::string> get(const std::string& key) { return std::nullopt; }
+};
+#endif
