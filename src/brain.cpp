@@ -13,6 +13,7 @@
 #include "tactile_unit.hpp"
 #include "federation.hpp"
 #include "hal.hpp"
+#include "infra/config.hpp"
 
 // Simple Config Loader
 struct BrainConfig {
@@ -61,6 +62,9 @@ private:
 };
 
 Brain::Brain() {
+    // Load Environment based credentials
+    db_conn_str = dnn::infra::Config::get_db_conn_str();
+
     // Load config if exists
     BrainConfig config = BrainConfig::load("config/config.json");
     personality.curiosity = config.curiosity;
@@ -135,22 +139,15 @@ Brain::Brain() {
         for (auto& v : vec) v = static_cast<double>(rand()) / RAND_MAX * 2.0 - 1.0;
         word_embeddings[w] = vec;
     }
-
-    // MEGA-BATCH 3: Word2Vec Phase 1
-    // Generate some basic embeddings for common words
-    std::vector<std::string> base_vocab = {"ai", "brain", "robot", "physics", "science", "happy", "sad", "joy", "fear"};
-    for (const auto& w : base_vocab) {
-        std::vector<double> vec(VECTOR_DIM);
-        for (auto& v : vec) v = static_cast<double>(rand()) / RAND_MAX * 2.0 - 1.0;
-        word_embeddings[w] = vec;
-    }
     
     // Load persisted vocabulary
     load_vocab();
 #ifdef USE_REDIS
-    redis_cache = std::make_unique<RedisClient>("redis", 6379);
+    std::string redis_host = dnn::infra::Config::get("REDIS_HOST", "redis");
+    int redis_port = dnn::infra::Config::get_int("REDIS_PORT", 6379);
+    redis_cache = std::make_unique<RedisClient>(redis_host, redis_port);
     if (redis_cache->connect()) {
-        safe_print("[Brain]: Connected to Redis cache layer.");
+        safe_print("[Brain]: Connected to Redis cache layer at " + redis_host + ":" + std::to_string(redis_port));
     }
 #endif
 
@@ -994,6 +991,10 @@ void Brain::teach(const std::string& input_text, const std::string& target_text)
     
     std::vector<double> cognitive_input = thought;
     cognitive_input.insert(cognitive_input.end(), memory_context.begin(), memory_context.end());
+    
+    // Add sensory input to match expected size of cognitive_center (VECTOR_DIM * 3)
+    std::vector<double> sensory_raw = get_aggregate_sensory_input();
+    cognitive_input.insert(cognitive_input.end(), sensory_raw.begin(), sensory_raw.end());
     
     std::vector<double> response_thought = cognitive_center->process(cognitive_input);
 

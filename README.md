@@ -51,16 +51,25 @@
 3.  **Access the Dashboard:**
     Open [http://localhost:5000](http://localhost:5000) in your browser.
 
-### Terminal Interaction
+### Local Development (Non-Docker)
 
-You can also interact directly via the terminal:
+1.  **Install dependencies:**
+    ```bash
+    ./scripts/setup_dev.sh
+    ```
+2.  **Manual Build:**
+    ```bash
+    mkdir -p build && cd build
+    cmake ..
+    make -j$(nproc)
+    ```
 
-```bash
-./connect.sh
-```
-*(Press `Ctrl+P`, then `Ctrl+Q` to detach)*
+## Configuration & Environment
 
-## Configuration
+The brain supports interaction via **Environment Variables** (see `.env.example`):
+- `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASS`: PostgreSQL credentials.
+- `REDIS_HOST`, `REDIS_PORT`: Redis connection info.
+- `SERVER_PORT`: Custom port for the main brain server.
 
 Tune the brain's personality in `config.json`:
 

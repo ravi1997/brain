@@ -25,6 +25,9 @@ public:
     // Set callback for received messages
     void on_input(MessageCallback cb);
 
+    // Set authentication token
+    void set_token(const std::string& token);
+
     int get_port() const { return port_; }
     std::string get_name() const { return name_; }
 
@@ -36,6 +39,7 @@ private:
 
     int port_;
     std::string name_;
+    std::string token_;
     int server_fd_{-1};
     std::atomic<bool> running_{false};
     
@@ -44,6 +48,7 @@ private:
     
     // Active client sockets
     std::vector<int> client_sockets_;
+    std::vector<int> authenticated_sockets_;
     std::mutex clients_mutex_;
     
     // Rate Limiting

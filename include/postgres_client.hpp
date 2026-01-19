@@ -1,7 +1,9 @@
 #pragma once
 #include <string>
 #include <vector>
+#ifdef USE_POSTGRES
 #include <libpq-fe.h>
+#endif
 #include <mutex>
 
 struct PostgresRow {

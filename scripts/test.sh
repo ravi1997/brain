@@ -1,4 +1,9 @@
 #!/bin/bash
 set -e
-echo "Running Unit Tests..."
-docker compose run --rm brain bash -c "mkdir -p build && cd build && cmake .. && make && ./tests/brain_tests"
+if [[ "$1" == "--local" ]]; then
+    echo "Running Unit Tests Locally..."
+    mkdir -p build && cd build && cmake .. && make -j$(nproc) && ./tests/brain_tests
+else
+    echo "Running Unit Tests in Docker..."
+    docker compose run --rm brain bash -c "mkdir -p build && cd build && cmake .. && make -j$$(nproc) && ./tests/brain_tests"
+fi

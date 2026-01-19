@@ -20,4 +20,7 @@
 
 // Vendors
 #include <sqlite3.h>
+
+#ifdef USE_REDIS
 #include <hiredis/hiredis.h>
+#endif

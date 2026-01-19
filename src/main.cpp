@@ -25,21 +25,23 @@ int main() {
         std::cout << "Port 9005: Chat" << std::endl;
         std::cout << "Port 9001-9009: Active" << std::endl;
 
-        // Auto-Train if vocab is empty (First run)
-        if (brain.get_knowledge_size() < 100) {
-             std::cout << "[System]: Brain appears empty. Initiating basic English download..." << std::endl;
-             std::ifstream basics("data/english_basics.txt");
-             if (basics) {
-                 std::string line;
-                 while(std::getline(basics, line)) {
-                     size_t delimiter = line.find("|");
-                     if (delimiter != std::string::npos) {
-                         brain.teach(line.substr(0, delimiter), line.substr(delimiter + 1));
+        // Auto-Train in background if vocab is empty (First run)
+        std::thread([&brain]() {
+            if (brain.get_knowledge_size() < 100) {
+                 std::cout << "[System]: Brain appears empty. Initiating basic English download..." << std::endl;
+                 std::ifstream basics("data/english_basics.txt");
+                 if (basics) {
+                     std::string line;
+                     while(std::getline(basics, line)) {
+                         size_t delimiter = line.find("|");
+                         if (delimiter != std::string::npos) {
+                             brain.teach(line.substr(0, delimiter), line.substr(delimiter + 1));
+                         }
                      }
+                     std::cout << "[System]: Basic English installed." << std::endl;
                  }
-                 std::cout << "[System]: Basic English installed." << std::endl;
-             }
-        }
+            }
+        }).detach();
 
         // Launch Console Input Thread
         std::thread console_thread([&brain]() {

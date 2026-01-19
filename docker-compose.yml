@@ -4,12 +4,18 @@ services:
   brain:
     build: .
     image: brain_replica
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME:-brain_db}
+      - DB_USER=${DB_USER:-brain_user}
+      - DB_PASS=${DB_PASS:-brain_password}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     volumes:
       - .:/app
-    # Override the default command to build and run the executable
-    # This allows for incremental builds when source files change
     command: >
-      bash -c "mkdir -p build && cd build && cmake .. && make -j$(nproc) brain_replica && ./brain_replica"
+      bash -c "mkdir -p build && cd build && cmake .. && make -j$$(nproc) brain_replica && ./brain_replica"
     ports:
       - "9001-9014:9001-9014"
     stdin_open: true
@@ -33,8 +39,8 @@ services:
   postgres:
     image: pgvector/pgvector:pg15
     environment:
-      POSTGRES_DB: brain_db
-      POSTGRES_USER: brain_user
-      POSTGRES_PASSWORD: brain_password
+      POSTGRES_DB: ${DB_NAME:-brain_db}
+      POSTGRES_USER: ${DB_USER:-brain_user}
+      POSTGRES_PASSWORD: ${DB_PASS:-brain_password}
 
 

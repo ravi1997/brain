@@ -3,16 +3,19 @@
 ## Assets Protected
 
 - Source Code
-- API Credentials (Projected)
-- User Data (Projected)
+- Brain Synaptic Weights (state/reflex_weights.json)
+- Long-Term Memory (PostgreSQL)
 
 ## Known Vulnerabilities
 
-- [None]
+- [LOW] Container running as root (FIXED: 2026-01-19)
+- [HIGH] Hardcoded DB passwords in docker-compose.yml and ci.yml
+- [MED] Unauthenticated admin port (9009)
 
 ## Audit History
 
-- [DATE] | Initial Scan | [Pass/Fail]
+- 2026-01-19 | Initial Repo Audit | DEGRADED (Root user found, secrets exposed)
+- 2026-01-19 | Post-Fix Scan | IMPROVED (Rootless Docker implemented)
 
 ## Secret Rotation Schedule
 

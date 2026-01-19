@@ -56,19 +56,24 @@ void TcpServer::stop() {
         close(sock);
     }
     client_sockets_.clear();
+    authenticated_sockets_.clear();
 }
 
 void TcpServer::broadcast(const std::string& message) {
     if (message.empty()) return;
     std::string packet = message + "\n";
     
-    std::vector<int> sockets_copy;
+    std::vector<int> targets;
     {
         std::lock_guard<std::mutex> lock(clients_mutex_);
-        sockets_copy = client_sockets_;
+        if (token_.empty()) {
+            targets = client_sockets_;
+        } else {
+            targets = authenticated_sockets_;
+        }
     }
 
-    for (int sock : sockets_copy) {
+    for (int sock : targets) {
         // Use MSG_DONTWAIT to avoid blocking the whole server if one client is slow
         ssize_t sent = send(sock, packet.c_str(), packet.length(), MSG_NOSIGNAL | MSG_DONTWAIT);
         if (sent < 0 && (errno == EPIPE || errno == EBADF)) {
@@ -79,6 +84,10 @@ void TcpServer::broadcast(const std::string& message) {
 
 void TcpServer::on_input(MessageCallback cb) {
     input_callback_ = cb;
+}
+
+void TcpServer::set_token(const std::string& token) {
+    token_ = token;
 }
 
 void TcpServer::accept_loop() {
@@ -113,6 +122,8 @@ void TcpServer::accept_loop() {
 
 void TcpServer::client_handler(int socket_fd) {
     char buffer[1024];
+    bool authenticated = token_.empty();
+
     while (running_) {
         memset(buffer, 0, 1024);
         int valread = read(socket_fd, buffer, 1024);
@@ -122,6 +133,10 @@ void TcpServer::client_handler(int socket_fd) {
             auto it = std::find(client_sockets_.begin(), client_sockets_.end(), socket_fd);
             if (it != client_sockets_.end()) {
                 client_sockets_.erase(it);
+                auto auth_it = std::find(authenticated_sockets_.begin(), authenticated_sockets_.end(), socket_fd);
+                if (auth_it != authenticated_sockets_.end()) {
+                    authenticated_sockets_.erase(auth_it);
+                }
                 close(socket_fd);
             }
             break;
@@ -130,7 +145,7 @@ void TcpServer::client_handler(int socket_fd) {
         // Process input
         std::string input_str(buffer, valread);
         
-        // Simple HTTP Health Check Handling
+        // Simple HTTP Health Check Handling - ALWAYS ALLOWED for k8s/docker health
         if (input_str.find("GET /health") == 0) {
             std::string response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\nOK";
             send(socket_fd, response.c_str(), response.length(), MSG_NOSIGNAL);
@@ -140,6 +155,47 @@ void TcpServer::client_handler(int socket_fd) {
             auto it = std::find(client_sockets_.begin(), client_sockets_.end(), socket_fd);
             if (it != client_sockets_.end()) {
                 client_sockets_.erase(it);
+                auto auth_it = std::find(authenticated_sockets_.begin(), authenticated_sockets_.end(), socket_fd);
+                if (auth_it != authenticated_sockets_.end()) {
+                    authenticated_sockets_.erase(auth_it);
+                }
+                close(socket_fd);
+            }
+            break;
+        }
+
+        if (!authenticated) {
+            // Expect "AUTH <token>\n"
+            if (input_str.find("AUTH ") == 0) {
+                std::string received_token = input_str.substr(5);
+                // Trim whitespace/newlines
+                received_token.erase(std::remove(received_token.begin(), received_token.end(), '\n'), received_token.end());
+                received_token.erase(std::remove(received_token.begin(), received_token.end(), '\r'), received_token.end());
+                
+                if (received_token == token_) {
+                    authenticated = true;
+                    {
+                        std::lock_guard<std::mutex> lock(clients_mutex_);
+                        authenticated_sockets_.push_back(socket_fd);
+                    }
+                    std::string success = "AUTH_OK\n";
+                    send(socket_fd, success.c_str(), success.length(), MSG_NOSIGNAL);
+                    continue; // Wait for next message
+                }
+            }
+            
+            // Authentication failed
+            std::string failure = "AUTH_FAILED\n";
+            send(socket_fd, failure.c_str(), failure.length(), MSG_NOSIGNAL);
+            
+            std::lock_guard<std::mutex> lock(clients_mutex_);
+            auto it = std::find(client_sockets_.begin(), client_sockets_.end(), socket_fd);
+            if (it != client_sockets_.end()) {
+                client_sockets_.erase(it);
+                auto auth_it = std::find(authenticated_sockets_.begin(), authenticated_sockets_.end(), socket_fd);
+                if (auth_it != authenticated_sockets_.end()) {
+                    authenticated_sockets_.erase(auth_it);
+                }
                 close(socket_fd);
             }
             break;

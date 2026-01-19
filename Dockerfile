@@ -14,10 +14,18 @@ RUN apt-get update && apt-get install -y \
     python3 \
     && rm -rf /var/lib/apt/lists/*
 
+# Create non-root user
+RUN useradd -m -s /bin/bash brain
+
 WORKDIR /app
 
-# Copy project files
-COPY . .
+# Copy project files and set ownership
+COPY --chown=brain:brain . .
+
+# Ensure state and data directories exist and are writable
+RUN mkdir -p /app/state/logs /app/data && chown -R brain:brain /app
+
+USER brain
 
 # Expose Neural Ports
 # 9001: Dashboard, 9002: Emotions, 9003: Logs, 9005: Chat

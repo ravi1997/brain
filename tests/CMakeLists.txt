@@ -11,7 +11,7 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
-add_executable(brain_tests
+set(BRAIN_TEST_SOURCES
     ../src/brain.cpp
     ../src/dnn.cpp
     ../src/memory_store.cpp
@@ -33,7 +33,6 @@ add_executable(brain_tests
     test_emotion_logic.cpp
     test_nlu_context.cpp
     test_planning_dynamic.cpp
-    test_postgres.cpp
     test_nlu_advanced.cpp
     test_cognition_features.cpp
     test_sensory.cpp
@@ -59,15 +58,27 @@ add_executable(brain_tests
     test_biological_dynamics.cpp
 )
 
+if(ENABLE_POSTGRES)
+    list(APPEND BRAIN_TEST_SOURCES test_postgres.cpp)
+endif()
+
+add_executable(brain_tests ${BRAIN_TEST_SOURCES})
+
 target_include_directories(brain_tests PRIVATE ../include ../src)
 
 target_link_libraries(brain_tests
     gtest_main
     sqlite3
     tbb
-    hiredis
-    ${LIBPQ_LIBRARY}
 )
+
+if(ENABLE_REDIS)
+    target_link_libraries(brain_tests ${HIREDIS_LIBRARY})
+endif()
+
+if(ENABLE_POSTGRES)
+    target_link_libraries(brain_tests ${LIBPQ_LIBRARY})
+endif()
 
 include(GoogleTest)
 gtest_discover_tests(brain_tests)

@@ -1,3 +1,4 @@
+#ifdef USE_POSTGRES
 #include "memory_store.hpp"
 #include "redis_client.hpp"
 #include <chrono>
@@ -298,3 +299,4 @@ std::vector<std::string> MemoryStore::search_similar(const std::vector<double>& 
     if (kv_store) return kv_store->search_similar(embedding, limit);
     return {};
 }
+#endif

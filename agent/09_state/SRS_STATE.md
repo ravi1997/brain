@@ -2,15 +2,15 @@
 
 ## Status
 
-- **Functional Requirements**: [NOT_STARTED]
-- **Non-Functional Requirements**: [NOT_STARTED]
-- **User Stories**: [NOT_STARTED]
-- **Acceptance Criteria**: [NOT_STARTED]
+- **Functional Requirements**: [DRAFT]
+- **Non-Functional Requirements**: [DRAFT]
+- **User Stories**: [DRAFT]
+- **Acceptance Criteria**: [DRAFT]
 
 ## Links
 
-- **Full SRS Path**: [NONE]
-- **Last Approved Version**: [NONE]
+- **Full SRS Path**: plans/SRS/
+- **Last Approved Version**: 0.1.0-alpha (Baseline)
 
 ## Approval
 

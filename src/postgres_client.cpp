@@ -1,3 +1,4 @@
+#ifdef USE_POSTGRES
 #include "postgres_client.hpp"
 #include <iostream>
 
@@ -107,3 +108,4 @@ int PostgresClient::store_memory(long long timestamp, const std::string& type, c
     PQclear(res);
     return id;
 }
+#endif

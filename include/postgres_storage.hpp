@@ -1,7 +1,9 @@
 #pragma once
 
 #include "db_interface.hpp"
+#ifdef USE_POSTGRES
 #include <libpq-fe.h>
+#endif
 #include <mutex>
 
 class PostgresStorage : public DatabaseInterface {
@@ -27,7 +29,11 @@ public:
 
 private:
     std::string connection_string;
+#ifdef USE_POSTGRES
     PGconn* conn;
+#else
+    void* conn; // Placeholder
+#endif
     std::mutex db_mutex;
 
     bool check_status();

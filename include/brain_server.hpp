@@ -6,6 +6,7 @@
 #include <memory>
 #include <sstream>
 #include "json.hpp"
+#include "infra/config.hpp"
 
 using json = nlohmann::json;
 
@@ -30,6 +31,8 @@ public:
     std::unique_ptr<TcpServer> output_server;    // 9014 ( efferent / motor )
 
     BrainServer(Brain& b) : brain(b) {
+        std::string token = dnn::infra::Config::get("BRAIN_TOKEN", "");
+
         dash_server = std::make_unique<TcpServer>(9001, "Dashboard");
         emotion_server = std::make_unique<TcpServer>(9002, "Emotions");
         log_server = std::make_unique<TcpServer>(9003, "Logs");
@@ -44,6 +47,24 @@ public:
         graph_server = std::make_unique<TcpServer>(9012, "Graph");
         input_server = std::make_unique<TcpServer>(9013, "Input (Sensory)");
         output_server = std::make_unique<TcpServer>(9014, "Output (Motor)");
+
+        if (!token.empty()) {
+            dash_server->set_token(token);
+            emotion_server->set_token(token);
+            log_server->set_token(token);
+            error_server->set_token(token);
+            chat_server->set_token(token);
+            thought_server->set_token(token);
+            research_server->set_token(token);
+            extra_server->set_token(token);
+            admin_server->set_token(token);
+            task_server->set_token(token);
+            control_server->set_token(token);
+            graph_server->set_token(token);
+            input_server->set_token(token);
+            output_server->set_token(token);
+            std::cout << "[Security] Authentication enabled for all ports." << std::endl;
+        }
 
         // Wire Brain Events
         brain.set_log_callback([this](const std::string& msg) {

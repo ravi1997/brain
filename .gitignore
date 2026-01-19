@@ -1,4 +1,4 @@
-build/
+build*/
 brain
 *.o
 *.obj
@@ -11,3 +11,12 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Project specifics
+state/
+.env
+.DS_Store
+*.txt
+!CMakeLists.txt
+!requirements.txt
+!.env.example

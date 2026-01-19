@@ -1,3 +1,4 @@
+#ifdef USE_POSTGRES
 #include "postgres_storage.hpp"
 #include <iostream>
 #include <stdexcept>
@@ -237,3 +238,4 @@ void PostgresStorage::execute_non_query(const std::string& sql) {
     }
     PQclear(res);
 }
+#endif
